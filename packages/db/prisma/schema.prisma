@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ChannelType {
+  PUBLIC
+  PRIVATE
+  AI_AGENT
+}
+
+enum SenderType {
+  USER
+  AGENT
+  SYSTEM
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  memberships    OrganizationMember[]
+  messages       Message[]
+  createdJobs    Job[]                @relation("UserJobs")
+  channelmembers ChannelMember[]
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  plan      String?
+  createdAt DateTime @default(now())
+
+  members    OrganizationMember[]
+  workspaces Workspace[]
+}
+
+model OrganizationMember {
+  id             String           @id @default(uuid())
+  organizationId String
+  userId         String
+  role           OrganizationRole
+  joinedAt       DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([organizationId, userId])
+}
+
+model Workspace {
+  id             String   @id @default(uuid())
+  name           String
+  organizationId String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  agents   Agent[]
+  jobs     Job[]
+  channels Channel[]
+}
+
+model Agent {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  name         String
+  model        String
+  systemPrompt String
+  createdAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  messages Message[]
+}
+
+model Job {
+  id          String    @id @default(uuid())
+  workspaceId String
+  createdBy   String
+  prompt      String
+  status      JobStatus
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  creator   User      @relation("UserJobs", fields: [createdBy], references: [id])
+
+  tasks  Task[]
+  events AgentEvent[]
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  jobId       String
+  stepNumber  Int
+  type        String
+  payload     Json
+  status      TaskStatus
+  result      Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  job Job @relation(fields: [jobId], references: [id])
+
+  executions TaskExecution[]
+
+  @@index([jobId])
+}
+
+model TaskExecution {
+  id          String     @id @default(uuid())
+  taskId      String
+  workerId    String
+  logs        String?
+  status      TaskStatus
+  startedAt   DateTime
+  completedAt DateTime?
+
+  task Task @relation(fields: [taskId], references: [id])
+
+  @@index([taskId])
+}
+
+model Tool {
+  id          String   @id @default(uuid())
+  name        String
+  type        String
+  endpoint    String
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  capabilities ToolCapability[]
+}
+
+model ToolCapability {
+  id          String  @id @default(uuid())
+  toolId      String
+  name        String
+  description String?
+
+  tool Tool @relation(fields: [toolId], references: [id])
+
+  @@index([toolId])
+}
+
+model Channel {
+  id          String      @id @default(uuid())
+  workspaceId String
+  name        String
+  type        ChannelType
+  createdAt   DateTime    @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  members  ChannelMember[]
+  messages Message[]
+}
+
+model ChannelMember {
+  id        String   @id @default(uuid())
+  channelId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([channelId, userId])
+}
+
+model Message {
+  id         String     @id @default(uuid())
+  channelId  String
+  senderType SenderType
+  senderId   String
+  content    String
+  createdAt  DateTime   @default(now())
+  channel    Channel    @relation(fields: [channelId], references: [id])
+  user       User?      @relation(fields: [userId], references: [id])
+  userId     String?
+  agent      Agent?     @relation(fields: [agentId], references: [id])
+  agentId    String?
+
+  @@index([channelId])
+}
+
+model AgentEvent {
+  id        String   @id @default(uuid())
+  jobId     String
+  taskId    String?
+  type      String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id])
+
+  @@index([jobId])
+}
