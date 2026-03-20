@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { RegisterBody, LoginBody } from "@repo/schemas";
-import { $ref } from "../../schemas";
+import { $ref } from "../../validationSchemas";
 import {
     signupController,
     loginController,
