@@ -1,0 +1,20 @@
+{
+  "name": "mail-forge",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "mail-forger:start": "bun ./src/mail-forger"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "bullmq": "^5.71.0",
+    "@repo/email": "*",
+    "@repo/queue": "*"
+  }
+}
