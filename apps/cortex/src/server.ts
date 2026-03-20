@@ -7,6 +7,7 @@ import corsPlugin from "./plugins/auth_plugins/cors";
 
 import authRoutes from "./routes/auth/auth.routes";
 import clerkWebhookRoutes from "./routes/auth/webhooks/clerk.routes";
+import organizationRoutes from "./routes/organization/organization.routes";
 
 const fastify = Fastify({
   logger: {
@@ -17,7 +18,10 @@ const fastify = Fastify({
   },
 });
 
-import { authJsonSchemas } from "./schemas";
+import { authJsonSchemas } from "./validationSchemas";
+import workspaceRoutes from "./routes/workspace/workspace.routes";
+import organizationInviteLinkRoutes from "./routes/organization_invite/organization.inviteLink.routes";
+import organizationAcceptInviteRoutes from "./routes/organization_invite/organization.acceptInvite.routes";
 for (const schema of authJsonSchemas) {
   fastify.addSchema(schema);
 }
@@ -30,7 +34,18 @@ fastify.register(authGuardPlugin);
 
 fastify.register(authRoutes, { prefix: "/api/v1/auth" });
 fastify.register(clerkWebhookRoutes, { prefix: "/api/v1/webhooks" });
-
+fastify.register(organizationRoutes, {
+  prefix: "/api/v1/register-organization",
+});
+fastify.register(workspaceRoutes, {
+  prefix: "/api/v1/register-workspace",
+});
+fastify.register(organizationInviteLinkRoutes, {
+  prefix: "/api/v1/generate-invite-link/",
+});
+fastify.register(organizationAcceptInviteRoutes, {
+  prefix: "/api/v1/accept-invite",
+});
 fastify.get("/health", async () => ({ status: "ok" }));
 
 fastify.listen(
@@ -41,5 +56,5 @@ fastify.listen(
       process.exit(1);
     }
     fastify.log.info(`Server listening on ${address}`);
-  }
+  },
 );
