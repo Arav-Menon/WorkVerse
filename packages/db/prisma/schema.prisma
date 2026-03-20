@@ -46,21 +46,47 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
-  memberships    OrganizationMember[]
-  messages       Message[]
-  createdJobs    Job[]                @relation("UserJobs")
-  channelmembers ChannelMember[]
+  memberships         OrganizationMember[]
+  messages            Message[]
+  createdJobs         Job[]                @relation("UserJobs")
+  channelmembers      ChannelMember[]
+  organization        Organization[]
+  workspace           Workspace[]
+  organizationInvites OrganizationInvite[]
 }
 
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  plan      String?
-  createdAt DateTime @default(now())
+  id                  String               @id @default(uuid())
+  name                String
+  slug                String               @unique
+  createdAt           DateTime             @default(now())
+  createdById         String
+  createdBy           User                 @relation(fields: [createdById], references: [id])
+  members             OrganizationMember[]
+  workspaces          Workspace[]
+  organizationInvites OrganizationInvite[]
+}
 
-  members    OrganizationMember[]
-  workspaces Workspace[]
+model OrganizationInvite {
+  id             String           @id @default(uuid())
+  organizationId String
+  email          String           @unique
+  name           String
+  role           OrganizationRole @default(MEMBER)
+  token          String           @unique
+  inviteLink     String           @unique
+  createdById    String
+  status         InviteStatus
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+  user           User             @relation(fields: [createdById], references: [id])
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
 }
 
 model OrganizationMember {
@@ -77,12 +103,13 @@ model OrganizationMember {
 }
 
 model Workspace {
-  id             String   @id @default(uuid())
-  name           String
+  id             String       @id @default(uuid())
+  name           String       @unique
   organizationId String
-  createdAt      DateTime @default(now())
-
-  organization Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  createdById    String
+  createdBy      User         @relation(fields: [createdById], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   agents   Agent[]
   jobs     Job[]
