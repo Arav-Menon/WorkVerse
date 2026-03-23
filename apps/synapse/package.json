@@ -5,7 +5,7 @@
     "@types/bun": "latest"
   },
   "scripts": {
-    "start:synapse": "./src/server.ts"
+    "start:synapse": "bun src/index.ts"
   },
   "peerDependencies": {
     "typescript": "^5"
