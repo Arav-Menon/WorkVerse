@@ -1,1 +1,2 @@
-export * from "./src/redis";
+export * from "./src/config";
+export * from "./src/client/redis.producer";
