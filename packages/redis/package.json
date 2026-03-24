@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     "./redis-client": "./index.ts"
+    
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -13,6 +14,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "redis": "^5.11.0"
+    "redis": "^5.11.0",
+    "@repo/schemas": "workspace:*"
   }
 }
