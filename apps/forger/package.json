@@ -6,6 +6,9 @@
   "devDependencies": {
     "@types/bun": "latest"
   },
+  "dependencies": {
+    "@repo/redis": "*"
+  },
   "peerDependencies": {
     "typescript": "^5"
   }
