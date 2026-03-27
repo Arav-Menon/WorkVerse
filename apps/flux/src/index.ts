@@ -1,23 +1,38 @@
 import { WebSocket, WebSocketServer } from "ws";
+import axios from "axios";
+import { API_URL } from "./API/api_url";
 
 const wss = new WebSocketServer({ port: 8080 });
 
 wss.on("connection", (socket: WebSocket) => {
-  socket.on("message", async (mssg) => {
+  socket.on("message", async (message) => {
     try {
-      const { token, ...data } = JSON.parse(mssg.toString());
+      const parsed = JSON.parse(message.toString());
 
-      const response = await fetch("http://localhost:3000/api/v1/ingest-prompt", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const { token, workspaceId, userPrompt, organizationId } = parsed;
+
+      if (!token || !workspaceId || !userPrompt) {
+        socket.send(JSON.stringify({ error: "Missing required fields" }));
+        return;
+      }
+
+      const response = await axios.post(
+        API_URL,
+        {
+          workspaceId,
+          userPrompt,
+          organizationId,
         },
-        body: JSON.stringify(data),
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-      const result = await response.json();
-      socket.send(JSON.stringify(result));
+      console.log(response);
+
+      socket.send(JSON.stringify(response.data));
     } catch (err) {
       console.error("Error processing message:", err);
       socket.send(JSON.stringify({ error: "Failed to process message" }));
