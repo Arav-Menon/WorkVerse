@@ -1,5 +1,5 @@
 {
-  "name": "evaluator",
+  "name": "@repo/evaluator",
   "module": "index.ts",
   "type": "module",
   "private": true,
