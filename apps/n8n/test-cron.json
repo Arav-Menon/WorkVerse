@@ -1,0 +1,59 @@
+{
+  "name": "Test Cron Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "message",
+              "value": "Hello Arav",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "17db6dfe-f827-4b7f-ac19-e5dc015dabf1",
+      "name": "Cron1",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [-352, -32]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d2943336-54d4-43b8-bc82-9f198d5ea471",
+      "name": "Set1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [-96, -32]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron1": {
+      "main": [
+        [
+          {
+            "node": "Set1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d03c7e41-475b-460b-b6cf-22ed1a2e943f",
+  "meta": {
+    "instanceId": "fc3496468e33b4204e4dd361d068880db11a0e35133972062f83900bb4aaa300"
+  },
+  "id": "m9duMRP8zbkSdh8y",
+  "tags": []
+}
