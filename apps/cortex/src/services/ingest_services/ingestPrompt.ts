@@ -20,6 +20,5 @@ export async function registerIngestPrompt(
     systemPrompt,
     userPrompt,
   });
-
   return result;
 }
