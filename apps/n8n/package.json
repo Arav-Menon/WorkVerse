@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "axios": "^1.14.0"
+    "axios": "^1.14.0",
+    "@repo/redis": "*"
   }
 }
