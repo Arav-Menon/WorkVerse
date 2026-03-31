@@ -98,12 +98,11 @@
         "typescript": "^5",
       },
     },
-    "apps/synapse": {
-      "name": "synapse",
+    "apps/n8n": {
+      "name": "n8n",
       "dependencies": {
         "@repo/redis": "*",
-        "@types/ws": "^8.18.1",
-        "ws": "^8.19.0",
+        "axios": "^1.14.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -112,10 +111,12 @@
         "typescript": "^5",
       },
     },
-    "apps/test-n8n": {
-      "name": "n8n",
+    "apps/synapse": {
+      "name": "synapse",
       "dependencies": {
-        "axios": "^1.14.0",
+        "@repo/redis": "*",
+        "@types/ws": "^8.18.1",
+        "ws": "^8.19.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -1058,7 +1059,7 @@
 
     "mysql2": ["mysql2@3.15.3", "", { "dependencies": { "aws-ssl-profiles": "^1.1.1", "denque": "^2.1.0", "generate-function": "^2.3.1", "iconv-lite": "^0.7.0", "long": "^5.2.1", "lru.min": "^1.0.0", "named-placeholders": "^1.1.3", "seq-queue": "^0.0.5", "sqlstring": "^2.3.2" } }, "sha512-FBrGau0IXmuqg4haEZRBfHNWB5mUARw6hNwPDXXGg0XzVJ50mr/9hb267lvpVMnhZ1FON3qNd4Xfcez1rbFwSg=="],
 
-    "n8n": ["n8n@workspace:apps/test-n8n"],
+    "n8n": ["n8n@workspace:apps/n8n"],
 
     "named-placeholders": ["named-placeholders@1.1.6", "", { "dependencies": { "lru.min": "^1.1.0" } }, "sha512-Tz09sEL2EEuv5fFowm419c1+a/jSMiBjI9gHxVLrVdbUkkNUUfjsVYs9pVZu5oCon/kmRh9TfLEObFtkVxmY0w=="],
 
