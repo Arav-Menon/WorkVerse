@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@repo/redis": "*",
-  "@repo/evaluator": "*"
+    "@repo/evaluator": "*"
   },
   "peerDependencies": {
     "typescript": "^5"
