@@ -1,0 +1,1 @@
+export const N8N_URL = "http://localhost:5678/api/v1/workflows";
