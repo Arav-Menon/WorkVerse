@@ -3,6 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "n8n:start" : "bun /src/workflow.forger.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
