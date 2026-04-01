@@ -24,7 +24,7 @@ while (true) {
       userPrompt,
     });
 
-    if (parsed?.type === "workflow") {
+    if (parsed) {
       await pushUserWorkflowJob({
         userId,
         parsed: JSON.stringify(parsed),
