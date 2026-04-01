@@ -1,24 +1,33 @@
 import axios from "axios";
+import { extractJson, validateWorkflowJson } from "../utils/config";
+
+export interface ProcessAiParams {
+  systemPrompt: string;
+  userPrompt: string;
+}
+
 export const processWithAi = async ({
-  userId,
-  organizationId,
-  workspaceId,
   systemPrompt,
   userPrompt,
-}: any) => {
+}: ProcessAiParams): Promise<any | undefined> => {
   try {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "arcee-ai/trinity-large-preview:free",
-        message: [
-          { role: "system", content: systemPrompt },
+        messages: [
+          {
+            role: "system",
+            content:
+              systemPrompt +
+              "\n\nDo NOT wrap JSON in markdown. Return raw JSON only.",
+          },
           { role: "user", content: userPrompt },
         ],
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer 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`,
           "Content-Type": "application/json",
           "HTTP-Referer": "http://localhost:4000",
           "X-Title": "DevForces Evaluator",
@@ -27,6 +36,28 @@ export const processWithAi = async ({
     );
 
     const result = response.data.choices[0].message.content;
-    console.log(result);
-  } catch (err) {}
+
+    console.log(result)
+
+    let parsed;
+    try {
+      const cleaned = extractJson(result);
+      parsed = JSON.parse(cleaned);
+    } catch (err) {
+      console.error("JSON parse failed:", result);
+      return undefined;
+    }
+
+    try {
+      validateWorkflowJson(parsed);
+    } catch (err) {
+      console.error("Validation failed:", err);
+      return undefined;
+    }
+
+    return parsed;
+  } catch (err) {
+    console.error("LLM request failed:", err);
+    return undefined;
+  }
 };
