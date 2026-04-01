@@ -1,6 +1,15 @@
-import { type UserInboundPrompt } from "@repo/schemas";
-import { pushToStream, type PushResult } from "../utils/redis.helper";
-import { pullSubmissionPrompt, type PullResult } from "../utils/redis.helper";
+import {
+  type UserInboundPrompt,
+  type UserWorkflowJobBody,
+} from "@repo/schemas";
+import {
+  pushToStream,
+  pushToWorkflow,
+  pullSubmissionPrompt,
+  pullWorkflowJSON,
+  type PushResult,
+  type PullResult,
+} from "../utils/redis.helper";
 
 export const pushUserInboundPrompt = async (
   data: UserInboundPrompt,
@@ -10,4 +19,14 @@ export const pushUserInboundPrompt = async (
 
 export const pullUserInboundPrompt = async (): Promise<PullResult> => {
   return await pullSubmissionPrompt();
+};
+
+export const pushUserWorkflowJob = async (
+  data: UserWorkflowJobBody,
+): Promise<PushResult> => {
+  return await pushToWorkflow(data);
+};
+
+export const pullUserWorkflowJob = async (): Promise<PullResult> => {
+  return await pullWorkflowJSON();
 };
