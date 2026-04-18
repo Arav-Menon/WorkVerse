@@ -297,7 +297,7 @@ workverse/
 
 - Node.js 20+
 - Docker & Docker Compose
-- pnpm (`npm install -g pnpm`)
+- bun (`npm install -g bun`)
 
 ### Installation
 
@@ -307,7 +307,7 @@ git clone https://github.com/your-org/workverse.git
 cd workverse
 
 # Install all dependencies (Turborepo handles all apps)
-pnpm install
+bun install
 
 # Copy environment variables
 cp .env.example .env
@@ -316,7 +316,7 @@ cp .env.example .env
 docker-compose up -d
 
 # Run the development servers
-pnpm dev
+bun dev
 ```
 
 ### Environment Variables
