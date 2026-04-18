@@ -66,6 +66,8 @@ export class ChatServer {
       try {
         const message = data.toString();
         this.redisManager.publish(roomId, message);
+
+
       } catch (error) {
         console.error("Error processing message:", error);
       }
