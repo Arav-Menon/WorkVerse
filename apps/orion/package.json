@@ -8,5 +8,12 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "fastify": "^5.8.5",
+    "@repo/schemas": "*",
+    "@repo/redis": "*",
+    "fastify-plugin": "^5.1.0"
+
   }
 }

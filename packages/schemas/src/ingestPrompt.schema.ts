@@ -6,6 +6,7 @@ export const ingestPromptSchema = z.object({
   workspaceId: z.string(),
   systemPrompt: z.string(),
   userPrompt: z.string(),
+  promptId: z.string(),
 });
 
 export const UserInboundPromptSchema = z.object({
