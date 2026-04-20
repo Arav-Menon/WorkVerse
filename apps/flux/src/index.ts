@@ -30,7 +30,7 @@ wss.on("connection", (socket: WebSocket) => {
         },
       );
 
-      console.log(response);
+      console.log("Prompt recived")
 
       socket.send(JSON.stringify(response.data));
     } catch (err) {
