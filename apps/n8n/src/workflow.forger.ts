@@ -8,6 +8,8 @@ while (true) {
   try {
     const workflowJob = (await pullUserWorkflowJob()) as any;
 
+    console.log(workflowJob)
+
     if (!workflowJob?.success || !workflowJob?.response || workflowJob.response.length === 0) {
       continue;
     }
