@@ -3,6 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start:orion" : "bun /src/server.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -10,10 +13,10 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "fastify": "^5.8.5",
-    "@repo/schemas": "*",
+    "@fastify/type-provider-zod": "^1.0.0",
     "@repo/redis": "*",
+    "@repo/schemas": "*",
+    "fastify": "^5.8.5",
     "fastify-plugin": "^5.1.0"
-
   }
 }
