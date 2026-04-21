@@ -4,6 +4,11 @@ const NODE_TYPE_MAP: Record<string, string> = {
   set: "n8n-nodes-base.set",
   if: "n8n-nodes-base.if",
   respondToWebhook: "n8n-nodes-base.respondToWebhook",
+  function: "n8n-nodes-base.function",
+  code: "n8n-nodes-base.code",
+  noOp: "n8n-nodes-base.noOp",
+  merge: "n8n-nodes-base.merge",
+  switch: "n8n-nodes-base.switch",
 };
 
 export function mapWorkFlowData(data: any) {
