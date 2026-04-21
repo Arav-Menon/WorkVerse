@@ -1,7 +1,7 @@
 import type { ingestPromptBody } from "@repo/schemas";
 import { type FastifyInstance } from "fastify";
 
-export async function registerIngestPrompt(
+export async function registerIngestPromptService(
   fastify: FastifyInstance,
   input: ingestPromptBody,
 ): Promise<{
@@ -10,7 +10,7 @@ export async function registerIngestPrompt(
   statusCode?: number;
   message?: string;
   error?: any;
-  jobStatus?: string;
+  jobStatus?: object;
 }> {
   const {
     workspaceId,
@@ -22,7 +22,8 @@ export async function registerIngestPrompt(
   } = input;
 
   try {
-    const result = await fastify.redisProducer.pushUserInboundPrompt({
+
+    await fastify.redisProducer.pushUserInboundPrompt({
       promptId,
       userId,
       organizationId,
@@ -43,19 +44,22 @@ export async function registerIngestPrompt(
 
     await fastify.cache.set(
       `promptId:${promptId}`,
-      JSON.stringify(jobStatusPayload), { EX: 1000 });
+      JSON.stringify(jobStatusPayload),
+      { EX: 1000 },
+    );
 
     return {
       success: true,
       id: promptId,
-      jobStatus: JSON.stringify(jobStatusPayload),
+      jobStatus: jobStatusPayload,
     };
   } catch (error: any) {
+    console.log(error);
     return {
       success: false,
       statusCode: error.statusCode,
       message: "Failed to send prompt in queue",
-      error,
+      error: error,
     };
   }
 }
