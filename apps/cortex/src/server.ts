@@ -19,7 +19,7 @@ const fastify = Fastify({
   },
 });
 
-import { authJsonSchemas } from "./validationSchemas";
+import { authJsonSchemas } from "../src/validationSchemas";
 import workspaceRoutes from "./routes/workspace/workspace.routes";
 import organizationInviteLinkRoutes from "./routes/organization_invite/organization.inviteLink.routes";
 import organizationAcceptInviteRoutes from "./routes/organization_invite/organization.acceptInvite.routes";
