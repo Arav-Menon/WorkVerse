@@ -115,6 +115,7 @@
     "apps/orion": {
       "name": "orion",
       "dependencies": {
+        "@fastify/type-provider-zod": "^1.0.0",
         "@repo/redis": "*",
         "@repo/schemas": "*",
         "fastify": "^5.8.5",
@@ -362,6 +363,8 @@
     "@fastify/swagger": ["@fastify/swagger@8.15.0", "", { "dependencies": { "fastify-plugin": "^4.0.0", "json-schema-resolver": "^2.0.0", "openapi-types": "^12.0.0", "rfdc": "^1.3.0", "yaml": "^2.2.2" } }, "sha512-zy+HEEKFqPMS2sFUsQU5X0MHplhKJvWeohBwTCkBAJA/GDYGLGUWQaETEhptiqxK7Hs0fQB9B4MDb3pbwIiCwA=="],
 
     "@fastify/swagger-ui": ["@fastify/swagger-ui@1.10.2", "", { "dependencies": { "@fastify/static": "^6.0.0", "fastify-plugin": "^4.0.0", "openapi-types": "^12.0.2", "rfdc": "^1.3.0", "yaml": "^2.2.2" } }, "sha512-f2mRqtblm6eRAFQ3e8zSngxVNEtiYY7rISKQVjPA++ZsWc5WYlPVTb6Bx0G/zy0BIoucNqDr/Q2Vb/kTYkOq1A=="],
+
+    "@fastify/type-provider-zod": ["@fastify/type-provider-zod@1.0.0", "", { "dependencies": { "@fastify/error": "^4.2.0" }, "peerDependencies": { "@fastify/swagger": ">=9.5.1", "fastify": "^5.5.0", "openapi-types": "^12.1.3", "zod": ">=4.2.0" } }, "sha512-X4QIFR0ZMiULemfXItp/FIMSfD0V8qeZ9HkUGyL7HEysuHoMsHyM69OIFhmIICSaZ+l1/V0D3FLNmaKwxQtsMw=="],
 
     "@hono/node-server": ["@hono/node-server@1.19.9", "", { "peerDependencies": { "hono": "^4" } }, "sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw=="],
 
@@ -1500,6 +1503,8 @@
     "@fastify/swagger/fastify-plugin": ["fastify-plugin@4.5.1", "", {}, "sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ=="],
 
     "@fastify/swagger-ui/fastify-plugin": ["fastify-plugin@4.5.1", "", {}, "sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ=="],
+
+    "@fastify/type-provider-zod/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "@prisma/adapter-pg/@types/pg": ["@types/pg@8.11.11", "", { "dependencies": { "@types/node": "*", "pg-protocol": "*", "pg-types": "^4.0.1" } }, "sha512-kGT1qKM8wJQ5qlawUrEkXgvMSXoV213KfMGXcwfDwUIfUHXqXYXOfS1nE1LINRJVVVx5wCm70XnFlMHaIcQAfw=="],
 
