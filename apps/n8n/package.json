@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "n8n:start" : "bun /src/workflow.forger.ts"
+    "start:n8n" : "bun /src/workflow.forger.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
