@@ -1,1 +1,1 @@
-export const API_URL = "http://localhost:3002/api/v1/ingest-orion"
+export const API_URL = "http://localhost:3002/api/v1/orion/execute"
