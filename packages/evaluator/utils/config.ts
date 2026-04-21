@@ -11,13 +11,28 @@ export function extractJson(text: string): string {
 }
 
 export function validateWorkflowJson(data: any) {
-  if (
-    !data ||
-    typeof data !== "object" ||
-    !Array.isArray(data.nodes) ||
-    typeof data.connections !== "object"
-  ) {
-    throw new Error("Invalid workflow structure");
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid workflow structure: Data is not an object");
+  }
+
+  // Handle AI using 'node' instead of 'nodes'
+  if (!data.nodes && data.node) {
+    data.nodes = data.node;
+  }
+
+  // Default connections to empty object if missing
+  if (!data.connections) {
+    data.connections = {};
+  }
+
+  if (!Array.isArray(data.nodes)) {
+    console.error("[Evaluator] Validation failed: 'nodes' is not an array", data);
+    throw new Error("Invalid workflow structure: 'nodes' must be an array");
+  }
+
+  if (typeof data.connections !== "object" || Array.isArray(data.connections)) {
+    console.error("[Evaluator] Validation failed: 'connections' is not an object", data);
+    throw new Error("Invalid workflow structure: 'connections' must be an object");
   }
 
   const nodeNames = new Set(data.nodes.map((n: any) => n.name));
