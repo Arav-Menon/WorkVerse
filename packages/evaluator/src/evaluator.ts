@@ -14,7 +14,7 @@ export const processWithAi = async ({
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "arcee-ai/trinity-large-preview:free",
+        model: "inclusionai/ling-2.6-flash:free",
         messages: [
           {
             role: "system",
@@ -27,7 +27,7 @@ export const processWithAi = async ({
       },
       {
         headers: {
-          Authorization: `Bearer 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`,
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY} `,
           "Content-Type": "application/json",
           "HTTP-Referer": "http://localhost:4000",
           "X-Title": "DevForces Evaluator",
