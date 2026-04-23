@@ -5,6 +5,8 @@ interface N8nWorkflowResponse {
   name: string;
 }
 
+
+
 export async function createWorkflow(
   workflowJson: object,
 ): Promise<N8nWorkflowResponse> {
@@ -14,8 +16,8 @@ export async function createWorkflow(
       workflowJson,
       {
         headers: {
-          "Content-Type": "application/json",
-          "X-N8N-API-KEY": process.env.N8N_API_KEY
+          "accept": "application/json",
+          "X-N8N-API-KEY": `${process.env.N8N_API_KEY}`,
         },
       },
     );
