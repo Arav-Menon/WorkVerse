@@ -5,8 +5,6 @@ interface N8nWorkflowResponse {
   name: string;
 }
 
-
-
 export async function createWorkflow(
   workflowJson: object,
 ): Promise<N8nWorkflowResponse> {
