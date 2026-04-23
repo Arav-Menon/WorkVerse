@@ -23,6 +23,6 @@ export async function createWorkflow(
     return response.data;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message;
-    throw new Error(`Failed to create n8n workflow: ${errorMessage}`);
+    throw new Error(`Failed to create n8n workflow: ${errorMessage} statuscode : ${errorMessage.statuscode}`);
   }
 }
