@@ -10,10 +10,6 @@ const fastify = Fastify({
     },
   },
 });
-
-
-
-
 fastify.register(cachePlugin);
 fastify.register(producerPlugin);
 
