@@ -1,0 +1,18 @@
+{
+    "servers": {
+        "workVerse-mcp-server": {
+            "type": "stdio",
+            "command": "workVerse-mcp-server",
+            "args": [],
+            "cwd": "/home/arav-menon/Projects/workVerse",
+            "dev": {
+                "watch": ["src/**/*.ts"],
+                "shell": true
+            },
+            "env": {
+                "NODE_ENV": "development"
+            }
+        }
+    },
+    "inputs": []
+}
