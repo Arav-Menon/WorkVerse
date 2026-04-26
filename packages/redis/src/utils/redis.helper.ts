@@ -1,5 +1,9 @@
 import { client } from "../config";
-import { USER_INBOUND_PROMPT_STREAM, USER_WORKFLOW_JOB_STREAM } from "./stream";
+import {
+  USER_COMMS_JOB_STREAM,
+  USER_INBOUND_PROMPT_STREAM,
+  USER_WORKFLOW_JOB_STREAM,
+} from "./stream";
 import os from "os";
 
 const DEFAULT_MAX_STREAM_LENGTH = 10000;
@@ -9,12 +13,14 @@ export type PushResult = {
   success: boolean;
   id?: string;
   error?: string;
+  statusCode?: number;
 };
 
 export type PullResult = {
   success: boolean;
   response?: any;
   error?: string;
+  statusCode?: number;
 };
 
 export const pushToStream = async (
@@ -31,7 +37,7 @@ export const pushToStream = async (
     });
 
     return { success: true, id: messageId };
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       `[Redis Helper] Failed to push to stream "${USER_INBOUND_PROMPT_STREAM}":`,
       error,
@@ -40,6 +46,7 @@ export const pushToStream = async (
       success: false,
       error:
         error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
     };
   }
 };
@@ -58,7 +65,7 @@ export const pushToWorkflow = async (
     });
 
     return { success: true, id: messageId };
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       `[Redis Helper] Failed to push to stream "${USER_WORKFLOW_JOB_STREAM}":`,
       error,
@@ -67,6 +74,7 @@ export const pushToWorkflow = async (
       success: false,
       error:
         error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
     };
   }
 };
@@ -89,14 +97,16 @@ export const pullSubmissionPrompt = async (
     );
 
     return { success: true, response: response };
-  } catch (err) {
+  } catch (error: any) {
     console.error(
       `[Redis Helper] Failed to pull from stream "${USER_INBOUND_PROMPT_STREAM}":`,
-      err,
+      error,
     );
     return {
       success: false,
-      error: err instanceof Error ? err.message : "An unknown error occurred",
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
     };
   }
 };
@@ -114,7 +124,7 @@ export const pullWorkflowJSON = async (
     );
 
     return { success: true, response: response };
-  } catch (err) {
+  } catch (err: any) {
     console.error(
       `[Redis Helper] Failed to pull from stream "${USER_WORKFLOW_JOB_STREAM}":`,
       err,
@@ -122,6 +132,26 @@ export const pullWorkflowJSON = async (
     return {
       success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
+      statusCode: err.statusCode,
+    };
+  }
+};
+
+export const pushCommsStream = async (
+  data: Record<string, any>,
+  maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
+): Promise<PushResult> => {
+  try {
+    const messageId = await client.xAdd(USER_COMMS_JOB_STREAM, "*", data, {
+      TRIM: { strategy: "MAXLEN", strategyModifier: "~", threshold: maxLen },
+    });
+
+    return { success: true, id: messageId };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+      statusCode: err.statusCode,
     };
   }
 };
