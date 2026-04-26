@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@repo/mcp": "*"
+    "@repo/mcp": "*",
+    "zod": "^4.3.6",
+    "@repo/redis" : "*"
   }
 }
