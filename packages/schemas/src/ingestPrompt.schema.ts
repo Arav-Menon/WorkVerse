@@ -24,6 +24,13 @@ export const UserWorkflowJobSchema = z.object({
   organizationId: z.string(),
   workspaceId: z.string(),
 });
+export const UserCommsJobSchema = z.object({
+  userId: z.string(),
+  parsed: z.any(),
+  prompt : z.string(),
+  organizationId: z.string(),
+  workspaceId: z.string(),
+});
 
 export type ingestPromptBody = z.infer<typeof ingestPromptSchema>;
 export type UserInboundPrompt = z.infer<typeof UserInboundPromptSchema>;
