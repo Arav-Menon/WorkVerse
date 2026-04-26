@@ -9,6 +9,7 @@ import {
   pullWorkflowJSON,
   type PushResult,
   type PullResult,
+  pushCommsStream,
 } from "../utils/redis.helper";
 
 export const pushUserInboundPrompt = async (
@@ -30,3 +31,6 @@ export const pushUserWorkflowJob = async (
 export const pullUserWorkflowJob = async (): Promise<PullResult> => {
   return await pullWorkflowJSON();
 };
+export const pushToUserCommsStream = async (data: Us) : Promise<PushResult> {
+  return await pushCommsStream(data)
+}
