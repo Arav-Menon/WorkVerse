@@ -142,12 +142,50 @@ export const pushCommsStream = async (
   maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
 ): Promise<PushResult> => {
   try {
-    const messageId = await client.xAdd(USER_COMMS_JOB_STREAM, "*", data, {
+    const normalizedData: Record<string, string> = Object.entries(data).reduce(
+      (acc, [key, value]) => {
+        acc[key] = typeof value === "string" ? value : JSON.stringify(value);
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    const messageId = await client.xAdd(USER_COMMS_JOB_STREAM, "*", normalizedData, {
       TRIM: { strategy: "MAXLEN", strategyModifier: "~", threshold: maxLen },
     });
 
     return { success: true, id: messageId };
   } catch (err: any) {
+    console.error(
+      `[Redis Helper] Failed to push to stream "${USER_COMMS_JOB_STREAM}":`,
+      err,
+    );
+
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+      statusCode: err.statusCode,
+    };
+  }
+};
+
+export const pullCommsStream = async (
+  group = "comms-worker-group",
+  consumer = WORKER_ID,
+): Promise<PullResult> => {
+  try {
+    const response = await client.xReadGroup(
+      group,
+      consumer,
+      [{ key: USER_COMMS_JOB_STREAM, id: ">" }],
+      { COUNT: 1, BLOCK: 5000 },
+    );
+    return { success: true, response: response };
+  } catch (err: any) {
+    console.error(
+      `[Redis Helper] Failed to pull from stream "${USER_COMMS_JOB_STREAM}":`,
+      err,
+    );
     return {
       success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
