@@ -1,6 +1,8 @@
 import { server } from "@repo/mcp/mcp";
 import { z } from "zod"
-const registerSlackTool = async () => {
+
+
+export const slack_tool = async () => {
   server.tool(
     "add-two-number",
     "Add two numbers togther",
