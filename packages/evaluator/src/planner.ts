@@ -1,6 +1,5 @@
 import { OpenRouter } from "@openrouter/sdk";
 import { aiSystemPrompt } from "../utils/systemPrompt";
-import { CostDetails$inboundSchema } from "@openrouter/sdk/models";
 
 const openrouter = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
@@ -20,4 +19,5 @@ export async function processWithAi(prompt: string) {
   });
 
   console.log(stream);
+  return stream
 }
