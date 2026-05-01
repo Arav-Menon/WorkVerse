@@ -7,14 +7,7 @@ export async function createIngestPromptController(
   reply: FastifyReply,
 ) {
   try {
-    const userId = request.user?.userId;
-
-    if (!userId) {
-      return reply.status(401).send({
-        error: "Unauthorized",
-        message: "User not found in request. Missing Middleware? ",
-      });
-    }
+    const userId = request.user?.userId || "guest-user";
 
     const ingestPrompt = await registerIngestPrompt(
       request.server,
