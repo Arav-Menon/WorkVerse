@@ -1,9 +1,19 @@
-import { createCommsWorker } from "../core";
-import { commsTool } from "../tools/comms";
+import { createCategoryWorker } from "../core/workerFactory";
+import { startWorkerWithQueue } from "../core/queueIntegration";
+import { commsTools } from "../tools/comms";
 
-const worker = await createCommsWorker(commsTool)
+// Mock job queue for now (workerFactory needs it, but startWorkerWithQueue creates its own connection)
+const mockJobQueue: AsyncIterableIterator<any> = {
+  next: async () => ({ value: null, done: false }),
+  [Symbol.asyncIterator]: function() { return this; }
+};
 
-console.log("Worker started")
-console.log(JSON.stringify(worker))
+async function main() {
+  const context = await createCategoryWorker("comms", commsTools, mockJobQueue);
+  
+  console.log("Comms Worker Initialized. Starting queue processing...");
+  
+  await startWorkerWithQueue(context);
+}
 
-worker()
+main().catch(console.error);
