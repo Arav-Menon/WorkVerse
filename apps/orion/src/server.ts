@@ -3,6 +3,7 @@ import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
 import { ingestRoutes } from "./routes/ingest.routes";
 import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
+import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
 
 const fastify = Fastify({
   logger: {
@@ -20,19 +21,25 @@ fastify.register(ingestRoutes, { prefix: "/api/v1/orion" });
 
 fastify.register(async (fastify) => {
   await setupToolRoutes(fastify);
+  await setupMcpSseRoutes(fastify);
 });
 
 fastify.post("/api/v1/orion/admin/register-tool", async (request, reply) => {
   const tool = request.body as any;
-  toolRegistry.registerTool({
-    id: tool.id || `${tool.category}-${tool.name}`,
+  const toolId = tool.id || `${tool.category}-${tool.name}`;
+  const toolMetadata = {
+    id: toolId,
     name: tool.name,
     category: tool.category,
     description: tool.description,
     workerId: tool.workerId,
     inputSchema: tool.inputSchema || {},
-  });
-  return { ok: true, toolId: tool.id };
+  };
+
+  toolRegistry.registerTool(toolMetadata);
+  registerToolToBridge(toolMetadata);
+
+  return { ok: true, toolId };
 });
 
 fastify.listen(
