@@ -25,6 +25,7 @@
     "@repo/redis": "*",
     "@repo/schemas": "*",
     "@repo/mcp": "*",
+    "@repo/evaluator": "*",
     "axios": "^1.15.1",
     "fastify": "^5.8.2",
     "fastify-plugin": "^5.1.0",
