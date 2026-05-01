@@ -23,6 +23,7 @@
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@openrouter/sdk": "^0.12.24",
         "@repo/db": "*",
+        "@repo/evaluator": "*",
         "@repo/mcp": "*",
         "@repo/queue": "*",
         "@repo/redis": "*",
@@ -122,6 +123,7 @@
       "name": "orion",
       "dependencies": {
         "@fastify/type-provider-zod": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.29.0",
         "@repo/mcp": "*",
         "@repo/redis": "*",
         "@repo/schemas": "*",
