@@ -4,7 +4,10 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./mcp": "./index.ts"
+    ".": "./index.ts",
+    "./mcp": "./index.ts",
+    "./distributed": "./src/distributed.ts",
+    "./queue": "./src/queue.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -13,6 +16,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@repo/redis": "*"
   }
+
 }
