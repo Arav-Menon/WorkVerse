@@ -3,7 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "devDependencies": {
+  "scripts": {
+    "start:comms-worker": "bun ./src/workers/comms.worker.ts"
+  },
     "@types/bun": "latest"
   },
   "peerDependencies": {
