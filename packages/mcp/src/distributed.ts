@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 export interface WorkerConfig {
   category: string;
@@ -27,7 +27,7 @@ export async function startMCPServer(server: McpServer) {
   return { server, transport };
 }
 
-export interface ToolRegistry {
+export interface DistributedToolRegistry {
   categoryName: string;
   workerId: string;
   tools: Map<string, ToolDefinition>;
@@ -40,7 +40,7 @@ export interface ToolDefinition {
   execute: Function;
 }
 
-export function createToolRegistry(category: string, workerId: string): ToolRegistry {
+export function createToolRegistry(category: string, workerId: string): DistributedToolRegistry {
   return {
     categoryName: category,
     workerId: workerId,
