@@ -1,5 +1,5 @@
-import { slack_tool } from "./slack.tools"
+import { slackTools } from "./slack.tools"
 
-export const commsTool = {
-    slack_tool
+export const commsTools = {
+    ...slackTools
 }
