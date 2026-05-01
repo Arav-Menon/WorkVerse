@@ -1,9 +1,6 @@
-/**
- * Tool Manager - Maintains registry of all available tools
- * This runs in ORION and coordinates with executor workers
- */
-
 import type { FastifyInstance } from "fastify";
+import { queueToolExecution, getToolResult } from "@repo/mcp";
+import os from "os";
 
 export interface ToolMetadata {
   id: string;
@@ -14,9 +11,6 @@ export interface ToolMetadata {
   inputSchema: Record<string, any>;
 }
 
-/**
- * Tool registry that tracks which tools run on which workers
- */
 export class ToolRegistry {
   private tools: Map<string, ToolMetadata> = new Map();
   private toolsByCategory: Map<string, ToolMetadata[]> = new Map();
@@ -24,13 +18,13 @@ export class ToolRegistry {
 
   registerTool(tool: ToolMetadata) {
     this.tools.set(tool.id, tool);
-    
+
     // Index by category
     if (!this.toolsByCategory.has(tool.category)) {
       this.toolsByCategory.set(tool.category, []);
     }
     this.toolsByCategory.get(tool.category)?.push(tool);
-    
+
     // Index by worker
     if (!this.toolsByWorker.has(tool.workerId)) {
       this.toolsByWorker.set(tool.workerId, []);
@@ -94,8 +88,21 @@ export async function setupToolRoutes(fastify: FastifyInstance) {
     }
 
     // Push job to queue for the appropriate worker
-    // const result = await pushJobToQueue(tool.category, { toolId, input });
-    
-    return { status: "queued", toolId, workerId: tool.workerId };
+    const correlationId = `corr:${Date.now()}:${os.hostname()}`;
+    const jobId = await queueToolExecution(tool.id, tool.category, input, correlationId);
+
+    return { status: "queued", jobId, correlationId, toolId, workerId: tool.workerId };
+  });
+
+  // Polling route for results
+  fastify.get("/api/v1/orion/results/:correlationId", async (request, reply) => {
+    const { correlationId } = request.params as { correlationId: string };
+    const result = await getToolResult(correlationId);
+
+    if (!result) {
+      return reply.status(202).send({ status: "pending" });
+    }
+
+    return result;
   });
 }
