@@ -1,0 +1,1 @@
+export const JOIN_SPACE = "JOIN_WORKSPACE"
