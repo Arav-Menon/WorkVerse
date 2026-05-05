@@ -8,10 +8,32 @@ export class RedisManager {
     }
 
     async init() {
-        await this.subClient.on("error", (err: any) =>
+        this.subClient.on("error", (err: any) =>
             console.log("Redis Sub Client Error", err),
-        )
-        await this.subClient.connect();
-        console.log("Redis sub client is connected")
+        );
+        this.pubClient.on("error", (err: any) =>
+            console.log("Redis Pub Client Error", err),
+        );
+
+        await Promise.all([
+            this.subClient.connect(),
+            this.pubClient.connect()
+        ]);
+
+        console.log("Redis Pub and Sub clients are connected");
+    }
+    async subscribe(channel: string, callback: (message: string) => void) {
+        if (!this.subClient.isOpen) {
+            await this.subClient.connect();
+        }
+        await this.subClient.subscribe(channel, callback);
+    }
+
+    async publish(channel: string, message: any) {
+        if (!this.pubClient.isOpen) {
+            await this.pubClient.connect();
+        }
+        const payload = typeof message === "string" ? message : JSON.stringify(message);
+        await this.pubClient.publish(channel, payload);
     }
 }
