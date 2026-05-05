@@ -1,28 +1,19 @@
-import { STATUS_CODES } from "http";
 import jwt from "jsonwebtoken";
 
 export const authenticate = (token: string) => {
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+  try {
+    const cleanToken = token.startsWith("Bearer ")
+      ? token.split(" ")[1]
+      : token;
 
-        if (!decoded) return Error("Unauthorized", STATUS_CODES)
+    const decoded = jwt.verify(cleanToken as string, process.env.JWT_SECRET!);
+    console.log("Decoded Token:", decoded);
 
-        return decoded;
-    } catch (err) {
-        console.error("[Auth Middleware] Verification failed:", err);
-        return null;
-    }
-};
+    if (!decoded) return null;
 
-export const userId = (token: string) => {
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-
-        if (!decoded) return Error("Unauthorized", STATUS_CODES)
-
-        return decoded;
-    } catch (err) {
-        console.error("[Auth Middleware] Verification failed:", err);
-        return null;
-    }
+    return decoded;
+  } catch (err) {
+    console.error("[Auth Middleware] Verification failed:", err);
+    return null;
+  }
 };
