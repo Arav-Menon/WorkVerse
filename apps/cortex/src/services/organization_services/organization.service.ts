@@ -20,10 +20,24 @@ export async function registerOrganisation(
       message: "An Organization with this slug already exists",
     };
 
-  const organization = await fastify.db.organization.create({
-    data: { name, slug, createdById: userId },
-    select: { id: true, name: true, slug: true, createdById: true },
-  });
+  const organization = await fastify.db.$transaction(async (tx) => {
+    const organization = await tx.organization.create({
+      data: { name, slug, createdById: userId },
+      select: { id: true, name: true, slug: true, createdById: true },
+    });
+
+    await tx.organizationMember.create({
+      data: {
+        organizationId: organization.id,
+        userId: userId,
+        role: "ADMIN",
+      },
+    })
+
+    return organization;
+  })
+
+  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(organization.id))
 
   return organization;
 }

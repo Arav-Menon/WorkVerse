@@ -28,8 +28,6 @@ export async function registerAcceptInviteService(
       throw { statusCode: validation.statusCode, message: validation.message };
   }
 
-  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(invite?.organizationId))
-
   await fastify.db.$transaction(async (tx) => {
     await tx.organizationMember.create({
       data: {
@@ -44,6 +42,8 @@ export async function registerAcceptInviteService(
       data: { status: "ACCEPTED" },
     });
   });
+
+  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(invite?.organizationId))
 
   return { message: "Joined organization" };
 }
