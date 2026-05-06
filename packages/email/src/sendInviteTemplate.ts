@@ -1,11 +1,11 @@
 export function InviteEmailTemplate({
-    name,
-    inviteLink,
+  name,
+  inviteLink,
 }: {
-    name: string;
-    inviteLink: string;
+  name: string;
+  inviteLink: string;
 }) {
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="en">
     <head>

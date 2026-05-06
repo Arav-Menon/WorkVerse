@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage } from "http";
 import { spaceManager } from "./services/space-manager";
 import { authenticate } from "./middleware/verify";
-import { JOIN_SPACE, MOVE } from "../config/config";
+import { CHAT, JOIN_SPACE, MOVE } from "../config/config";
 import { RedisManager } from "./services/redis-manager";
 
 export class workspaceServer {
@@ -69,25 +69,30 @@ export class workspaceServer {
     socket.on("pong", () => {
       (socket as any).isAlive = true;
     });
-    socket.on("message", (data: any) => {
+    socket.on("message", async (data: any) => {
       try {
         const message = JSON.parse(data.toString());
         if (message.type == JOIN_SPACE) {
-          this.spaceManager.addClient(
-            workspaceId,
-            socket,
-            userId,
-            organizationId,
-          );
+          console.log(`[Arena] User ${userId} attempting to join workspace: ${workspaceId}`);
 
           if (!this.subscribedChannels.has(workspaceId)) {
+            console.log(`[Arena] Subscribing to Redis channel: space:${workspaceId}`);
             this.redisManager.subscribe(`space:${workspaceId}`, (redisMsg) => {
               this.spaceManager.broadcastLocal(workspaceId, redisMsg);
             });
             this.subscribedChannels.add(workspaceId);
           }
 
+          await this.spaceManager.addClient(
+            workspaceId,
+            socket,
+            userId,
+            organizationId,
+          );
+
           const roomCount = this.spaceManager.activeUsers(workspaceId);
+          console.log(`[Arena] Active users in ${workspaceId}: ${roomCount}`);
+
           socket.send(
             JSON.stringify({
               type: "INFO",
@@ -99,10 +104,21 @@ export class workspaceServer {
 
         if (message.type == MOVE) {
           const { x, y } = message.payload || {};
+          console.log(`user ,moves X: ${x} Y : ${y}`)
           if (typeof x === "number" && typeof y === "number") {
             this.spaceManager.moveClient(workspaceId, userId, { x, y });
           }
         }
+
+        if (message.type == CHAT) {
+          const { chatMessage } = message.payload || {}
+          console.log(`Message recieved : ${chatMessage} `);
+          if (typeof chatMessage == "string") {
+            this.spaceManager.chatMessage(workspaceId, userId, chatMessage)
+          }
+        }
+
+
       } catch (error: any) {
         console.error("Failed to parse message", error);
         socket.send(

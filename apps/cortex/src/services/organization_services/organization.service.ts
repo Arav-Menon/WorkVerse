@@ -4,7 +4,7 @@ import type { RegisterOrganizationBody } from "@repo/schemas";
 export async function registerOrganisation(
   fastify: FastifyInstance,
   input: RegisterOrganizationBody,
-  userId: string,
+  userId: string
 ): Promise<{ id: string; name: string; slug: string; createdById: string }> {
   const { name, slug } = input;
 

@@ -2,6 +2,7 @@ import { WebSocket } from "ws";
 import { client } from "@repo/redis";
 import { RedisManager } from "./redis-manager";
 import { db } from "@repo/db/db"
+import { timeStamp } from "node:console";
 
 export class spaceManager {
     private workspace: Map<string, Set<WebSocket>> = new Map();
@@ -61,16 +62,23 @@ export class spaceManager {
                 position: initialPosition
             });
 
-            const allUsersRaw = await client.hGetAll(`space:${workSpaceId}:users`);
+            const [allUsersRaw, historyRaw] = await Promise.all([
+                client.hGetAll(`space:${workSpaceId}:users`),
+                client.lRange(`space:${workSpaceId}:chat`, 0, -1)
+            ]);
+
             const users: Record<string, any> = {};
             for (const [id, data] of Object.entries(allUsersRaw)) {
                 users[id] = JSON.parse(data);
             }
 
+            const chatHistory = historyRaw.map(m => JSON.parse(m));
+
             socket.send(JSON.stringify({
                 type: "SPACE_JOINED",
                 message: `Joined workspace: ${workSpaceId}`,
-                users
+                users,
+                chatHistory
             }));
 
         } catch (error: any) {
@@ -86,6 +94,30 @@ export class spaceManager {
             type: "MOVE",
             userId,
             position
+        });
+    }
+
+    async chatMessage(workSpaceId: string, userId: string, chatMessage: string) {
+        const timestamp = Date.now();
+        const data = {
+            workSpaceId,
+            userId,
+            chatMessage,
+            timestamp
+        };
+
+        // 1. Hot History (Capped at last 50 messages for this specific room)
+        // Using rPush/lTrim to keep a rolling window of recent history
+        await client.rPush(`space:${workSpaceId}:chat`, JSON.stringify(data));
+        await client.lTrim(`space:${workSpaceId}:chat`, -50, -1);
+
+        // 2. Persistence Queue (Global queue for the background worker to dump into Postgres)
+        await client.lPush("chat_persistence_queue", JSON.stringify(data));
+
+        // 3. Real-time Broadcast to all server instances
+        await this.redisManager.publish(`space:${workSpaceId}`, {
+            type: "CHAT",
+            ...data
         });
     }
 
