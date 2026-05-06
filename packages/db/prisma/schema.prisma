@@ -53,6 +53,7 @@ model User {
   organization        Organization[]
   workspace           Workspace[]
   organizationInvites OrganizationInvite[]
+  chatMessages        ChatMessage[]
 }
 
 model Organization {
@@ -111,9 +112,10 @@ model Workspace {
   createdBy      User         @relation(fields: [createdById], references: [id])
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  agents   Agent[]
-  jobs     Job[]
-  channels Channel[]
+  agents       Agent[]
+  jobs         Job[]
+  channels     Channel[]
+  chatMessages ChatMessage[]
 }
 
 model Agent {
@@ -223,6 +225,20 @@ model ChannelMember {
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([channelId, userId])
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  message     String
+  workspaceId String
+  userId      String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
 }
 
 model Message {
