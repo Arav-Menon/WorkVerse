@@ -72,7 +72,33 @@ export class spaceManager {
                 users[id] = JSON.parse(data);
             }
 
-            const chatHistory = historyRaw.map(m => JSON.parse(m));
+            let chatHistory: any[] = [];
+
+            if (historyRaw.length > 0) {
+                chatHistory = historyRaw.map(m => JSON.parse(m));
+            } else {
+                console.log(`[SpaceManager] Cache miss for ${workSpaceId}. Fetching from DB...`);
+                const dbMessages = await db.chatMessage.findMany({
+                    where: { workspaceId: workSpaceId },
+                    take: 50,
+                    orderBy: { createdAt: 'desc' },
+                });
+
+                chatHistory = dbMessages.map(m => ({
+                    workSpaceId: m.workspaceId,
+                    userId: m.userId,
+                    chatMessage: m.content,
+                    timestamp: m.createdAt.getTime()
+                })).reverse();
+
+                if (chatHistory.length > 0) {
+                    const historyKey = `space:${workSpaceId}:chat`;
+                    for (const msg of chatHistory) {
+                        await client.rPush(historyKey, JSON.stringify(msg));
+                    }
+                    await client.lTrim(historyKey, -50, -1);
+                }
+            }
 
             socket.send(JSON.stringify({
                 type: "SPACE_JOINED",
@@ -106,15 +132,13 @@ export class spaceManager {
             timestamp
         };
 
-        // 1. Hot History (Capped at last 50 messages for this specific room)
-        // Using rPush/lTrim to keep a rolling window of recent history
-        await client.rPush(`space:${workSpaceId}:chat`, JSON.stringify(data));
-        await client.lTrim(`space:${workSpaceId}:chat`, -50, -1);
+        const historyKey = `space:${workSpaceId}:chat`;
+        await client.rPush(historyKey, JSON.stringify(data));
+        await client.lTrim(historyKey, -50, -1);
+        console.log(`[SpaceManager] Chat saved to Redis: ${historyKey}`);
 
-        // 2. Persistence Queue (Global queue for the background worker to dump into Postgres)
         await client.lPush("chat_persistence_queue", JSON.stringify(data));
 
-        // 3. Real-time Broadcast to all server instances
         await this.redisManager.publish(`space:${workSpaceId}`, {
             type: "CHAT",
             ...data
