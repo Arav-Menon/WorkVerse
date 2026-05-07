@@ -71,7 +71,7 @@ model Organization {
 model OrganizationInvite {
   id             String           @id @default(uuid())
   organizationId String
-  email          String           @unique
+  email          String
   name           String
   role           OrganizationRole @default(MEMBER)
   token          String           @unique
@@ -82,6 +82,8 @@ model OrganizationInvite {
   createdAt      DateTime         @default(now())
   user           User             @relation(fields: [createdById], references: [id])
   organization   Organization     @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, email])
 }
 
 enum InviteStatus {
@@ -229,7 +231,7 @@ model ChannelMember {
 
 model ChatMessage {
   id          String   @id @default(uuid())
-  message     String
+  content     String
   workspaceId String
   userId      String
   createdAt   DateTime @default(now())
