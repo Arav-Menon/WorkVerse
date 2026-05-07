@@ -139,6 +139,10 @@
     },
     "apps/scribe": {
       "name": "scribe",
+      "dependencies": {
+        "@repo/db": "*",
+        "@repo/redis": "*",
+      },
       "devDependencies": {
         "@types/bun": "latest",
       },
