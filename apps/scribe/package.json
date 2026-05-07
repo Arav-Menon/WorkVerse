@@ -1,12 +1,19 @@
 {
-  "name": "scribe",
-  "module": "index.ts",
+  "name": "@repo/scribe",
+  "module": "src/scribe.worker.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start:scribe": "bun src/scribe.worker.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@repo/redis": "*",
+    "@repo/db": "*"
   }
 }
