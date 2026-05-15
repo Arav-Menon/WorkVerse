@@ -6,6 +6,7 @@
   "scripts": {
     "start:comms-worker": "bun ./src/workers/comms.worker.ts"
   },
+  "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
