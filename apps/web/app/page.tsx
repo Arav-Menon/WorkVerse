@@ -1,102 +1,72 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
-
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import Navbar from "@/components/landing/Navbar";
+import Hero from "@/components/landing/Hero";
+import ProblemSection from "@/components/landing/ProblemSection";
+import HowItWorks from "@/components/landing/HowItWorks";
+import UseCases from "@/components/landing/UseCases";
+import Comparison from "@/components/landing/Comparison";
+import TechStack from "@/components/landing/TechStack";
+import CTASection from "@/components/landing/CTASection";
+import Footer from "@/components/landing/Footer";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="min-h-screen bg-black text-zinc-50 font-sans selection:bg-white/10 selection:text-white relative overflow-hidden">
+      {/* "Electric Lab" Advanced Background System */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Global Vertical Gradient (Monochrome) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f] via-[#050505] to-black"></div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+
+        {/* Top Ambient White Glows */}
+        <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03),transparent_70%)] blur-[140px] animate-pulse"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)] blur-[120px]"></div>
+
+        {/* Vertical Electric Rays (Dynamic) */}
+        <div className="absolute top-0 right-0 w-full md:w-1/2 h-full opacity-[0.1] flex justify-end gap-6 px-12 overflow-hidden">
+          <div className="w-[1px] h-full bg-gradient-to-b from-transparent via-white/50 to-transparent animate-slow-drift"></div>
+          <div className="w-[2px] h-full bg-gradient-to-b from-transparent via-white/40 to-transparent ml-4 animate-slow-drift-reverse"></div>
+          <div className="w-[1px] h-full bg-white/20 ml-12"></div>
+          <div className="w-[20px] h-full bg-gradient-to-b from-transparent via-white/20 to-transparent blur-md"></div>
+          <div className="w-[1px] h-full bg-white/10 ml-8 animate-pulse"></div>
+          <div className="w-[4px] h-full bg-gradient-to-b from-transparent via-white/30 to-transparent blur-sm ml-16"></div>
+          <div className="w-[40px] h-full bg-gradient-to-b from-transparent via-white/10 to-transparent blur-2xl"></div>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
-    </div>
+
+        {/* Floating Particles (Simulated with small radial gradients) */}
+        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-white rounded-full blur-[1px] animate-pulse opacity-40"></div>
+        <div className="absolute top-1/2 left-1/3 w-1.5 h-1.5 bg-white rounded-full blur-[2px] animate-slow-drift opacity-30"></div>
+        <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-white rounded-full blur-[1px] animate-pulse opacity-40 delay-700"></div>
+        <div className="absolute bottom-1/4 right-1/3 w-2 h-2 bg-white rounded-full blur-[3px] animate-slow-drift-reverse opacity-20"></div>
+        
+        {/* Subtle Noise Texture */}
+        <div className="absolute inset-0 opacity-[0.12] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+      </div>
+
+      <div className="relative z-10">
+        <Navbar />
+        <Hero />
+        
+        {/* Decorative dividers between sections */}
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full max-w-5xl mx-auto"></div>
+        <ProblemSection />
+        
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full max-w-5xl mx-auto"></div>
+        <HowItWorks />
+        
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full max-w-5xl mx-auto"></div>
+        <UseCases />
+        
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full max-w-5xl mx-auto"></div>
+        <Comparison />
+        
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full max-w-5xl mx-auto"></div>
+        <TechStack />
+        
+        <CTASection />
+        <Footer />
+      </div>
+    </main>
   );
 }
