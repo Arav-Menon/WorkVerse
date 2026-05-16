@@ -13,9 +13,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@repo/mcp": "*",
-    "zod": "^4.3.6",
+    "zod": "^3.23.0",
     "@repo/redis" : "*"
   }
 }
