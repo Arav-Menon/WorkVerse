@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "@fastify/type-provider-zod": "^1.0.0",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@repo/mcp": "*",
     "@repo/redis": "*",
     "@repo/schemas": "*",
-    "fastify": "^5.8.5",
-    "fastify-plugin": "^5.1.0"
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0"
   }
 }
