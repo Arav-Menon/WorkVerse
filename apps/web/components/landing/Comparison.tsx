@@ -63,7 +63,7 @@ export default function Comparison() {
             <CheckIcon size={16} className="text-emerald-500" /> Organizes info
           </div>
           <div className="flex items-center gap-2 text-zinc-500">
-            <XIcon size={16} className="text-red-500/70" /> Can't execute anything
+            <XIcon size={16} className="text-red-500/70" /> Can&apos;t execute anything
           </div>
         </div>
 
