@@ -15,7 +15,7 @@ export default function UseCases() {
         One prompt. Real execution.
       </h2>
       <p className="text-base text-zinc-400 leading-relaxed max-w-2xl mb-12">
-        Whether you're a founder, developer, or sales lead — WorkVerse handles the ops.
+        Whether you&apos;re a founder, developer, or sales lead — WorkVerse handles the ops.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -26,7 +26,7 @@ export default function UseCases() {
           </div>
           <h4 className="text-sm font-medium text-zinc-50 mb-3">Investor outreach</h4>
           <div className="font-mono text-[11px] text-zinc-200 bg-zinc-900/20 px-3 py-2.5 rounded-md border border-zinc-800/30 mb-4 leading-relaxed group-hover:border-white/30 transition-colors">
-            "Schedule call, attach deck, follow up Thursday"
+            &quot;Schedule call, attach deck, follow up Thursday&quot;
           </div>
           <div className="flex items-start gap-2 text-xs text-zinc-400">
             <CircleCheckIcon size={16} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -41,7 +41,7 @@ export default function UseCases() {
           </div>
           <h4 className="text-sm font-medium text-zinc-50 mb-3">Deploy pipeline</h4>
           <div className="font-mono text-[11px] text-zinc-200 bg-zinc-900/20 px-3 py-2.5 rounded-md border border-zinc-800/30 mb-4 leading-relaxed group-hover:border-white/30 transition-colors">
-            "Deploy backend with CI/CD and alert team"
+            &quot;Deploy backend with CI/CD and alert team&quot;
           </div>
           <div className="flex items-start gap-2 text-xs text-zinc-400">
             <CircleCheckIcon size={16} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -56,7 +56,7 @@ export default function UseCases() {
           </div>
           <h4 className="text-sm font-medium text-zinc-50 mb-3">Lead outreach</h4>
           <div className="font-mono text-[11px] text-zinc-200 bg-zinc-900/20 px-3 py-2.5 rounded-md border border-zinc-800/30 mb-4 leading-relaxed group-hover:border-white/30 transition-colors">
-            "Email last week's leads, personalize each one"
+            &quot;Email last week&apos;s leads, personalize each one&quot;
           </div>
           <div className="flex items-start gap-2 text-xs text-zinc-400">
             <CircleCheckIcon size={16} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -71,7 +71,7 @@ export default function UseCases() {
           </div>
           <h4 className="text-sm font-medium text-zinc-50 mb-3">Day planning</h4>
           <div className="font-mono text-[11px] text-zinc-200 bg-zinc-900/20 px-3 py-2.5 rounded-md border border-zinc-800/30 mb-4 leading-relaxed group-hover:border-white/30 transition-colors">
-            "Block deep work, reschedule 3pm, send standup"
+            &quot;Block deep work, reschedule 3pm, send standup&quot;
           </div>
           <div className="flex items-start gap-2 text-xs text-zinc-400">
             <CircleCheckIcon size={16} className="text-emerald-500 mt-0.5 shrink-0" />
