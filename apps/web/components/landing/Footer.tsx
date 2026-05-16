@@ -39,7 +39,9 @@ export default function Footer() {
                     <path d="M2 11V22H13L2 11Z" fill="white" />
                   </svg>
                 </div>
-                <div className="text-2xl font-bold text-white tracking-tighter">Workverse</div>
+                <div className="text-xl font-bold tracking-tighter text-white">
+          Work<span className="text-zinc-500">Verse</span>
+        </div>
               </div>
               <div className="space-y-2">
                 <p className="text-zinc-100 text-sm font-medium leading-relaxed">

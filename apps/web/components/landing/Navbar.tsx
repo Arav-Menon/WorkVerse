@@ -18,7 +18,9 @@ export default function Navbar() {
               <path d="M2 11V22H13L2 11Z" fill="white" />
             </svg>
           </div>
-          <span className="text-sm font-bold text-white tracking-tighter">Workverse</span>
+           <div className="text-xl font-bold tracking-tighter text-white">
+          Work<span className="text-zinc-500">Verse</span>
+        </div>
         </div>
 
         {/* CENTER: Links */}
