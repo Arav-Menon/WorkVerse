@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { Icons } from "../../components/auth/AuthIcons";
 import { AuthBackground } from "../../components/auth/AuthBackground";
 import { BrandingPanel } from "../../components/auth/BrandingPanel";
 import { SignInForm } from "../../components/auth/SignInForm";
