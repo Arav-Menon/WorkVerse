@@ -66,8 +66,8 @@ export default function Hero() {
           </div>
 
           {/* Interface Content Mockup */}
-          <div className="flex-1 grid grid-cols-12 gap-px bg-white/5">
-            <div className="col-span-3 bg-black/40 p-6 space-y-6">
+          <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-px bg-white/5">
+            <div className="hidden md:block md:col-span-3 bg-black/40 p-6 space-y-6">
               <div className="space-y-2">
                 <div className="h-2 w-1/2 bg-white/20 rounded-full"></div>
                 <div className="h-2 w-3/4 bg-white/10 rounded-full"></div>
@@ -84,7 +84,7 @@ export default function Hero() {
                 ))}
               </div>
             </div>
-            <div className="col-span-6 bg-black/20 flex items-center justify-center relative group/inner">
+            <div className="w-full md:col-span-6 bg-black/20 flex flex-1 items-center justify-center relative group/inner min-h-[300px]">
               {/* Central Command UI Mockup */}
               <div className="p-8 rounded-2xl bg-black/60 border border-white/10 backdrop-blur-3xl max-w-sm w-full space-y-4 shadow-2xl relative animate-shimmer-fast">
                 <div className="flex items-center justify-between">
@@ -113,7 +113,7 @@ export default function Hero() {
                 <div className="px-2 py-0.5 bg-white text-black text-[8px] font-bold rounded-sm">Alex K.</div>
               </div>
             </div>
-            <div className="col-span-3 bg-black/40 p-6">
+            <div className="hidden md:block md:col-span-3 bg-black/40 p-6">
               <div className="space-y-6">
                 <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Execution Feed</div>
                 <div className="space-y-4">
