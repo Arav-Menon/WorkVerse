@@ -27,7 +27,9 @@ export default function Comparison() {
       <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         
-        {/* Header */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[600px]">
+            {/* Header */}
         <div className="grid grid-cols-3 bg-zinc-900/80 border-b border-zinc-800/80 text-[11px] font-medium uppercase tracking-[1px] text-zinc-500 p-4">
           <div>Tool</div>
           <div>What it does</div>
@@ -88,11 +90,12 @@ export default function Comparison() {
           <div className="flex items-center gap-2 text-zinc-300 relative z-10">
             <CheckIcon size={16} className="text-emerald-400" /> Understands intent
           </div>
-          <div className="font-medium text-zinc-200 relative z-10">
-            Creates + executes + remembers
+            <div className="font-medium text-zinc-200 relative z-10">
+              Creates + executes + remembers
+            </div>
           </div>
         </div>
-
+      </div>
       </div>
     </section>
   );
