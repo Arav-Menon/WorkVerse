@@ -17,7 +17,7 @@ export default function CTASection() {
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/5 blur-[80px] rounded-full animate-pulse delay-1000"></div>
 
         {/* Realtime presence indicator mockup */}
-        <div className="absolute top-8 right-8 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+        <div className="hidden sm:flex absolute top-4 right-4 md:top-8 md:right-8 items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
           <div className="flex -space-x-2">
             <div className="w-5 h-5 rounded-full bg-zinc-700 border border-black flex items-center justify-center text-[8px]">JD</div>
             <div className="w-5 h-5 rounded-full bg-zinc-600 border border-black flex items-center justify-center text-[8px]">AK</div>
