@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const BrandingPanel = () => {
   return (
-    <div className="relative z-10 w-full md:w-[42%] lg:w-[38%] flex flex-col justify-between p-8 md:p-12 lg:p-16 bg-zinc-950/20 backdrop-blur-sm border-b md:border-b-0 md:border-r border-zinc-800/50">
+    <div className="relative z-10 hidden md:flex w-full md:w-[42%] lg:w-[38%] flex-col justify-between p-8 md:p-12 lg:p-16 bg-zinc-950/20 backdrop-blur-sm border-b md:border-b-0 md:border-r border-zinc-800/50">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 pb-20">
         {/* Brand Section */}
         <Link href="/" className="md:col-span-4 space-y-8">
