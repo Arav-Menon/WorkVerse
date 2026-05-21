@@ -62,11 +62,6 @@ export default function OrgNavbar({
 
       {/* Right side: Telemetry badge + profile controls */}
       <div className="flex items-center gap-3">
-        {/* Pulsating status badge */}
-        <div className="hidden sm:flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/60 rounded-full px-2.5 py-1 text-[9px] font-mono font-semibold text-emerald-400 select-none">
-          <span className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse"></span>
-          <span>{orgName.toUpperCase()}.LIVE</span>
-        </div>
 
         {/* Notification bell */}
         <button className="relative w-8 h-8 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer" aria-label="Notifications">
