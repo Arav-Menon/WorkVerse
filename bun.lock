@@ -140,6 +140,7 @@
         "@fastify/type-provider-zod": "^1.0.0",
         "@modelcontextprotocol/sdk": "^1.0.0",
         "@repo/mcp": "*",
+        "@repo/rate-limit": "*",
         "@repo/redis": "*",
         "@repo/schemas": "*",
         "fastify": "^5.0.0",
