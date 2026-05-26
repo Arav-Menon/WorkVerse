@@ -19,7 +19,8 @@
   "packageManager": "bun@1.1.0",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+     "packages/*/*"
   ],
   "dependencies": {
     "@types/node": "^22.0.0"
