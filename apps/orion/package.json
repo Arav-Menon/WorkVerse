@@ -18,6 +18,7 @@
     "@repo/mcp": "*",
     "@repo/redis": "*",
     "@repo/schemas": "*",
+    "@repo/rate-limit": "*",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0"
   }
