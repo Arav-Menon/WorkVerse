@@ -8,6 +8,16 @@ export default async function organizationAcceptInviteRoutes(
   fastify.post<{
     Body: AcceptOrganizationInviteBody;
   }>("/", {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 300000,
+        keyGenerator: (request) => {
+          const userId = (request.user as any)?.userId || request.ip;
+          return `ratelimit:org:accept:${userId}`;
+        },
+      },
+    },
     preHandler: [fastify.authenticate],
     handler: acceptOrganizationInviteController,
   });
