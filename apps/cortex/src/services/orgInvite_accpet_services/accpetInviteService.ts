@@ -50,7 +50,7 @@ export async function registerAcceptInviteService(
     });
   });
 
-  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(invite.organizationId));
+  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(invite.organizationId), "EX", 24 * 60 * 60);
 
   return { message: "Joined organization successfully" };
 }
