@@ -1,0 +1,15 @@
+{
+  "name": "testing",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.7"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
