@@ -1,13 +1,20 @@
 {
-  "name": "testing",
+  "name": "@repo/testing",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./factories": "./src/factories/auth.factories.ts",
+    "./vitest.config": "./src/vitest.base.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/supertest": "^7.2.0",
     "supertest": "^7.2.2",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.7",
+    "vitest-mock-extended": "^4.0.0",
+    "@repo/db": "*"
   },
   "peerDependencies": {
     "typescript": "^5"
