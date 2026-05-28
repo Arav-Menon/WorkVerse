@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start:cortex": "bun ./src/server.ts"
+    "start:cortex": "bun ./src/bin.ts",
+    "test": "vitest"
   },
   "devDependencies": {
     "@types/bun": "latest"
