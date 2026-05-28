@@ -11,7 +11,7 @@ import authRoutes from "./routes/auth/auth.routes";
 import clerkWebhookRoutes from "./routes/auth/webhooks/clerk.routes";
 import organizationRoutes from "./routes/organization/organization.routes";
 
-const fastify = Fastify({
+export const fastify = Fastify({
   logger: {
     transport: {
       target: "pino-pretty",
@@ -57,14 +57,3 @@ fastify.register(organizationAcceptInviteRoutes, {
 fastify.register(createRoomRoutes, { prefix: "/api/v1/open-room" });
 fastify.register(ingestPromptRoutes, { prefix: "/api/v1/ingest-prompt" });
 fastify.get("/health", async () => ({ status: "ok" }));
-
-fastify.listen(
-  { port: Number(process.env.PORT ?? 3000), host: "0.0.0.0" },
-  (err, address) => {
-    if (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-    fastify.log.info(`Server listening on ${address}`);
-  },
-);
