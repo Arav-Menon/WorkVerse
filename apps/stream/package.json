@@ -8,5 +8,10 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@repo/schemas" : "*",
+    "mediasoup": "^3.20.0",
+    "@repo/redis" : "*"
   }
 }
