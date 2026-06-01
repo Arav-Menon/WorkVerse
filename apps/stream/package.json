@@ -1,5 +1,5 @@
 {
-  "name": "stream",
+  "name": "@repo/stream",
   "module": "index.ts",
   "type": "module",
   "private": true,
