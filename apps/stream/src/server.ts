@@ -1,4 +1,5 @@
 import Fastify from "fastify"
+import transportRoute from "./routes/transport.route.ts";
 
 export const fastify = Fastify({
     logger: {
@@ -9,4 +10,7 @@ export const fastify = Fastify({
     },
 });
 
+fastify.register(transportRoute, {
+  prefix : "/api/v1/"
+})
 
