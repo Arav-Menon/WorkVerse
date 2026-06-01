@@ -2,7 +2,6 @@ import { WebSocket } from "ws";
 import { client } from "@repo/redis";
 import { RedisManager } from "./redis-manager";
 import { db } from "@repo/db/db"
-import { timeStamp } from "node:console";
 
 export class spaceManager {
     private workspace: Map<string, Set<WebSocket>> = new Map();
@@ -27,7 +26,7 @@ export class spaceManager {
 
                 if (member) {
                     cachedAccess = organizationId;
-                    await client.set(`user:${userId}:access`, organizationId, { EX: 3600 })
+                    await client.set(`user:${userId}:access`, organizationId, "EX", 24 * 60 * 60);
                 } else {
                     socket.send("Error: Access denied");
                     socket.close(1008);
@@ -54,7 +53,7 @@ export class spaceManager {
             this.workspace.get(workSpaceId)!.add(socket);
 
             const initialPosition = { x: 0, y: 0 };
-            await client.hSet(`space:${workSpaceId}:users`, userId, JSON.stringify(initialPosition));
+            await client.hset(`space:${workSpaceId}:users`, userId, JSON.stringify(initialPosition));
 
             await this.redisManager.publish(`space:${workSpaceId}`, {
                 type: "JOIN",
@@ -63,8 +62,8 @@ export class spaceManager {
             });
 
             const [allUsersRaw, historyRaw] = await Promise.all([
-                client.hGetAll(`space:${workSpaceId}:users`),
-                client.lRange(`space:${workSpaceId}:chat`, 0, -1)
+                client.hgetall(`space:${workSpaceId}:users`),
+                client.lrange(`space:${workSpaceId}:chat`, 0, -1)
             ]);
 
             const users: Record<string, any> = {};
@@ -94,9 +93,9 @@ export class spaceManager {
                 if (chatHistory.length > 0) {
                     const historyKey = `space:${workSpaceId}:chat`;
                     for (const msg of chatHistory) {
-                        await client.rPush(historyKey, JSON.stringify(msg));
+                        await client.rpush(historyKey, JSON.stringify(msg));
                     }
-                    await client.lTrim(historyKey, -50, -1);
+                    await client.ltrim(historyKey, -50, -1);
                 }
             }
 
@@ -114,7 +113,7 @@ export class spaceManager {
     }
 
     async moveClient(workSpaceId: string, userId: string, position: { x: number, y: number }) {
-        await client.hSet(`space:${workSpaceId}:users`, userId, JSON.stringify(position));
+        await client.hset(`space:${workSpaceId}:users`, userId, JSON.stringify(position));
 
         await this.redisManager.publish(`space:${workSpaceId}`, {
             type: "MOVE",
@@ -133,11 +132,11 @@ export class spaceManager {
         };
 
         const historyKey = `space:${workSpaceId}:chat`;
-        await client.rPush(historyKey, JSON.stringify(data));
-        await client.lTrim(historyKey, -50, -1);
+        await client.rpush(historyKey, JSON.stringify(data));
+        await client.ltrim(historyKey, -50, -1);
         console.log(`[SpaceManager] Chat saved to Redis: ${historyKey}`);
 
-        await client.lPush("chat_persistence_queue", JSON.stringify(data));
+        await client.lpush("chat_persistence_queue", JSON.stringify(data));
 
         await this.redisManager.publish(`space:${workSpaceId}`, {
             type: "CHAT",
@@ -169,7 +168,7 @@ export class spaceManager {
         }
 
         if (userId) {
-            await client.hDel(`space:${workSpaceId}:users`, userId);
+            await client.hdel(`space:${workSpaceId}:users`, userId);
 
             await this.redisManager.publish(`space:${workSpaceId}`, {
                 type: "LEAVE",
