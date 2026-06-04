@@ -120,6 +120,30 @@ export class spaceManager {
             userId,
             position
         });
+
+        // Calculate proximity to other users
+        const PROXIMITY_THRESHOLD = 50;
+        const allUsersRaw = await client.hgetall(`space:${workSpaceId}:users`);
+
+        for (const [otherUserId, data] of Object.entries(allUsersRaw)) {
+            if (otherUserId === userId) continue;
+
+            try {
+                const otherPos = JSON.parse(data);
+                const distance = Math.sqrt(
+                    Math.pow(otherPos.x - position.x, 2) + Math.pow(otherPos.y - position.y, 2)
+                );
+
+                if (distance <= PROXIMITY_THRESHOLD) {
+                    await this.redisManager.publish(`space:${workSpaceId}`, {
+                        type: "CAN_CONNECT",
+                        users: [userId, otherUserId]
+                    });
+                }
+            } catch (err) {
+                console.error("Error calculating proximity", err);
+            }
+        }
     }
 
     async chatMessage(workSpaceId: string, userId: string, chatMessage: string) {
