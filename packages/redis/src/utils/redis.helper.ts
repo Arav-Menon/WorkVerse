@@ -28,7 +28,7 @@ export const pushToStream = async (
   maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
 ): Promise<PushResult> => {
   try {
-    const messageId = await client.xAdd(USER_INBOUND_PROMPT_STREAM, "*", data, {
+    const messageId = await client.xadd(USER_INBOUND_PROMPT_STREAM, "*", data, {
       TRIM: {
         strategy: "MAXLEN",
         strategyModifier: "~",
