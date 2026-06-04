@@ -1,13 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import type { TransportInput } from "@repo/schemas";
-import { transportController } from "../controllers/transport.controller.ts";
+import { transportController, getRouterCapabilities, connectTransport, produce, consume } from "../controllers/transport.controller.ts";
 
 export default async function transportRoute(fastify: FastifyInstance) {
-    fastify.post<{ Body: TransportInput }>("/create-transport", {
-        // schema: {
-        //     body: $ref("createTransportSchema"),
-        //     response: { 201: $ref("createTransportResponseSchema") },
-        // },
-        handler: transportController
-    })
+    fastify.get("/router-capabilities/:roomId", getRouterCapabilities);
+    fastify.post("/create-transport", transportController);
+    fastify.post("/connect-transport", connectTransport);
+    fastify.post("/produce", produce);
+    fastify.post("/consume", consume);
 }
