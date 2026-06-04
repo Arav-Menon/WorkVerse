@@ -9,6 +9,10 @@ declare module "fastify" {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
+  if (client.status === "wait") {
+    await client.connect();
+  }
+  
   fastify.decorate("cache", client);
   fastify.addHook("onClose", async () => {
     await client.quit();
