@@ -53,8 +53,7 @@ class RtcTransportManager {
         if (!transport) throw new Error("Transport not found");
 
         const producer = await transport.produce({ kind, rtpParameters });
-        
-        // Mediasoup requires us to handle producer events (like close)
+
         producer.on("transportclose", () => {
             producer.close();
         });
@@ -69,7 +68,6 @@ class RtcTransportManager {
         const room = roomManager.getRoom(roomId);
         if (!room) throw new Error("Room not found");
 
-        // The router needs to check if we can consume this producer
         if (!room.router.canConsume({ producerId, rtpCapabilities })) {
             throw new Error("Cannot consume this producer");
         }
@@ -77,7 +75,7 @@ class RtcTransportManager {
         const consumer = await transport.consume({
             producerId,
             rtpCapabilities,
-            paused: true // Best practice: start paused, then let client unpause when ready
+            paused: true
         });
 
         consumer.on("transportclose", () => {
