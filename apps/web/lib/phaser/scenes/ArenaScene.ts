@@ -239,7 +239,9 @@ export class ArenaScene extends Phaser.Scene {
     g.lineStyle(1, C.aiLabAccent, 0.2);
     const edges = [[0, 1], [1, 2], [3, 4], [4, 5], [6, 7], [7, 8], [0, 4], [1, 4], [2, 4], [3, 4], [4, 5], [4, 6], [4, 7], [4, 8]];
     edges.forEach(([a, b]) => {
+      //@ts-ignore
       g.moveTo(dotPositions[a][0], dotPositions[a][1]);
+      //@ts-ignore
       g.lineTo(dotPositions[b][0], dotPositions[b][1]);
     });
     g.strokePath();
@@ -335,7 +337,7 @@ export class ArenaScene extends Phaser.Scene {
       g.fillRect(x + 8, slotY, rW - 16, 18);
       // Status light
       const lightColors = [C.aiServerLight, C.aiLabAccent, 0x22c55e, C.aiServerLight, C.aiLabAccent, 0x22c55e, C.aiLabAccent];
-      g.fillStyle(lightColors[i % lightColors.length], 0.9);
+      g.fillStyle(lightColors[i % lightColors.length]!, 0.9);
       g.fillCircle(x + rW - 16, slotY + 9, 4);
     }
   }
