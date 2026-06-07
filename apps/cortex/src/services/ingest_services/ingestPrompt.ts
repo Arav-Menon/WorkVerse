@@ -50,6 +50,8 @@ export async function registerIngestPrompt(
       updatedAt: new Date().toISOString(),
     };
 
+    const setExecute = await fastify.db.
+
     await fastify.cache.set(
       `promptId:${promptId}`,
       JSON.stringify(jobStatusPayload),
