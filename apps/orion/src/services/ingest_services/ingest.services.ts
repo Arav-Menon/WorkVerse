@@ -21,8 +21,8 @@ export async function registerIngestPromptService(
     userId,
   } = input;
 
+  // have to write the thinging logic which execution tool to use mcp or n8n. remove this pushUserInboundPromt queue from here because it does decide blindly pushing to the queue
   try {
-
     await fastify.redisProducer.pushUserInboundPrompt({
       promptId,
       userId,
@@ -42,11 +42,27 @@ export async function registerIngestPromptService(
       updatedAt: new Date().toISOString(),
     };
 
-    await fastify.cache.set(
-      `promptId:${promptId}`,
-      JSON.stringify(jobStatusPayload),
-      { EX: 1000 },
-    );
+    await Promise.all([
+      fastify.db.workflowJob.create({
+        data: {
+          id: promptId,
+          createdById: userId,
+          organizationId,
+          workspaceId,
+          title: promptId,
+          prompt: userPrompt,
+          systemPrompt,
+          status: "PENDING",
+        },
+      }),
+
+      fastify.cache.set(
+        `promptId:${promptId}`,
+        JSON.stringify(jobStatusPayload),
+        "EX",
+        3600,
+      ),
+    ]);
 
     return {
       success: true,
