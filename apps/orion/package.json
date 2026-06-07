@@ -15,6 +15,7 @@
   "dependencies": {
     "@fastify/type-provider-zod": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "@repo/db": "*",
     "@repo/mcp": "*",
     "@repo/redis": "*",
     "@repo/schemas": "*",
