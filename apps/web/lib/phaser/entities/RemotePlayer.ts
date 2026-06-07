@@ -14,7 +14,7 @@ export class RemotePlayer {
   constructor(scene: Phaser.Scene, id: string, name: string, x: number, y: number) {
     this.id = id;
     this.name = name;
-    this.avatarColor = PLAYER_COLORS[colorIndex % PLAYER_COLORS.length];
+    this.avatarColor = PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]!;
     colorIndex++;
 
     const radius = WorldConfig.remotePlayer.radius;
