@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
+import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
 import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
 import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
@@ -16,6 +17,7 @@ const fastify = Fastify({
 });
 
 fastify.register(cachePlugin);
+fastify.register(dbPlugin);
 fastify.register(producerPlugin);
 fastify.register(rateLimitPlugin);
 
