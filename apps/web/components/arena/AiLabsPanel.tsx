@@ -43,7 +43,7 @@ export function AiLabsPanel() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: MOCK_RESPONSES.default,
+      content: MOCK_RESPONSES.default!,
       timestamp: new Date(),
     },
   ]);
