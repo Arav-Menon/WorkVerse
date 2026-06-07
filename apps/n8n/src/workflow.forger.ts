@@ -1,6 +1,7 @@
 import { pullUserWorkflowJob } from "@repo/redis/redis-client";
 import { mapWorkFlowData } from "../transformer";
 import { createWorkflow } from "./workflow-job";
+import { db } from "@repo/db/db";
 
 console.log("[Workflow Forger] Started worker...");
 
@@ -50,6 +51,10 @@ while (true) {
 
     const result = await createWorkflow(workflow_json);
     console.log("[Workflow Forger] Workflow created successfully ID:", result.id);
+
+    // await db.workflowJob.update({ where : {  } })
+
+
 
   } catch (error) {
     console.error("[Workflow Forger] Error in worker loop:", error);
