@@ -37,7 +37,7 @@ export async function registerOrganisation(
     return organization;
   })
 
-  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(organization.id))
+  await fastify.cache.set(`user:${userId}:access`, JSON.stringify(organization.id), "EX", 24 * 60 * 60);
 
   return organization;
 }

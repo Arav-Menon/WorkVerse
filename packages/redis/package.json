@@ -6,7 +6,6 @@
   "exports": {
     ".": "./index.ts",
     "./redis-client": "./index.ts"
-    
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -16,6 +15,7 @@
   },
   "dependencies": {
     "redis": "^5.11.0",
+    "ioredis": "^5.10.1",
     "@repo/schemas": "workspace:*"
   }
 }

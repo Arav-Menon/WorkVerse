@@ -1,0 +1,20 @@
+{
+  "name": "@repo/stream",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start:stream" : "./src/bin.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@repo/schemas" : "*",
+    "mediasoup": "^3.20.0",
+    "@repo/redis" : "*"
+  }
+}

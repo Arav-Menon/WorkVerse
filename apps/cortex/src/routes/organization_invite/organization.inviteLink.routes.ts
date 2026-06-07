@@ -9,6 +9,16 @@ export default async function organizationInviteLinkRoutes(
     Body: RegisterOrganizationInviteBody;
     Params: { orgId: string };
   }>("/:orgId", {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 300000,
+        keyGenerator: (request) => {
+          const userId = (request.user as any)?.userId || request.ip;
+          return `ratelimit:org:invite:${userId}`;
+        },
+      },
+    },
     preHandler: [fastify.authenticate],
     handler: createOrganizationInviteController,
   });

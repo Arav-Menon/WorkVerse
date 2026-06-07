@@ -1,0 +1,20 @@
+{
+  "name": "relay",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start:relay": "bun ./src/bin.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@repo/redis": "*",
+    "@repo/stream": "*",
+    "axios": "^1.17.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

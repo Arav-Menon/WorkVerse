@@ -13,11 +13,17 @@ enum OrganizationRole {
   MEMBER
 }
 
-enum JobStatus {
+enum WorkflowStatus {
   PENDING
   RUNNING
   COMPLETED
   FAILED
+}
+
+enum WorkflowExecutor {
+  N8N
+  MCP
+  HYBRID
 }
 
 enum TaskStatus {
@@ -39,6 +45,12 @@ enum SenderType {
   SYSTEM
 }
 
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -48,7 +60,7 @@ model User {
 
   memberships         OrganizationMember[]
   messages            Message[]
-  createdJobs         Job[]                @relation("UserJobs")
+
   channelmembers      ChannelMember[]
   organization        Organization[]
   workspace           Workspace[]
@@ -115,9 +127,52 @@ model Workspace {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   agents       Agent[]
-  jobs         Job[]
   channels     Channel[]
   chatMessages ChatMessage[]
+}
+
+model WorkflowJob {
+  id             String             @id
+  workspaceId    String
+  organizationId String
+  createdById    String
+  title          String
+  prompt         String
+  systemPrompt   String?
+  status         WorkflowStatus
+  executor       WorkflowExecutor?
+  graph          Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  executions JobExecution[]
+  events     AgentEvent[]
+}
+
+model AiChatMessage {
+  id             String      @id
+  conversationId String
+  workspaceId    String
+  userId         String
+  role           MessageRole
+  content        Json
+  createdAt      DateTime
+}
+
+model JobExecution {
+  id          String     @id @default(uuid())
+  taskId      String
+  workerId    String
+  logs        String?
+  input       Json
+  output      Json
+  status      TaskStatus
+  startedAt   DateTime
+  completedAt DateTime?
+
+  task WorkflowJob @relation(fields: [taskId], references: [id])
+
+  @@index([taskId])
 }
 
 model Agent {
@@ -133,53 +188,39 @@ model Agent {
   messages Message[]
 }
 
-model Job {
-  id          String    @id @default(uuid())
-  workspaceId String
-  createdBy   String
-  prompt      String
-  status      JobStatus
-  createdAt   DateTime  @default(now())
-  completedAt DateTime?
+// model Job {
+//   id          String    @id @default(uuid())
+//   workspaceId String
+//   createdBy   String
+//   prompt      String
+//   status      JobStatus
+//   createdAt   DateTime  @default(now())
+//   completedAt DateTime?
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-  creator   User      @relation("UserJobs", fields: [createdBy], references: [id])
+//   workspace Workspace @relation(fields: [workspaceId], references: [id])
+//   creator   User      @relation("UserJobs", fields: [createdBy], references: [id])
 
-  tasks  Task[]
-  events AgentEvent[]
-}
+//   tasks  Task[]
+//   events AgentEvent[]
+// }
 
-model Task {
-  id          String     @id @default(uuid())
-  jobId       String
-  stepNumber  Int
-  type        String
-  payload     Json
-  status      TaskStatus
-  result      Json?
-  startedAt   DateTime?
-  completedAt DateTime?
+// model Task {
+//   id          String     @id @default(uuid())
+//   jobId       String
+//   stepNumber  Int
+//   type        String
+//   payload     Json
+//   status      TaskStatus
+//   result      Json?
+//   startedAt   DateTime?
+//   completedAt DateTime?
 
-  job Job @relation(fields: [jobId], references: [id])
+//   job Job @relation(fields: [jobId], references: [id])
 
-  executions TaskExecution[]
+//   executions TaskExecution[]
 
-  @@index([jobId])
-}
-
-model TaskExecution {
-  id          String     @id @default(uuid())
-  taskId      String
-  workerId    String
-  logs        String?
-  status      TaskStatus
-  startedAt   DateTime
-  completedAt DateTime?
-
-  task Task @relation(fields: [taskId], references: [id])
-
-  @@index([taskId])
-}
+//   @@index([jobId])
+// }
 
 model Tool {
   id          String   @id @default(uuid())
@@ -267,7 +308,7 @@ model AgentEvent {
   payload   Json?
   createdAt DateTime @default(now())
 
-  job Job @relation(fields: [jobId], references: [id])
+  job WorkflowJob @relation(fields: [jobId], references: [id])
 
   @@index([jobId])
 }

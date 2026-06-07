@@ -5,12 +5,13 @@ import jwtPlugin from "./plugins/auth_plugins/jwt";
 import clerkPlugin from "./plugins/auth_plugins/clerk";
 import authGuardPlugin from "./plugins/auth_plugins/authGuard";
 import corsPlugin from "./plugins/auth_plugins/cors";
+import { rateLimitPlugin } from "@repo/rate-limit";
 
 import authRoutes from "./routes/auth/auth.routes";
 import clerkWebhookRoutes from "./routes/auth/webhooks/clerk.routes";
 import organizationRoutes from "./routes/organization/organization.routes";
 
-const fastify = Fastify({
+export const fastify = Fastify({
   logger: {
     transport: {
       target: "pino-pretty",
@@ -37,6 +38,7 @@ fastify.register(jwtPlugin);
 fastify.register(clerkPlugin);
 fastify.register(authGuardPlugin);
 fastify.register(redisPlugin);
+fastify.register(rateLimitPlugin);
 
 fastify.register(authRoutes, { prefix: "/api/v1/auth" });
 fastify.register(clerkWebhookRoutes, { prefix: "/api/v1/webhooks" });
@@ -55,14 +57,3 @@ fastify.register(organizationAcceptInviteRoutes, {
 fastify.register(createRoomRoutes, { prefix: "/api/v1/open-room" });
 fastify.register(ingestPromptRoutes, { prefix: "/api/v1/ingest-prompt" });
 fastify.get("/health", async () => ({ status: "ok" }));
-
-fastify.listen(
-  { port: Number(process.env.PORT ?? 3000), host: "0.0.0.0" },
-  (err, address) => {
-    if (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-    fastify.log.info(`Server listening on ${address}`);
-  },
-);

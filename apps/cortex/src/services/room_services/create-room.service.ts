@@ -22,9 +22,7 @@ export async function registerCreateRoom(
 
   const roomId = getRoomId_sort(currentUserId, targetUserId);
 
-  await fastify.cache.set(cacheKey, roomId, {
-    EX: 24 * 60 * 60,
-  });
+  await fastify.cache.set(cacheKey, roomId, "EX", 24 * 60 * 60);
 
   return { id: roomId, name: roomId, createdById: currentUserId };
 }

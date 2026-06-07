@@ -1,9 +1,11 @@
 import Fastify from "fastify";
 import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
+import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
 import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
 import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
+import { rateLimitPlugin } from "@repo/rate-limit";
 
 const fastify = Fastify({
   logger: {
@@ -15,7 +17,9 @@ const fastify = Fastify({
 });
 
 fastify.register(cachePlugin);
+fastify.register(dbPlugin);
 fastify.register(producerPlugin);
+fastify.register(rateLimitPlugin);
 
 fastify.register(ingestRoutes, { prefix: "/api/v1/orion" });
 

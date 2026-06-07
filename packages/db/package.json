@@ -4,13 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "prisma:generate" : "bunx --bun prisma generate",
-    "prisma:migrate"  : "bunx --bun prisma migrate dev",
-    "prisma:studio"   : "bunx --bun prisma studio --browser none "
-
+    "prisma:generate": "bunx --bun prisma generate",
+    "prisma:migrate": "bunx --bun prisma migrate dev",
+    "prisma:studio": "bunx --bun prisma studio --browser none "
   },
-  "exports" : {
-    "./db" : "./index.ts"
+  "exports": {
+    "./db": "./index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
