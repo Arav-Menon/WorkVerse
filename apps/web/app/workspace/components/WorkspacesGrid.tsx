@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface WorkspaceCard {
   name: string;
@@ -26,6 +27,7 @@ export default function WorkspacesGrid({
   onEnterWorkspace,
   onCreateWorkspace,
 }: WorkspacesGridProps) {
+  const router = useRouter();
   const [filterType, setFilterType] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [layoutView, setLayoutView] = useState<"grid" | "list">("grid");
@@ -300,7 +302,7 @@ export default function WorkspacesGrid({
 
                   <button 
                     className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:translate-x-1 duration-200 transition-all cursor-pointer"
-                    onClick={() => onEnterWorkspace(card.name)}
+                    onClick={() => router.push(`/space/${encodeURIComponent(card.name.toLowerCase().replace(/\s+/g, '-'))}`)}
                   >
                     Enter
                     <i className="ti ti-arrow-right text-[11px]"></i>
@@ -350,7 +352,7 @@ export default function WorkspacesGrid({
                   <span className="text-[10px] text-zinc-600 font-mono truncate max-w-[160px]">{card.activity}</span>
                   <button 
                     className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:translate-x-1 duration-200 transition-all cursor-pointer"
-                    onClick={() => onEnterWorkspace(card.name)}
+                    onClick={() => router.push(`/space/${encodeURIComponent(card.name.toLowerCase().replace(/\s+/g, '-'))}`)}
                   >
                     Enter
                     <i className="ti ti-arrow-right text-[11px]"></i>

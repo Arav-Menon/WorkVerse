@@ -9,6 +9,7 @@ import HomeNavbar from "./HomeNavbar";
 import HomeStatsSection from "./HomeStatsSection";
 import OrganizationSection from "./OrganizationSection";
 import RecentActivityPanel from "./RecentActivityPanel";
+import AppNavbar from "@/components/shared/AppNavbar";
 
 interface HomeDashboardShellProps {
   data: HomePageData;
@@ -17,9 +18,17 @@ interface HomeDashboardShellProps {
 export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [currentWorkspace, setCurrentWorkspace] = useState("Personal");
+  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFiltering, startFilterTransition] = useTransition();
   const deferredQuery = useDeferredValue(searchQuery);
+
+  const handleWorkspaceChange = (workspace: string) => {
+    setCurrentWorkspace(workspace);
+    router.push(`/organization/${encodeURIComponent(workspace.toLowerCase())}`);
+  };
 
   const filteredOrganizations = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
@@ -54,7 +63,7 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
   }));
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-black text-zinc-400 antialiased selection:bg-white/10 selection:text-white">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-black text-zinc-400 font-sans antialiased selection:bg-white/10 selection:text-white">
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#111114] via-[#050505] to-black" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_65%_at_50%_0%,#000_70%,transparent_100%)]" />
@@ -62,13 +71,22 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
         <div className="absolute bottom-[-18%] right-[-10%] h-[42rem] w-[42rem] rounded-full bg-cyan-500/[0.06] blur-[160px]" />
       </div>
 
-      <HomeNavbar
+      {/* <HomeNavbar
         searchQuery={searchQuery}
         onSearchChange={(value) => startFilterTransition(() => setSearchQuery(value))}
         onMenuClick={() => setSidebarOpen((prev) => !prev)}
         currentUser={data.currentUser}
         profileMenu={data.profileMenu}
-      />
+      /> */}
+
+      <AppNavbar 
+              currentWorkspace={currentWorkspace}
+              switcherOpen={switcherOpen}
+              setSidebarOpen={setSidebarOpen}
+              setSwitcherOpen={setSwitcherOpen}
+              onWorkspaceChange={handleWorkspaceChange}
+              onSearchClick={() => setCmdPaletteOpen(true)}
+            />
 
       <div className="relative z-10 flex flex-1 overflow-hidden">
         <AppSidebar

@@ -127,7 +127,7 @@ export default function HomePage() {
   // Dynamic Workspace Switching Handler
   const handleWorkspaceChange = (workspace: string) => {
     setCurrentWorkspace(workspace);
-    router.push(`/organization/${encodeURIComponent(workspace.toLowerCase())}`);
+    router.push(`/workspace/${encodeURIComponent(workspace.toLowerCase())}`);
   };
 
   // Dynamic Activity Simulation (makes the dashboard look incredibly premium and live!)
@@ -250,7 +250,7 @@ export default function HomePage() {
         <div className="absolute top-[30%] left-[20%] w-[60%] h-[50%] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.01),transparent_75%)] blur-[130px] pointer-events-none"></div>
       </div>
 
-      {/* Home Navbar */}
+      {/* org Navbar */}
       <AppNavbar 
         currentWorkspace={currentWorkspace}
         switcherOpen={switcherOpen}
@@ -263,7 +263,7 @@ export default function HomePage() {
       {/* Main Grid Wrapper */}
       <div className="flex flex-1 h-[calc(100vh-56px)] relative z-10 overflow-hidden">
         
-        {/* Home Sidebar */}
+        {/* org Sidebar */}
         <AppSidebar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}

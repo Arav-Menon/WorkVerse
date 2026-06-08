@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
+
+  const router = useRouter();
+
   return (
     <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 md:px-6">
       <nav className="flex items-center gap-4 md:gap-8 px-4 md:px-6 py-2 md:py-2.5 rounded-full border border-white/10 bg-black/40 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative group w-full max-w-fit justify-between">
@@ -40,10 +44,10 @@ export default function Navbar() {
         {/* RIGHT: Actions */}
         <div className="flex items-center gap-2 md:gap-4 shrink-0">
           <div className="hidden sm:flex items-center gap-4 border-l border-white/10 pl-4 ml-2">
-            <Link href="/auth" className="text-[11px] uppercase tracking-widest text-zinc-300 hover:text-white transition-colors cursor-pointer font-bold">Sign In</Link>
+             <span onClick={() => router.push('/auth')} className="text-[11px] uppercase tracking-widest text-zinc-300 hover:text-white transition-colors cursor-pointer font-bold">Sign In</span>
           </div>
           
-          <button className="relative group/cta px-4 md:px-5 py-2 rounded-full bg-white text-black text-[9px] md:text-[11px] uppercase tracking-widest font-bold hover:bg-zinc-200 transition-all cursor-pointer overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.1)] whitespace-nowrap">
+          <button onClick={() => router.push("/auth")} className="relative group/cta px-4 md:px-5 py-2 rounded-full bg-white text-black text-[9px] md:text-[11px] uppercase tracking-widest font-bold hover:bg-zinc-200 transition-all cursor-pointer overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.1)] whitespace-nowrap">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-700"></div>
             Launch Workspace
           </button>
