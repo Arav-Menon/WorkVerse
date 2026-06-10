@@ -19,7 +19,7 @@ export async function registerIngestPrompt(
 }> {
   const { userPrompt, organizationId, workspaceId } = input;
 
-  const systemPrompt = aiSystemPrompt();
+  // const systemPrompt = aiSystemPrompt();
   const promptId = tokenId();
 
   try {
@@ -29,7 +29,7 @@ export async function registerIngestPrompt(
         workspaceId,
         userPrompt,
         organizationId,
-        systemPrompt,
+        // systemPrompt,
         promptId,
         userId,
       },
