@@ -3,21 +3,20 @@ import { aiSystemPrompt } from "../utils/systemPrompt";
 
 const openrouter = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
-export async function processWithAi(prompt: string) {
+export async function planExecution(prompt: string): Promise<any> {
   const stream = await openrouter.chat.send({
     chatRequest: {
-      model: "openai/gpt-5.5-pro",
+      model: "poolside/laguna-xs.2:free",
       messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
+        { role: "user", content: prompt },
         { role: "system", content: aiSystemPrompt() },
       ],
-      stream: true,
+      stream: false,
     },
   });
 
-  console.log(stream);
-  return stream
+
+  const result = stream.choices[0]?.message.content;
+  console.log(result)
+
 }
