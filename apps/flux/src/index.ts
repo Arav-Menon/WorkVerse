@@ -35,7 +35,7 @@ wss.on("connection", (socket: WebSocket) => {
       socket.send(JSON.stringify(response.data));
     } catch (err) {
       console.error("Error processing message:", err);
-      socket.send(JSON.stringify({ error: "Failed to process message" }));
+      socket.send(JSON.stringify({ error: "Failed to process message", err }));
     }
   });
 });
