@@ -14,7 +14,7 @@ import {
   pullCommsStream,
 } from "../utils/redis.helper";
 
-export const pushUserInboundPrompt = async (
+export const pushUserWorkflowPrompt = async (
   data: UserInboundPrompt,
 ): Promise<PushResult> => {
   return await pushToStream(data);
