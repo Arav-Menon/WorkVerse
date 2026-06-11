@@ -56,7 +56,7 @@ export const pushToWorkflow = async (
   maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
 ): Promise<PushResult> => {
   try {
-    const messageId = await client.xAdd(USER_WORKFLOW_JOB_STREAM, "*", data, {
+    const messageId = await client.xadd(USER_WORKFLOW_JOB_STREAM, "*", data, {
       TRIM: {
         strategy: "MAXLEN",
         strategyModifier: "~",
