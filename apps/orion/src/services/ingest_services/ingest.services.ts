@@ -1,7 +1,17 @@
 import type { ingestPromptBody } from "@repo/schemas";
 import { type FastifyInstance } from "fastify";
 import { planExecution } from "@repo/evaluator";
-import { get } from "http";
+import { CHAT_ONLY, HYBRID, MCP, WORKFLOW } from "../../../utils/config_names.ts";
+
+interface JobStatusPayLoad {
+  promptId: string,
+  status: "queued",
+  userId: string,
+  userPrompt: string,
+  organizationId: string,
+  workspaceId: string,
+  intent: any
+}
 
 export async function registerIngestPromptService(
   fastify: FastifyInstance,
@@ -18,34 +28,46 @@ export async function registerIngestPromptService(
     workspaceId,
     userPrompt,
     organizationId,
-    // systemPrompt,
     promptId,
     userId,
   } = input;
 
-  const jobStatusPayload2 = {
-    status: "queued",
-    userId,
-    userPrompt,
-    organizationId,
-    workspaceId,
-    promptId,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  console.log(jobStatusPayload2)
-
   try {
 
-    console.log("step:1")
-    const getTheIntent = await planExecution(userPrompt);
-    console.log("step:2")
-    console.log(getTheIntent)
+    const intent = await planExecution(userPrompt);
+
+    console.log(intent)
+    const jobPayload: JobStatusPayLoad = {
+      promptId,
+      status: "queued",
+      userId,
+      userPrompt,
+      organizationId,
+      workspaceId,
+      intent
+    }
+
+
+    switch (intent.execution_plan.type) {
+      case WORKFLOW:
+        const workflowQueue = await fastify.redisProducer.pushUserWorkflowPrompt(jobPayload)
+        console.log(workflowQueue);
+        break
+      case MCP:
+        console.log(MCP);
+        break
+      case HYBRID:
+        console.log(HYBRID);
+        break
+      case CHAT_ONLY:
+        console.log(CHAT_ONLY)
+        break
+    }
+
     return {
       success: true,
       // statusCode: error.statusCode,
-      message: "DOne",
+      message: "Done",
       // error: error,
     }
   } catch (error: any) {
