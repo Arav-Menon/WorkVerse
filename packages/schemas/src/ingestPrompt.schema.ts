@@ -14,7 +14,6 @@ export const UserInboundPromptSchema = z.object({
   organizationId: z.string(),
   userId: z.string(),
   workspaceId: z.string(),
-  systemPrompt: z.string(),
   userPrompt: z.string(),
 });
 
@@ -27,7 +26,7 @@ export const UserWorkflowJobSchema = z.object({
 export const UserCommsJobSchema = z.object({
   userId: z.string(),
   parsed: z.any(),
-  args : z.string(),
+  args: z.string(),
   organizationId: z.string(),
   workspaceId: z.string(),
 });
