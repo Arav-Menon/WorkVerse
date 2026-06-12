@@ -1,1 +1,1 @@
-export * from "./n8n.mapper";
+export * from "../src/n8n.mapper";
