@@ -17,6 +17,21 @@ export async function planExecution(prompt: string): Promise<any> {
     },
   });
 
-  const result = stream.choices[0]?.message.content;
-  return result
+  let result = stream.choices[0]?.message.content;
+  if (result) {
+    try {
+      // Safely extract JSON block if the AI wrapped it
+      const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (jsonMatch) {
+        result = jsonMatch[1];
+      } else {
+        result = result.replace(/^```/, "").replace(/```$/, "").trim();
+      }
+      return JSON.parse(result);
+    } catch (e) {
+      console.error("Failed to parse JSON from AI response:", result);
+      return null;
+    }
+  }
+  return null;
 }
