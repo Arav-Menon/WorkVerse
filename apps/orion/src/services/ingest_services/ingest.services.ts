@@ -50,7 +50,7 @@ export async function registerIngestPromptService(
 
     switch (intent.execution_plan.type) {
       case WORKFLOW:
-        const workflowQueue = await fastify.redisProducer.pushUserWorkflowPrompt(jobPayload)
+        const workflowQueue = await fastify.redisProducer.pushUserWorkflowJob(jobPayload as any)
         console.log(workflowQueue);
         break
       case MCP:
