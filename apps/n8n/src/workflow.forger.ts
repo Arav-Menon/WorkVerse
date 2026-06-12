@@ -2,6 +2,7 @@ import { pullUserWorkflowJob } from "@repo/redis/redis-client";
 import { mapWorkFlowData } from "../transformer";
 import { createWorkflow } from "./workflow-job";
 import { db } from "@repo/db/db";
+import { mapWorkflowToN8n } from "../transformer/mapper";
 
 console.log("[Workflow Forger] Started worker...");
 
@@ -22,7 +23,7 @@ while (true) {
 
     console.log("[Workflow Forger] Processing record from stream logic...");
 
-    const { userId, organizationId, workspaceId, parsed: parsedRaw } = record.message;
+    const { userId, organizationId, workspaceId, intent: parsedRaw } = record.message;
 
     if (!parsedRaw) {
       console.error("[Workflow Forger] No parsed data found in message");
@@ -33,14 +34,24 @@ while (true) {
 
     console.dir(parsed, { depth: null });
 
-    const data = {
-      name: parsed.name,
-      nodes: parsed.nodes || parsed.node,
-      connections: parsed.connections,
-      settings: parsed.settings,
+    const orionWorkflow = {
+      workflow: {
+        steps: [
+          ...(parsed?.execution_plan?.trigger ? [{
+            id: parsed.execution_plan.trigger.id,
+            engine: 'internal',
+            service: parsed.execution_plan.trigger.service || 'webhook',
+            action: parsed.execution_plan.trigger.event || 'trigger',
+            input: {}
+          }] : []),
+          ...(parsed?.execution_plan?.steps || [])
+        ]
+      }
     };
 
-    const workflow_json = mapWorkFlowData(data);
+    const workflow_json = mapWorkflowToN8n(orionWorkflow as any, parsed.name || "Generated Workflow");
+
+    console.log(workflow_json);
 
     delete (workflow_json as any).active;
     delete (workflow_json as any).versionId;
