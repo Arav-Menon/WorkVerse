@@ -1,0 +1,15 @@
+{
+  "name": "events",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@repo/redis" : "*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
