@@ -4,14 +4,16 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start:forger" : "bun src/forger.ts"
+    "start:forger": "bun src/forger.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "dependencies": {
+    "@repo/evaluator": "*",
     "@repo/redis": "*",
-    "@repo/evaluator": "*"
+    "@repo/queue" : "*",
+    "bullmq": "^5.78.0"
   },
   "peerDependencies": {
     "typescript": "^5"
