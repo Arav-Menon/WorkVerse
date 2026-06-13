@@ -1,6 +1,6 @@
 import type { ingestPromptBody } from "@repo/schemas";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { registerIngestPromptService } from "../services/ingest_services/ingest.services";
+import { registerIngestPromptService } from "../services/ingest_services/ingest.service";
 export async function createIngestController(
   request: FastifyRequest<{ Body: ingestPromptBody }>,
   reply: FastifyReply,
