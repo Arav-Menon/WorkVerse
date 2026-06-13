@@ -2,7 +2,7 @@ export function extractJson(text: string): string {
   try {
     JSON.parse(text);
     return text;
-  } catch {}
+  } catch { }
 
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("No JSON found in LLM response");
