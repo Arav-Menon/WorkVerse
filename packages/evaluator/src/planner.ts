@@ -1,9 +1,9 @@
 import { OpenRouter } from "@openrouter/sdk";
-import { aiSystemPrompt } from "../utils/systemPrompt";
+import { plannerSystemPrompt } from "../utils/systemPrompt";
 
 const openrouter = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
-const systemPrompt = aiSystemPrompt();
+const systemPrompt = plannerSystemPrompt();
 
 export async function planExecution(prompt: string): Promise<any> {
   const stream = await openrouter.chat.send({
@@ -20,7 +20,6 @@ export async function planExecution(prompt: string): Promise<any> {
   let result = stream.choices[0]?.message.content;
   if (result) {
     try {
-      // Safely extract JSON block if the AI wrapped it
       const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
       if (jsonMatch) {
         result = jsonMatch[1];
