@@ -1,42 +1,33 @@
-import {
-  pullUserInboundPrompt,
-  pushUserWorkflowJob,
-} from "@repo/redis/redis-client";
-import { processWithAi } from "@repo/evaluator";
+import { Worker } from "bullmq";
+import { connection } from "@repo/queue";
+import { chat } from "@repo/evaluator"
 
-while (true) {
-  const userInboundPrompt = await pullUserInboundPrompt();
-  if (!userInboundPrompt || !userInboundPrompt.response) continue;
+export const worker = new Worker('chat_response-queue', async (job) => {
+    console.log("worker is started.....")
+    const { workspaceId, userPrompt, organizationId, promptId, userId } = job.data;
 
-  console.dir(userInboundPrompt, { depth: null });
-
-  const stream = userInboundPrompt.response[0]?.messages[0]?.message;
-  if (!stream) continue;
-
-  console.log(stream);
-
-  const { userId, organizationId, workspaceId, systemPrompt, userPrompt } =
-    stream;
-
-  try {
-    const parsed = await processWithAi({
-      systemPrompt,
-      userPrompt,
-    });
-
-    if (parsed) {
-      await pushUserWorkflowJob({
-        userId,
-        parsed: JSON.stringify(parsed),
-        organizationId,
-        workspaceId,
-      });
-    } else {
-      console.log(JSON.stringify(parsed));
+    try {
+        console.log("reached to worker")
+        const response = await chat(userPrompt);
+        console.log("get the response from the worker")
+        console.log(response)
+        return {
+            success: true,
+            statusCode: 200,
+            info: {
+                promptId,
+                userId,
+                organizationId,
+                workspaceId,
+                content: response,
+            }
+        };
+    } catch (error: any) {
+        return {
+            success: true,
+            statusCode: error.statusCode ?? 500,
+            error
+        }
     }
-  } catch (err) {
-    console.error("Failed, to push to queue");
-  }
 
-  console.log(stream);
-}
+}, { connection })
