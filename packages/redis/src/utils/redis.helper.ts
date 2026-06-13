@@ -1,4 +1,4 @@
-import { client } from "../config";
+import { client } from "../connection/config";
 import {
   USER_COMMS_JOB_STREAM,
   USER_INBOUND_PROMPT_STREAM,
@@ -23,7 +23,11 @@ export type PullResult = {
   statusCode?: number;
 };
 
-// Helper to map ioredis nested array response to object-based structure expected by workers
+export type StreamResult = {
+  id: string;
+  message: Record<string, string>;
+};
+
 const parseStreamResponse = (response: any) => {
   if (!response) return response;
   return response.map(([name, messages]: any) => ({
@@ -36,36 +40,6 @@ const parseStreamResponse = (response: any) => {
       return { id, message };
     }),
   }));
-};
-
-export const pushToStream = async (
-  data: Record<string, any>,
-  maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
-): Promise<PushResult> => {
-  try {
-    const flatData = Object.entries(data).reduce((acc, [k, v]) => acc.concat(k, typeof v === "string" ? v : JSON.stringify(v)), [] as string[]);
-    const messageId = await client.xadd(
-      USER_INBOUND_PROMPT_STREAM,
-      "MAXLEN",
-      "~",
-      maxLen,
-      "*",
-      ...flatData
-    );
-
-    return { success: true, id: messageId! };
-  } catch (error: any) {
-    console.error(
-      `[Redis Helper] Failed to push to stream "${USER_INBOUND_PROMPT_STREAM}":`,
-      error,
-    );
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
-      statusCode: error.statusCode,
-    };
-  }
 };
 
 export const pushToWorkflow = async (
@@ -87,44 +61,6 @@ export const pushToWorkflow = async (
   } catch (error: any) {
     console.error(
       `[Redis Helper] Failed to push to stream "${USER_WORKFLOW_JOB_STREAM}":`,
-      error,
-    );
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
-      statusCode: error.statusCode,
-    };
-  }
-};
-
-export type StreamResult = {
-  id: string;
-  message: Record<string, string>;
-};
-
-export const pullSubmissionPrompt = async (
-  group = "submission-worker-group",
-  consumer = WORKER_ID,
-): Promise<PullResult> => {
-  try {
-    const response = await client.xreadgroup(
-      "GROUP",
-      group,
-      consumer,
-      "COUNT",
-      1,
-      "BLOCK",
-      5000,
-      "STREAMS",
-      USER_INBOUND_PROMPT_STREAM,
-      ">"
-    );
-
-    return { success: true, response: parseStreamResponse(response) };
-  } catch (error: any) {
-    console.error(
-      `[Redis Helper] Failed to pull from stream "${USER_INBOUND_PROMPT_STREAM}":`,
       error,
     );
     return {
@@ -167,6 +103,42 @@ export const pullWorkflowJSON = async (
     };
   }
 };
+
+
+export const pullSubmissionPrompt = async (
+  group = "submission-worker-group",
+  consumer = WORKER_ID,
+): Promise<PullResult> => {
+  try {
+    const response = await client.xreadgroup(
+      "GROUP",
+      group,
+      consumer,
+      "COUNT",
+      1,
+      "BLOCK",
+      5000,
+      "STREAMS",
+      USER_INBOUND_PROMPT_STREAM,
+      ">"
+    );
+
+    return { success: true, response: parseStreamResponse(response) };
+  } catch (error: any) {
+    console.error(
+      `[Redis Helper] Failed to pull from stream "${USER_INBOUND_PROMPT_STREAM}":`,
+      error,
+    );
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
+    };
+  }
+};
+
+
 
 export const pushCommsStream = async (
   data: Record<string, any>,
