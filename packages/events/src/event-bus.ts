@@ -32,6 +32,28 @@ class EventBusService {
     }
 
     /**
+     * Subscribe to a specific event channel continuously.
+     * @param channel The Redis channel to listen to.
+     * @param handler A function that runs whenever an event is received.
+     * @returns A cleanup function to remove the listener.
+     */
+    async subscribe<K extends keyof EventMap>(
+        channel: K,
+        handler: (payload: EventMap[K]) => void
+    ): Promise<() => void> {
+        if (!this.subscribedChannels.has(channel as string)) {
+            await subscriberRedis.subscribe(channel as string);
+            this.subscribedChannels.add(channel as string);
+        }
+
+        this.emitter.on(channel, handler);
+
+        return () => {
+            this.emitter.off(channel, handler);
+        };
+    }
+
+    /**
      * Wait for an event that matches a specific condition.
      * @param channel The Redis channel to listen to.
      * @param filterFn A function that returns true when the incoming event belongs to this request (e.g., matching promptId).
