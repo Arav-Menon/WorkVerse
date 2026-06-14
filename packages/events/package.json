@@ -1,8 +1,11 @@
 {
-  "name": "events",
+  "name": "@repo/events",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "exports" : {
+    "." : "./src/index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
