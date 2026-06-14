@@ -58,8 +58,8 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
-  memberships         OrganizationMember[]
-  messages            Message[]
+  memberships OrganizationMember[]
+  messages    Message[]
 
   channelmembers      ChannelMember[]
   organization        Organization[]
@@ -132,7 +132,7 @@ model Workspace {
 }
 
 model WorkflowJob {
-  id             String             @id
+  id             String            @id
   workspaceId    String
   organizationId String
   createdById    String
@@ -142,8 +142,8 @@ model WorkflowJob {
   status         WorkflowStatus
   executor       WorkflowExecutor?
   graph          Json?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   executions JobExecution[]
   events     AgentEvent[]
@@ -152,6 +152,8 @@ model WorkflowJob {
 model AiChatMessage {
   id             String      @id
   conversationId String
+  promptId       String
+  organizationId String
   workspaceId    String
   userId         String
   role           MessageRole
