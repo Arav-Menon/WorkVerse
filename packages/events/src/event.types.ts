@@ -3,6 +3,6 @@ export interface ChatCompletedEvent {
     userId: string;
     workspaceId: string;
     organizationId: string;
-    content: string;
+    content: string | null;
     status: "completed";
 }
