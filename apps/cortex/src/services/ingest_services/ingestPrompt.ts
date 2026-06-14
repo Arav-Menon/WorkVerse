@@ -17,10 +17,7 @@ export async function registerIngestPrompt(
   message?: string;
   jobStatus?: string;
 }> {
-  const { userPrompt, organizationId, workspaceId } = input;
-
-  // const systemPrompt = aiSystemPrompt();
-  const promptId = tokenId();
+  const { userPrompt, organizationId, workspaceId, promptId } = input;
 
   try {
     await axios.post(
@@ -29,7 +26,6 @@ export async function registerIngestPrompt(
         workspaceId,
         userPrompt,
         organizationId,
-        // systemPrompt,
         promptId,
         userId,
       },
