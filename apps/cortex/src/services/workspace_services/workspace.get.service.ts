@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-const WS_TTL = 3600; // 1 hour
+const WS_TTL = 3600;
 
 async function assertOrgMembership(
   fastify: FastifyInstance,
@@ -30,7 +30,6 @@ export async function getOrgWorkspaces(
 
   await assertOrgMembership(fastify, userId, orgId);
 
-  // Single query — includes space count per workspace, no N+1
   const workspaces = await fastify.db.workspace.findMany({
     where: { organizationId: orgId },
     select: {
