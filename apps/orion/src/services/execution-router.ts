@@ -24,6 +24,7 @@ export class ExecutionRouter {
                 await chatQueue.add("chat_job", {
                     promptId: payload.promptId,
                     userId: payload.userId,
+                    spaceId: payload.spaceId,
                     userPrompt: payload.userPrompt,
                     organizationId: payload.organizationId,
                     workspaceId: payload.workspaceId,
