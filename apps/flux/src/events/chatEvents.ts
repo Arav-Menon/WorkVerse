@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 import { EventBus } from "@repo/events";
 import { socketStore } from "../store/socketStore";
+import { start } from "repl";
 
 export function registerChatEvents() {
   EventBus.subscribe("chat_completed", (payload: any) => {
@@ -22,4 +23,25 @@ export function registerChatEvents() {
 
     socketStore.remove(payload.promptId);
   });
+}
+
+export function registerWorklfowEvents() {
+  EventBus.subscribe("workflow_event", (payload: any) => {
+    const socket = socketStore.get(payload.promptId);
+
+    if (!socket) return;
+
+    if (socket.readyState == WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        status: payload.status,
+        message: payload.message,
+        userId: payload.userId,
+        organizationId: payload.organizationId,
+        workspaceId: payload.workSpaceId,
+        promptId: payload.promptId,
+        content: payload.content,
+      }))
+    }
+
+  })
 }
