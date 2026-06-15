@@ -2,11 +2,12 @@ import { z } from "zod";
 
 export const ingestPromptSchema = z.object({
   userId: z.string(),
-  organizationId: z.string(),
-  workspaceId: z.string(),
+  organizationId: z.string().min(2),
+  workspaceId: z.string().min(2),
+  spaceId: z.string().min(2),
   systemPrompt: z.string(),
   userPrompt: z.string(),
-  promptId: z.string(),
+  promptId: z.string().min(2),
 });
 
 export const UserInboundPromptSchema = z.object({
