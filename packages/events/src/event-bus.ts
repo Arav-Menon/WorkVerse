@@ -1,9 +1,10 @@
 import { publisherRedis, subscriberRedis } from "@repo/redis";
-import type { ChatCompletedEvent } from "./event.types";
+import type {ChatCompletedEvent, WorkflowEvent} from "./event.types";
 import { EventEmitter } from "events";
 
 export interface EventMap {
     "chat_completed": ChatCompletedEvent;
+    "workflow_event" : WorkflowEvent;
 }
 
 class EventBusService {
@@ -11,8 +12,6 @@ class EventBusService {
     private subscribedChannels = new Set<string>();
 
     constructor() {
-        // 1. One global Redis listener for the entire application.
-        // This prevents MaxListenersExceededWarning memory leaks.
         subscriberRedis.on("message", (channel, message) => {
             try {
                 const parsed = JSON.parse(message);
