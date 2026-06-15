@@ -24,7 +24,7 @@ export const worker = new Worker('chat_response-queue', async (job) => {
 
         await client.set(`chat${promptId}:access`, JSON.stringify(chatCompletePayload), "EX", 86400);
 
-        const dbCheck = await insertBulk(chatCompletePayload) as any;
+        await insertBulk(chatCompletePayload);
 
         await EventBus.publish("chat_completed", chatCompletePayload);
 
