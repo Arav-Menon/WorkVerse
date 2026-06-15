@@ -7,10 +7,9 @@ export class ExecutionRouter {
     static async dispatch(intent: any, payload: JobStatusPayLoad): Promise<any> {
         let responseMessage: string;
 
-        console.log("step:3")
-
         switch ((intent as any).execution_plan.type) {
             case WORKFLOW: {
+                console.log("nikal gyaa queue ke liye")
                 await redisProducer.pushUserWorkflowJob(payload);
                 responseMessage = "Workflow queued successfully. Your automation is being prepared";
                 break;
