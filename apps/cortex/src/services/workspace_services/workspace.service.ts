@@ -20,10 +20,25 @@ export async function registerWorkspace(
         "A workspace with this name in this organization is already exists",
     };
 
-  const workspace = await fastify.db.workspace.create({
-    data: { name, createdById: userId, organizationId: orgId },
-    select: { id: true, name: true, createdById: true, organizationId: true },
+  const workspace_space = await fastify.db.$transaction(async (tx) => {
+    const workspace = await tx.workspace.create({
+      data: { name, createdById: userId, organizationId: orgId },
+      select: { id: true, name: true, createdById: true, organizationId: true },
+    });
+
+    await tx.space.create({
+      data: {
+        orgId,
+        workspaceId: workspace.id,
+        createdById: userId,
+        userId: userId,
+      },
+    });
+
+    return workspace;
   });
 
-  return workspace;
+  await fastify.cache.set(`workspace_space${workspace_space.id}:access`, JSON.stringify(workspace_space), "EX", "3,600");
+
+  return workspace_space;
 }
