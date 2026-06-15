@@ -67,6 +67,7 @@ model User {
   organizationInvites OrganizationInvite[]
   chatMessages        ChatMessage[]
   oauthConnections    OAuthConnection[]
+  spaces              Space[]
 }
 
 model Organization {
@@ -79,6 +80,7 @@ model Organization {
   members             OrganizationMember[]
   workspaces          Workspace[]
   organizationInvites OrganizationInvite[]
+  spaces              Space[]
 }
 
 model OrganizationInvite {
@@ -130,6 +132,7 @@ model Workspace {
   agents       Agent[]
   channels     Channel[]
   chatMessages ChatMessage[]
+  spaces       Space[]
 }
 
 model WorkflowJob {
@@ -335,4 +338,21 @@ model OAuthConnection {
 
   @@unique([userId, provider])
   @@index([userId])
+}
+
+model Space {
+  id          String       @id @default(uuid())
+  orgId       String
+  workspaceId String
+  createdById String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy   User         @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([workspaceId])
+  @@index([workspaceId])
+  @@index([orgId])
 }
