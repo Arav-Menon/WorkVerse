@@ -8,7 +8,7 @@ import { insertBulk } from "../utils/bulkInsert";
 
 export const worker = new Worker('chat_response-queue', async (job) => {
     console.log("worker is started.....")
-    const { workspaceId, userPrompt, organizationId, promptId, userId } = job.data;
+    const { workspaceId, spaceId, userPrompt, organizationId, promptId, userId } = job.data;
 
     try {
         const response = await chat(userPrompt);
@@ -16,6 +16,7 @@ export const worker = new Worker('chat_response-queue', async (job) => {
         const chatCompletePayload: ChatCompletedEvent = {
             promptId,
             userId,
+            spaceId,
             organizationId,
             workspaceId,
             content: response,
