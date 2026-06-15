@@ -31,12 +31,12 @@ export async function registerIngestPromptService(
     deps: IngestServiceDeps,
     input: ingestPromptBody,
 ): Promise<IngestServiceResponse> {
-    const { log, redisProducer } = deps;
+    const { log } = deps;
     const { workspaceId, userPrompt, organizationId, promptId, userId } = input;
 
     try {
         const intent = await planExecution(userPrompt);
-        console.log("step:1")
+        console.log(intent)
 
         const jobPayload: JobStatusPayLoad = {
             promptId,
@@ -48,9 +48,7 @@ export async function registerIngestPromptService(
             intent,
         };
 
-        console.log("Step:2")
         const responseMessage = await ExecutionRouter.dispatch(intent, jobPayload);
-        console.log(responseMessage)
 
         return {
             success: true,
