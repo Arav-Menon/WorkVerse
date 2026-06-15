@@ -11,6 +11,7 @@ export const handleConnection = (socket: WebSocket) => {
       token: string;
       workspaceId: string;
       userPrompt: string;
+      spaceId: string;
       organizationId: string;
     };
 
@@ -21,9 +22,9 @@ export const handleConnection = (socket: WebSocket) => {
       return;
     }
 
-    const { token, workspaceId, userPrompt, organizationId } = parsed;
+    const { token, workspaceId, userPrompt, organizationId, spaceId } = parsed;
 
-    if (!token || !workspaceId || !userPrompt || !organizationId) {
+    if (!token || !workspaceId || !userPrompt || !organizationId || !spaceId) {
       socket.send(JSON.stringify({ error: "Missing required fields" }));
       return;
     }
@@ -35,7 +36,7 @@ export const handleConnection = (socket: WebSocket) => {
     try {
       await axios.post(
         API_URL,
-        { workspaceId, userPrompt, promptId, organizationId },
+        { workspaceId, userPrompt, promptId, organizationId, spaceId },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
