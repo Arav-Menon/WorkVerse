@@ -1,29 +1,23 @@
 import { pullUserWorkflowJob } from "@repo/redis/redis-client";
-import { mapWorkFlowData } from "../transformer";
 import { createWorkflow } from "./workflow-job";
-import { db } from "@repo/db/db";
 import { mapWorkflowToN8n } from "../transformer/mapper";
-
-console.log("[Workflow Forger] Started worker...");
+import { client } from "@repo/redis";
+import { EventBus, type WorkflowEvent } from "@repo/events"
 
 while (true) {
+
   try {
     const workflowJob = (await pullUserWorkflowJob()) as any;
 
     if (!workflowJob?.success || !workflowJob?.response || workflowJob.response.length === 0) {
       continue;
     }
-
-    console.log("[Workflow Forger] Received job from stream");
-
     const stream = workflowJob.response[0];
     const record = stream?.messages?.[0];
 
     if (!record) continue;
 
-    console.log("[Workflow Forger] Processing record from stream logic...");
-
-    const { userId, organizationId, workspaceId, intent: parsedRaw } = record.message;
+    const { promptId, userId, organizationId, workspaceId, intent: parsedRaw } = record.message;
 
     if (!parsedRaw) {
       console.error("[Workflow Forger] No parsed data found in message");
@@ -31,8 +25,6 @@ while (true) {
     }
 
     const parsed = typeof parsedRaw === "string" ? JSON.parse(parsedRaw) : parsedRaw;
-
-    console.dir(parsed, { depth: null });
 
     const orionWorkflow = {
       workflow: {
@@ -49,23 +41,40 @@ while (true) {
       }
     };
 
+    const workflowPayload: WorkflowEvent = {
+      promptId,
+      userId,
+      organizationId,
+      workspaceId,
+      status: "mapping",
+      message: "Converting workflow into executable steps...",
+    };
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+
+    await EventBus.publish("workflow_event", workflowPayload)
+
     const workflow_json = mapWorkflowToN8n(orionWorkflow as any, parsed.name || "Generated Workflow");
 
-    console.log(workflow_json);
+    workflowPayload.status = "generating";
+    workflowPayload.message = "Pushing workflow to n8n engine...";
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+    await EventBus.publish("workflow_event", workflowPayload);
 
     delete (workflow_json as any).active;
     delete (workflow_json as any).versionId;
     delete (workflow_json as any).id;
 
-    console.log(`[Workflow Forger] Creating workflow: "${workflow_json.name}"`);
-    console.log("[Workflow Forger] Payload keys:", Object.keys(workflow_json));
+    await createWorkflow(workflow_json);
 
-    const result = await createWorkflow(workflow_json);
-    console.log("[Workflow Forger] Workflow created successfully ID:", result.id);
+    workflowPayload.status = "completed";
+    workflowPayload.message = "Workflow successfully created and ready to use!";
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
 
-    // await db.workflowJob.update({ where : {  } })
-
-
+    // TODO :- Add the workflow exectution to the db throw queue not directly.
+    // given an example
+    // and also setup the bullMQ too before the inserting to the db; 
+    // await db.workflowJob.update({ where : { promptId } }); 
+    await EventBus.publish("workflow_event", workflowPayload);
 
   } catch (error) {
     console.error("[Workflow Forger] Error in worker loop:", error);
