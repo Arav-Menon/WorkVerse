@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 FROM base AS install
 RUN mkdir -p /temp/prod
 COPY package.json bun.lock /temp/prod/
-COPY apps/forger/package.json /temp/prod/apps/cortex
+COPY apps/forger/package.json /temp/prod/apps/forger
 COPY packages/evaluator/package.json /temp/prod/packages/evaluator/
 COPY packages/events/package.json /temp/prod/packages/events/
 COPY packages/queue/package.json /temp/prod/packages/queue/
