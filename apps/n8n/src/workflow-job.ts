@@ -15,7 +15,7 @@ export async function createWorkflow(
       {
         headers: {
           "accept": "application/json",
-          "X-N8N-API-KEY": `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5OWFhMGI0ZS1mNTkwLTQyZDAtOTE2Mi0yNDU0MDVmZjA4M2MiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNTVlNDU0OWEtM2M3Yy00ODM5LWE2NDAtZWJkYjQxNmUwNDM3IiwiaWF0IjoxNzgxNTExMDc5LCJleHAiOjE3ODQwODgwMDB9.3BfkwoLhRzuZdOmxHvVMtwEMeyRQmcncZz0Z6uf0YMc`,
+          "X-N8N-API-KEY": `${process.env.N8N_API_KEY}`,
         },
       },
     );
