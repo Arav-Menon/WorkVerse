@@ -17,7 +17,7 @@ while (true) {
 
     if (!record) continue;
 
-    const { promptId, userId, organizationId, workspaceId, intent: parsedRaw } = record.message;
+    const { promptId, userId, organizationId, workspaceId, spaceId, intent: parsedRaw } = record.message;
 
     if (!parsedRaw) {
       console.error("[Workflow Forger] No parsed data found in message");
@@ -45,6 +45,7 @@ while (true) {
       promptId,
       userId,
       organizationId,
+      spaceId,
       workspaceId,
       status: "mapping",
       message: "Converting workflow into executable steps...",
