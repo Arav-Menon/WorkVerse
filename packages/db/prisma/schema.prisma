@@ -66,6 +66,7 @@ model User {
   workspace           Workspace[]
   organizationInvites OrganizationInvite[]
   chatMessages        ChatMessage[]
+  oauthConnections    OAuthConnection[]
 }
 
 model Organization {
@@ -313,4 +314,25 @@ model AgentEvent {
   job WorkflowJob @relation(fields: [jobId], references: [id])
 
   @@index([jobId])
+}
+
+enum OAuthProvider {
+  GITHUB
+  GOOGLE
+  SLACK
+}
+
+model OAuthConnection {
+  id          String        @id @default(uuid())
+  userId      String
+  provider    OAuthProvider
+  accessToken String
+  scopes      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, provider])
+  @@index([userId])
 }
