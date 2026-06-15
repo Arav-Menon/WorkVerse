@@ -27,6 +27,7 @@ import organizationAcceptInviteRoutes from "./routes/organization_invite/organiz
 import createRoomRoutes from "./routes/create_room/create_room.route";
 import redisPlugin from "./plugins/redis";
 import { ingestPromptRoutes } from "./routes";
+import oauthRoutes from "./routes/oauth/oauth.route";
 for (const schema of authJsonSchemas) {
   fastify.addSchema(schema);
 }
@@ -56,4 +57,5 @@ fastify.register(organizationAcceptInviteRoutes, {
 });
 fastify.register(createRoomRoutes, { prefix: "/api/v1/open-room" });
 fastify.register(ingestPromptRoutes, { prefix: "/api/v1/ingest-prompt" });
+fastify.register(oauthRoutes, { prefix: "/api/v1/oauth" });
 fastify.get("/health", async () => ({ status: "ok" }));
