@@ -8,6 +8,7 @@ interface JobStatusPayLoad {
     status: "queued";
     userId: string;
     userPrompt: string;
+    spaceId: string,
     organizationId: string;
     workspaceId: string;
     intent: unknown;
@@ -32,16 +33,16 @@ export async function registerIngestPromptService(
     input: ingestPromptBody,
 ): Promise<IngestServiceResponse> {
     const { log } = deps;
-    const { workspaceId, userPrompt, organizationId, promptId, userId } = input;
+    const { workspaceId, userPrompt, organizationId, promptId, userId, spaceId } = input;
 
     try {
         const intent = await planExecution(userPrompt);
-        console.log(intent)
 
         const jobPayload: JobStatusPayLoad = {
             promptId,
             status: "queued",
             userId,
+            spaceId,
             userPrompt,
             organizationId,
             workspaceId,
