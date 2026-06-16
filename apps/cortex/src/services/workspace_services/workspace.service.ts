@@ -38,7 +38,7 @@ export async function registerWorkspace(
     return workspace;
   });
 
-  await fastify.cache.set(`workspace_space${workspace_space.id}:access`, JSON.stringify(workspace_space), "EX", "3,600");
+  await fastify.cache.set(`workspace_space${workspace_space.id}:access`, JSON.stringify(workspace_space), "EX", 3600);
 
   return workspace_space;
 }
