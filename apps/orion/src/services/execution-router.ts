@@ -9,12 +9,13 @@ export class ExecutionRouter {
 
         switch ((intent as any).execution_plan.type) {
             case WORKFLOW: {
-                console.log("nikal gyaa queue ke liye")
                 await redisProducer.pushUserWorkflowJob(payload);
                 responseMessage = "Workflow queued successfully. Your automation is being prepared";
                 break;
             }
             case MCP:
+                const mcpQueue = await redisProducer.pushUserMcpJob(payload)
+                console.log(mcpQueue);
                 responseMessage = "Action request received. Processing your request";
                 break;
             case HYBRID:
