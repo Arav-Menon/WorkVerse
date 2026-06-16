@@ -7,6 +7,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "prisma:generate" : "cd packages/db && bun prisma:generate",
+    "prisma:studio" : "cd packages/db && bun prisma:studio",
     "test": "vitest"
   },
   "devDependencies": {
