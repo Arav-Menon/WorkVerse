@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start:comms-worker": "bun ./src/workers/comms.worker.ts"
+    "start:executor": "bun ./src/workers/executor.mcp.worker.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -16,6 +16,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@repo/mcp": "*",
     "zod": "^3.23.0",
-    "@repo/redis" : "*"
+    "@repo/redis": "*",
+    "@repo/db": "*"
   }
 }
