@@ -3,6 +3,7 @@ import {
   USER_COMMS_JOB_STREAM,
   USER_INBOUND_PROMPT_STREAM,
   USER_WORKFLOW_JOB_STREAM,
+  USER_MCP_JOB_STREAM,
 } from "./stream";
 import os from "os";
 
@@ -199,6 +200,79 @@ export const pullCommsStream = async (
   } catch (err: any) {
     console.error(
       `[Redis Helper] Failed to pull from stream "${USER_COMMS_JOB_STREAM}":`,
+      err,
+    );
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+      statusCode: err.statusCode,
+    };
+  }
+};
+
+export const pushToMcp = async (
+  data: Record<string, any>,
+  maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
+): Promise<PushResult> => {
+  try {
+    const flatData = Object.entries(data).reduce((acc, [k, v]) => acc.concat(k, typeof v === "string" ? v : JSON.stringify(v)), [] as string[]);
+    const messageId = await client.xadd(
+      USER_MCP_JOB_STREAM,
+      "MAXLEN",
+      "~",
+      maxLen,
+      "*",
+      ...flatData
+    );
+
+    return { success: true, id: messageId! };
+  } catch (error: any) {
+    console.error(
+      `[Redis Helper] Failed to push to stream "${USER_MCP_JOB_STREAM}":`,
+      error,
+    );
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
+    };
+  }
+};
+
+export const pullMcpJSON = async (
+  group = "mcp-worker-group",
+  consumer = WORKER_ID,
+): Promise<PullResult> => {
+  try {
+    const response = await client.xreadgroup(
+      "GROUP",
+      group,
+      consumer,
+      "COUNT",
+      1,
+      "BLOCK",
+      5000,
+      "STREAMS",
+      USER_MCP_JOB_STREAM,
+      ">"
+    );
+
+    return { success: true, response: parseStreamResponse(response) };
+  } catch (err: any) {
+    if (err.message && err.message.includes("NOGROUP")) {
+      try {
+        await client.xgroup("CREATE", USER_MCP_JOB_STREAM, group, "0", "MKSTREAM");
+        return await pullMcpJSON(group, consumer);
+      } catch (createErr: any) {
+        if (!createErr.message.includes("BUSYGROUP")) {
+          console.error(`[Redis Helper] Failed to create consumer group for "${USER_MCP_JOB_STREAM}":`, createErr);
+        }
+      }
+    }
+
+    console.error(
+      `[Redis Helper] Failed to pull from stream "${USER_MCP_JOB_STREAM}":`,
       err,
     );
     return {
