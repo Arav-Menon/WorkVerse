@@ -1,5 +1,6 @@
 import { OpenRouter } from "@openrouter/sdk";
 import { plannerSystemPrompt } from "../utils/systemPrompt";
+import * as console from "node:console";
 
 const openrouter = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
@@ -18,6 +19,7 @@ export async function planExecution(prompt: string): Promise<any> {
   });
 
   let result = stream.choices[0]?.message.content;
+  console.log(result)
   if (result) {
     try {
       const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
