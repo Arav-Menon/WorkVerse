@@ -18,7 +18,7 @@ export default function ConnectionsRecommendations({ recommendations }: Connecti
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {recommendations.map((rec, i) => (
-          <div key={i} className={`bg-zinc-950/30 border rounded-2xl p-5 flex flex-col gap-4 ${
+          <div key={i} className={`bg-zinc-950/30 border rounded-2xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 ${
             rec.type === "reconnect"
               ? "border-amber-500/20 hover:border-amber-500/30"
               : "border-zinc-900/80 hover:border-zinc-800"

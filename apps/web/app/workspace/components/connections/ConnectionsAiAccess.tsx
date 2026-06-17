@@ -20,16 +20,16 @@ export default function ConnectionsAiAccess({ services }: ConnectionsAiAccessPro
 
       <div className="bg-zinc-950/30 border border-zinc-900 rounded-2xl overflow-hidden">
         {healthyServices.map((service, i, arr) => (
-          <div key={service.id} className={`flex items-start gap-4 px-5 py-4 ${i < arr.length - 1 ? "border-b border-zinc-900/60" : ""}`}>
+          <div key={service.id} className={`flex items-start gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 sm:py-4 ${i < arr.length - 1 ? "border-b border-zinc-900/60" : ""}`}>
             <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
               <i className={`ti ${service.icon} text-zinc-400 text-base`}></i>
             </div>
-            <div className="flex-grow">
+            <div className="flex-grow min-w-0">
               <p className="text-[13px] font-semibold text-zinc-200 mb-2">{service.name}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {service.aiAccess.map(a => (
-                  <span key={a} className="flex items-center gap-1.5 text-[11px] text-zinc-400 bg-zinc-900/60 border border-zinc-800 rounded-full px-2.5 py-1">
-                    <i className="ti ti-check text-emerald-500 text-[10px]"></i>
+                  <span key={a} className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-zinc-400 bg-zinc-900/60 border border-zinc-800 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1">
+                    <i className="ti ti-check text-emerald-500 text-[9px] sm:text-[10px]"></i>
                     {a}
                   </span>
                 ))}
