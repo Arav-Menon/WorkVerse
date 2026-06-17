@@ -19,8 +19,17 @@ export class ExecutionRouter {
                 responseMessage = "Action request received. Processing your request";
                 break;
             case HYBRID:
-                responseMessage = "Hybrid execution queued. Preparing workflow and actions.";
-                break;
+                return  {
+                "status": "not_supported",
+                "executionType": "HYBRID",
+                "message":
+                "This request requires multi-step AI automation with conditional execution, which is not yet supported in your current WorkVerse version.",
+                    "supportedToday": [
+                "CHAT_ONLY",
+                "MCP",
+                "WORKFLOW"
+            ]
+                }
             case CHAT_ONLY: {
                 await chatQueue.add("chat_job", {
                     promptId: payload.promptId,
