@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start:orion": "bun ./src/server.ts"
+    "start:orion": "bun /src/server.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -21,6 +21,8 @@
     "@repo/schemas": "*",
     "@repo/rate-limit": "*",
     "fastify": "^5.0.0",
-    "fastify-plugin": "^5.0.0"
+    "fastify-plugin": "^5.0.0",
+    "@repo/evaluator" : "*",
+    "@repo/queue": "*"
   }
 }

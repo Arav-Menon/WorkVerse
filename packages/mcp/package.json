@@ -3,6 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start:server": "bun src/server.ts"
+  },
   "exports": {
     ".": "./index.ts",
     "./mcp": "./index.ts",
@@ -17,7 +20,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@repo/redis": "*"
+    "@repo/redis": "*",
+    "@repo/db": "*",
+    "zod": "^4.4.3"
   }
-
 }

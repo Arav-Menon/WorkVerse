@@ -1,23 +1,38 @@
 import { OpenRouter } from "@openrouter/sdk";
-import { aiSystemPrompt } from "../utils/systemPrompt";
+import { plannerSystemPrompt } from "../utils/systemPrompt";
+import * as console from "node:console";
 
 const openrouter = new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
-export async function processWithAi(prompt: string) {
+const systemPrompt = plannerSystemPrompt();
+
+export async function planExecution(prompt: string): Promise<any> {
   const stream = await openrouter.chat.send({
     chatRequest: {
-      model: "openai/gpt-5.5-pro",
+      model: "openai/gpt-oss-120b:free",
       messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-        { role: "system", content: aiSystemPrompt() },
+        { role: "user", content: prompt },
+        { role: "system", content: systemPrompt },
       ],
-      stream: true,
+      stream: false,
     },
   });
 
-  console.log(stream);
-  return stream
+  let result = stream.choices[0]?.message.content;
+  console.log(result)
+  if (result) {
+    try {
+      const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (jsonMatch) {
+        result = jsonMatch[1];
+      } else {
+        result = result.replace(/^```/, "").replace(/```$/, "").trim();
+      }
+      return JSON.parse(result);
+    } catch (e) {
+      console.error("Failed to parse JSON from AI response:", result);
+      return null;
+    }
+  }
+  return null;
 }

@@ -1,4 +1,5 @@
 @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -17,6 +18,7 @@
 body {
   background-color: #000;
   color: #fff;
+  font-family: 'Raleway', sans-serif;
 }
 
 /* Custom scrollbar for webkit browsers */
@@ -26,14 +28,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090b; 
+  background: #09090b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a; 
+  background: #27272a;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46; 
+  background: #3f3f46;
 }

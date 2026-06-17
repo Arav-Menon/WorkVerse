@@ -1,7 +1,5 @@
 import { type FastifyInstance } from "fastify";
 import type { ingestPromptBody } from "@repo/schemas";
-import { tokenId } from "./getId";
-import { aiSystemPrompt } from "./systemPrompt";
 import axios from "axios";
 import { API_URL } from "../../../utils";
 
@@ -17,19 +15,16 @@ export async function registerIngestPrompt(
   message?: string;
   jobStatus?: string;
 }> {
-  const { userPrompt, organizationId, workspaceId } = input;
-
-  const systemPrompt = aiSystemPrompt();
-  const promptId = tokenId();
+  const { userPrompt, organizationId, workspaceId, promptId, spaceId } = input;
 
   try {
     await axios.post(
       API_URL,
       {
         workspaceId,
+        spaceId,
         userPrompt,
         organizationId,
-        systemPrompt,
         promptId,
         userId,
       },
@@ -43,6 +38,7 @@ export async function registerIngestPrompt(
     const jobStatusPayload = {
       status: "received",
       userId,
+      spaceId,
       organizationId,
       workspaceId,
       promptId,

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 interface Member {
   name: string;
@@ -23,12 +24,15 @@ export default function OrgSidebar({
   activeSection,
   setActiveSection,
 }: OrgSidebarProps) {
+  const params = useParams();
+  const workspaceName = params?.workspaceName as string ?? "";
+
   const navigation = [
-    { name: "Home", icon: "ti-home" },
     { name: "Workspaces", icon: "ti-layout-grid", badge: 12 },
     { name: "AI Lab", icon: "ti-robot" },
     { name: "Automations", icon: "ti-arrows-split" },
     { name: "Schedule", icon: "ti-calendar" },
+    { name: "Connections", icon: "ti-plug-connected",},
   ];
 
   const members: Member[] = [
@@ -55,6 +59,8 @@ export default function OrgSidebar({
         }`}
         aria-label="Organization sidebar navigation"
       >
+
+
         <nav className="flex-grow flex flex-col justify-between" aria-label="Main sections">
           <div className="space-y-6">
             <div>
@@ -67,7 +73,7 @@ export default function OrgSidebar({
                         activeSection === item.name ? "bg-zinc-900 text-white font-medium" : ""
                       }`}
                       onClick={() => {
-                        setActiveSection(item.name);
+                          setActiveSection(item.name);
                         setSidebarOpen(false);
                       }}
                     >
@@ -84,6 +90,7 @@ export default function OrgSidebar({
               </ul>
             </div>
 
+                  {/* Office-presence */}
             <div>
               <p className="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase px-3 mb-2.5 select-none">Office Presence</p>
               <ul className="space-y-0.5">

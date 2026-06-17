@@ -1,4 +1,4 @@
-import { createRedisClient } from "../config"
+import { createRedisClient } from "../connection/config"
 
 const createBrodClient = (name: string) => {
     const connection = createRedisClient();

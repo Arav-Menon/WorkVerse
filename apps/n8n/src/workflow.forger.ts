@@ -1,28 +1,23 @@
 import { pullUserWorkflowJob } from "@repo/redis/redis-client";
-import { mapWorkFlowData } from "../transformer";
 import { createWorkflow } from "./workflow-job";
-import { db } from "@repo/db/db";
-
-console.log("[Workflow Forger] Started worker...");
+import { mapWorkflowToN8n } from "../transformer/mapper";
+import { client } from "@repo/redis";
+import { EventBus, type WorkflowEvent } from "@repo/events"
 
 while (true) {
+
   try {
     const workflowJob = (await pullUserWorkflowJob()) as any;
 
     if (!workflowJob?.success || !workflowJob?.response || workflowJob.response.length === 0) {
       continue;
     }
-
-    console.log("[Workflow Forger] Received job from stream");
-
     const stream = workflowJob.response[0];
     const record = stream?.messages?.[0];
 
     if (!record) continue;
 
-    console.log("[Workflow Forger] Processing record from stream logic...");
-
-    const { userId, organizationId, workspaceId, parsed: parsedRaw } = record.message;
+    const { promptId, userId, organizationId, workspaceId, spaceId, intent: parsedRaw } = record.message;
 
     if (!parsedRaw) {
       console.error("[Workflow Forger] No parsed data found in message");
@@ -31,30 +26,56 @@ while (true) {
 
     const parsed = typeof parsedRaw === "string" ? JSON.parse(parsedRaw) : parsedRaw;
 
-    console.dir(parsed, { depth: null });
-
-    const data = {
-      name: parsed.name,
-      nodes: parsed.nodes || parsed.node,
-      connections: parsed.connections,
-      settings: parsed.settings,
+    const orionWorkflow = {
+      workflow: {
+        steps: [
+          ...(parsed?.execution_plan?.trigger ? [{
+            id: parsed.execution_plan.trigger.id,
+            engine: 'internal',
+            service: parsed.execution_plan.trigger.service || 'webhook',
+            action: parsed.execution_plan.trigger.event || 'trigger',
+            input: {}
+          }] : []),
+          ...(parsed?.execution_plan?.steps || [])
+        ]
+      }
     };
 
-    const workflow_json = mapWorkFlowData(data);
+    const workflowPayload: WorkflowEvent = {
+      promptId,
+      userId,
+      organizationId,
+      spaceId,
+      workspaceId,
+      status: "mapping",
+      message: "Converting workflow into executable steps...",
+    };
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+
+    await EventBus.publish("workflow_event", workflowPayload)
+
+    const workflow_json = mapWorkflowToN8n(orionWorkflow as any, parsed.name || "Generated Workflow");
+
+    workflowPayload.status = "generating";
+    workflowPayload.message = "Pushing workflow to n8n engine...";
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+    await EventBus.publish("workflow_event", workflowPayload);
 
     delete (workflow_json as any).active;
     delete (workflow_json as any).versionId;
     delete (workflow_json as any).id;
 
-    console.log(`[Workflow Forger] Creating workflow: "${workflow_json.name}"`);
-    console.log("[Workflow Forger] Payload keys:", Object.keys(workflow_json));
+    await createWorkflow(workflow_json);
 
-    const result = await createWorkflow(workflow_json);
-    console.log("[Workflow Forger] Workflow created successfully ID:", result.id);
+    workflowPayload.status = "completed";
+    workflowPayload.message = "Workflow successfully created and ready to use!";
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
 
-    // await db.workflowJob.update({ where : {  } })
-
-
+    // TODO :- Add the workflow exectution to the db throw queue not directly.
+    // given an example
+    // and also setup the bullMQ too before the inserting to the db; 
+    // await db.workflowJob.update({ where : { promptId } }); 
+    await EventBus.publish("workflow_event", workflowPayload);
 
   } catch (error) {
     console.error("[Workflow Forger] Error in worker loop:", error);

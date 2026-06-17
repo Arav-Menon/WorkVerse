@@ -4,7 +4,7 @@ import cachePlugin from "./plugins/cache";
 import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
 import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
-import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
+// import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
 import { rateLimitPlugin } from "@repo/rate-limit";
 
 const fastify = Fastify({
@@ -25,7 +25,7 @@ fastify.register(ingestRoutes, { prefix: "/api/v1/orion" });
 
 fastify.register(async (fastify) => {
   await setupToolRoutes(fastify);
-  await setupMcpSseRoutes(fastify);
+  // await setupMcpSseRoutes(fastify);
 });
 
 fastify.post("/api/v1/orion/admin/register-tool", async (request, reply) => {
@@ -41,7 +41,7 @@ fastify.post("/api/v1/orion/admin/register-tool", async (request, reply) => {
   };
 
   toolRegistry.registerTool(toolMetadata);
-  registerToolToBridge(toolMetadata);
+  // registerToolToBridge(toolMetadata);
 
   return { ok: true, toolId };
 });

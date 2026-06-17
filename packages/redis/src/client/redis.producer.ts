@@ -1,10 +1,9 @@
 import {
   type UserCommsJobBody,
-  type UserInboundPrompt,
   type UserWorkflowJobBody,
+  type UserMcpJobBody,
 } from "@repo/schemas";
 import {
-  pushToStream,
   pushToWorkflow,
   pullSubmissionPrompt,
   pullWorkflowJSON,
@@ -12,24 +11,22 @@ import {
   type PullResult,
   pushCommsStream,
   pullCommsStream,
+  pushToMcp,
+  pullMcpJSON,
 } from "../utils/redis.helper";
-
-export const pushUserInboundPrompt = async (
-  data: UserInboundPrompt,
-): Promise<PushResult> => {
-  return await pushToStream(data);
-};
 
 export const pullUserInboundPrompt = async (): Promise<PullResult> => {
   return await pullSubmissionPrompt();
 };
 
+//push workflow queue.
 export const pushUserWorkflowJob = async (
   data: UserWorkflowJobBody,
 ): Promise<PushResult> => {
   return await pushToWorkflow(data);
 };
 
+//pull worflow queue.
 export const pullUserWorkflowJob = async (): Promise<PullResult> => {
   return await pullWorkflowJSON();
 };
@@ -40,3 +37,13 @@ export const pushToUserCommsStream = async (data: UserCommsJobBody): Promise<Pus
 export const pullUserCommsStream = async (): Promise<PullResult> => {
   return await pullCommsStream()
 }
+
+export const pushUserMcpJob = async (
+  data: UserMcpJobBody,
+): Promise<PushResult> => {
+  return await pushToMcp(data);
+};
+
+export const pullUserMcpJob = async (): Promise<PullResult> => {
+  return await pullMcpJSON();
+};

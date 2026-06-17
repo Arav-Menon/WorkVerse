@@ -2,11 +2,12 @@ import { z } from "zod";
 
 export const ingestPromptSchema = z.object({
   userId: z.string(),
-  organizationId: z.string(),
-  workspaceId: z.string(),
+  organizationId: z.string().min(2),
+  workspaceId: z.string().min(2),
+  spaceId: z.string().min(2),
   systemPrompt: z.string(),
   userPrompt: z.string(),
-  promptId: z.string(),
+  promptId: z.string().min(2),
 });
 
 export const UserInboundPromptSchema = z.object({
@@ -14,7 +15,6 @@ export const UserInboundPromptSchema = z.object({
   organizationId: z.string(),
   userId: z.string(),
   workspaceId: z.string(),
-  systemPrompt: z.string(),
   userPrompt: z.string(),
 });
 
@@ -27,7 +27,17 @@ export const UserWorkflowJobSchema = z.object({
 export const UserCommsJobSchema = z.object({
   userId: z.string(),
   parsed: z.any(),
-  args : z.string(),
+  args: z.string(),
+  organizationId: z.string(),
+  workspaceId: z.string(),
+});
+
+export const UserMcpJobSchema = z.object({
+  userId: z.string(),
+  promptId: z.string(),
+  spaceId: z.string(),
+  status: z.string(),
+  intent: z.unknown(),
   organizationId: z.string(),
   workspaceId: z.string(),
 });
@@ -36,3 +46,4 @@ export type ingestPromptBody = z.infer<typeof ingestPromptSchema>;
 export type UserInboundPrompt = z.infer<typeof UserInboundPromptSchema>;
 export type UserWorkflowJobBody = z.infer<typeof UserWorkflowJobSchema>;
 export type UserCommsJobBody = z.infer<typeof UserCommsJobSchema>;
+export type UserMcpJobBody = z.infer<typeof UserMcpJobSchema>;

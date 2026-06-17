@@ -35,7 +35,7 @@ export default function HomeSidebar({
   const router = useRouter();
   const primaryNav = [
     { name: "Home", icon: "ti-home" },
-    { name: "Organizations", icon: "ti-layout-grid", badge: orgs.length },
+    { name: "Organizations", icon: "ti-layout-grid", badge: orgs?.length },
     { name: "Spaces", icon: "ti-planet" },
     { name: "AI Lab", icon: "ti-robot" },
     { name: "Workflows", icon: "ti-arrows-split" },
@@ -98,7 +98,7 @@ export default function HomeSidebar({
             <div>
               <p className="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase px-3 mb-2.5 select-none">Organizations</p>
               <ul className="space-y-0.5" role="list">
-                {orgs.map((org) => (
+                {orgs?.map((org) => (
                   <li key={org.name}>
                     <button 
                       className="flex items-center gap-2.5 p-1.5 px-3 rounded-lg text-left w-full hover:bg-zinc-900/40 group transition-colors cursor-pointer"

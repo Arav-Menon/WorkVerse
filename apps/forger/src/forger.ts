@@ -1,42 +1,51 @@
-import {
-  pullUserInboundPrompt,
-  pushUserWorkflowJob,
-} from "@repo/redis/redis-client";
-import { processWithAi } from "@repo/evaluator";
+import { Worker } from "bullmq";
+import { connection } from "@repo/queue";
+import { chat } from "@repo/evaluator";
+import type { ChatCompletedEvent } from "@repo/events";
+import { EventBus } from "@repo/events";
+import { client } from "@repo/redis";
+import { insertBulk } from "../utils/bulkInsert";
 
-while (true) {
-  const userInboundPrompt = await pullUserInboundPrompt();
-  if (!userInboundPrompt || !userInboundPrompt.response) continue;
+export const worker = new Worker('chat_response-queue', async (job) => {
+    console.log("worker is started.....")
+    const { workspaceId, spaceId, userPrompt, organizationId, promptId, userId } = job.data;
 
-  console.dir(userInboundPrompt, { depth: null });
+    try {
+        const response = await chat(userPrompt);
 
-  const stream = userInboundPrompt.response[0]?.messages[0]?.message;
-  if (!stream) continue;
+        const chatCompletePayload: ChatCompletedEvent = {
+            promptId,
+            userId,
+            spaceId,
+            organizationId,
+            workspaceId,
+            content: response,
+            status: "completed"
+        }
 
-  console.log(stream);
+        await client.set(`chat${promptId}:access`, JSON.stringify(chatCompletePayload), "EX", 86400);
 
-  const { userId, organizationId, workspaceId, systemPrompt, userPrompt } =
-    stream;
+        await insertBulk(chatCompletePayload);
 
-  try {
-    const parsed = await processWithAi({
-      systemPrompt,
-      userPrompt,
-    });
+        await EventBus.publish("chat_completed", chatCompletePayload);
 
-    if (parsed) {
-      await pushUserWorkflowJob({
-        userId,
-        parsed: JSON.stringify(parsed),
-        organizationId,
-        workspaceId,
-      });
-    } else {
-      console.log(JSON.stringify(parsed));
+        return {
+            success: true,
+            statusCode: 200,
+            info: {
+                promptId,
+                userId,
+                organizationId,
+                workspaceId,
+                content: response,
+            }
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            statusCode: error.statusCode ?? 500,
+            error
+        }
     }
-  } catch (err) {
-    console.error("Failed, to push to queue");
-  }
 
-  console.log(stream);
-}
+}, { connection, concurrency: 100 })

@@ -1,41 +1,13 @@
-import { WebSocket, WebSocketServer } from "ws";
-import axios from "axios";
-import { API_URL } from "./API/api_url";
+import { WebSocketServer } from "ws";
+import { registerChatEvents, registerWorklfowEvents } from "./events/chatEvents";
+import { handleConnection } from "./handlers/socketHandler";
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = 8080;
+const wss = new WebSocketServer({ port: PORT });
 
-wss.on("connection", (socket: WebSocket) => {
-  socket.on("message", async (message) => {
-    try {
-      const parsed = JSON.parse(message.toString());
+console.log(`[Flux] WebSocket server listening on port ${PORT}`);
 
-      const { token, workspaceId, userPrompt, organizationId } = parsed;
+registerChatEvents();
+registerWorklfowEvents();
+wss.on("connection", handleConnection);
 
-      if (!token || !workspaceId || !userPrompt) {
-        socket.send(JSON.stringify({ error: "Missing required fields" }));
-        return;
-      }
-
-      const response = await axios.post(
-        API_URL,
-        {
-          workspaceId,
-          userPrompt,
-          organizationId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      console.log("Prompt recived")
-
-      socket.send(JSON.stringify(response.data));
-    } catch (err) {
-      console.error("Error processing message:", err);
-      socket.send(JSON.stringify({ error: "Failed to process message" }));
-    }
-  });
-});

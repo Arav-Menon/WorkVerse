@@ -1,8 +1,9 @@
-import { client } from "../config";
+import { client } from "../connection/config";
 import {
   USER_COMMS_JOB_STREAM,
   USER_INBOUND_PROMPT_STREAM,
   USER_WORKFLOW_JOB_STREAM,
+  USER_MCP_JOB_STREAM,
 } from "./stream";
 import os from "os";
 
@@ -23,32 +24,23 @@ export type PullResult = {
   statusCode?: number;
 };
 
-export const pushToStream = async (
-  data: Record<string, any>,
-  maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
-): Promise<PushResult> => {
-  try {
-    const messageId = await client.xadd(USER_INBOUND_PROMPT_STREAM, "*", data, {
-      TRIM: {
-        strategy: "MAXLEN",
-        strategyModifier: "~",
-        threshold: maxLen,
-      },
-    });
+export type StreamResult = {
+  id: string;
+  message: Record<string, string>;
+};
 
-    return { success: true, id: messageId };
-  } catch (error: any) {
-    console.error(
-      `[Redis Helper] Failed to push to stream "${USER_INBOUND_PROMPT_STREAM}":`,
-      error,
-    );
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
-      statusCode: error.statusCode,
-    };
-  }
+const parseStreamResponse = (response: any) => {
+  if (!response) return response;
+  return response.map(([name, messages]: any) => ({
+    name,
+    messages: messages.map(([id, keyValues]: any) => {
+      const message: Record<string, string> = {};
+      for (let i = 0; i < keyValues.length; i += 2) {
+        message[keyValues[i]] = keyValues[i + 1];
+      }
+      return { id, message };
+    }),
+  }));
 };
 
 export const pushToWorkflow = async (
@@ -56,50 +48,20 @@ export const pushToWorkflow = async (
   maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
 ): Promise<PushResult> => {
   try {
-    const messageId = await client.xAdd(USER_WORKFLOW_JOB_STREAM, "*", data, {
-      TRIM: {
-        strategy: "MAXLEN",
-        strategyModifier: "~",
-        threshold: maxLen,
-      },
-    });
+    const flatData = Object.entries(data).reduce((acc, [k, v]) => acc.concat(k, typeof v === "string" ? v : JSON.stringify(v)), [] as string[]);
+    const messageId = await client.xadd(
+      USER_WORKFLOW_JOB_STREAM,
+      "MAXLEN",
+      "~",
+      maxLen,
+      "*",
+      ...flatData
+    );
 
-    return { success: true, id: messageId };
+    return { success: true, id: messageId! };
   } catch (error: any) {
     console.error(
       `[Redis Helper] Failed to push to stream "${USER_WORKFLOW_JOB_STREAM}":`,
-      error,
-    );
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
-      statusCode: error.statusCode,
-    };
-  }
-};
-
-export type StreamResult = {
-  id: string;
-  message: Record<string, string>;
-};
-
-export const pullSubmissionPrompt = async (
-  group = "submission-worker-group",
-  consumer = WORKER_ID,
-): Promise<PullResult> => {
-  try {
-    const response = await client.xReadGroup(
-      group,
-      consumer,
-      [{ key: USER_INBOUND_PROMPT_STREAM, id: ">" }],
-      { COUNT: 1, BLOCK: 5000 },
-    );
-
-    return { success: true, response: response };
-  } catch (error: any) {
-    console.error(
-      `[Redis Helper] Failed to pull from stream "${USER_INBOUND_PROMPT_STREAM}":`,
       error,
     );
     return {
@@ -116,14 +78,20 @@ export const pullWorkflowJSON = async (
   consumer = WORKER_ID,
 ): Promise<PullResult> => {
   try {
-    const response = await client.xReadGroup(
+    const response = await client.xreadgroup(
+      "GROUP",
       group,
       consumer,
-      [{ key: USER_WORKFLOW_JOB_STREAM, id: ">" }],
-      { COUNT: 1, BLOCK: 5000 },
+      "COUNT",
+      1,
+      "BLOCK",
+      5000,
+      "STREAMS",
+      USER_WORKFLOW_JOB_STREAM,
+      ">"
     );
 
-    return { success: true, response: response };
+    return { success: true, response: parseStreamResponse(response) };
   } catch (err: any) {
     console.error(
       `[Redis Helper] Failed to pull from stream "${USER_WORKFLOW_JOB_STREAM}":`,
@@ -136,6 +104,42 @@ export const pullWorkflowJSON = async (
     };
   }
 };
+
+
+export const pullSubmissionPrompt = async (
+  group = "submission-worker-group",
+  consumer = WORKER_ID,
+): Promise<PullResult> => {
+  try {
+    const response = await client.xreadgroup(
+      "GROUP",
+      group,
+      consumer,
+      "COUNT",
+      1,
+      "BLOCK",
+      5000,
+      "STREAMS",
+      USER_INBOUND_PROMPT_STREAM,
+      ">"
+    );
+
+    return { success: true, response: parseStreamResponse(response) };
+  } catch (error: any) {
+    console.error(
+      `[Redis Helper] Failed to pull from stream "${USER_INBOUND_PROMPT_STREAM}":`,
+      error,
+    );
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
+    };
+  }
+};
+
+
 
 export const pushCommsStream = async (
   data: Record<string, any>,
@@ -150,11 +154,17 @@ export const pushCommsStream = async (
       {} as Record<string, string>,
     );
 
-    const messageId = await client.xAdd(USER_COMMS_JOB_STREAM, "*", normalizedData, {
-      TRIM: { strategy: "MAXLEN", strategyModifier: "~", threshold: maxLen },
-    });
+    const flatData = Object.entries(normalizedData).reduce((acc, [k, v]) => acc.concat(k, v), [] as string[]);
+    const messageId = await client.xadd(
+      USER_COMMS_JOB_STREAM,
+      "MAXLEN",
+      "~",
+      maxLen,
+      "*",
+      ...flatData
+    );
 
-    return { success: true, id: messageId };
+    return { success: true, id: messageId! };
   } catch (err: any) {
     console.error(
       `[Redis Helper] Failed to push to stream "${USER_COMMS_JOB_STREAM}":`,
@@ -174,16 +184,95 @@ export const pullCommsStream = async (
   consumer = WORKER_ID,
 ): Promise<PullResult> => {
   try {
-    const response = await client.xReadGroup(
+    const response = await client.xreadgroup(
+      "GROUP",
       group,
       consumer,
-      [{ key: USER_COMMS_JOB_STREAM, id: ">" }],
-      { COUNT: 1, BLOCK: 5000 },
+      "COUNT",
+      1,
+      "BLOCK",
+      5000,
+      "STREAMS",
+      USER_COMMS_JOB_STREAM,
+      ">"
     );
-    return { success: true, response: response };
+    return { success: true, response: parseStreamResponse(response) };
   } catch (err: any) {
     console.error(
       `[Redis Helper] Failed to pull from stream "${USER_COMMS_JOB_STREAM}":`,
+      err,
+    );
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+      statusCode: err.statusCode,
+    };
+  }
+};
+
+export const pushToMcp = async (
+  data: Record<string, any>,
+  maxLen: number = DEFAULT_MAX_STREAM_LENGTH,
+): Promise<PushResult> => {
+  try {
+    const flatData = Object.entries(data).reduce((acc, [k, v]) => acc.concat(k, typeof v === "string" ? v : JSON.stringify(v)), [] as string[]);
+    const messageId = await client.xadd(
+      USER_MCP_JOB_STREAM,
+      "MAXLEN",
+      "~",
+      maxLen,
+      "*",
+      ...flatData
+    );
+
+    return { success: true, id: messageId! };
+  } catch (error: any) {
+    console.error(
+      `[Redis Helper] Failed to push to stream "${USER_MCP_JOB_STREAM}":`,
+      error,
+    );
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+      statusCode: error.statusCode,
+    };
+  }
+};
+
+export const pullMcpJSON = async (
+  group = "mcp-worker-group",
+  consumer = WORKER_ID,
+): Promise<PullResult> => {
+  try {
+    const response = await client.xreadgroup(
+      "GROUP",
+      group,
+      consumer,
+      "COUNT",
+      1,
+      "BLOCK",
+      5000,
+      "STREAMS",
+      USER_MCP_JOB_STREAM,
+      ">"
+    );
+
+    return { success: true, response: parseStreamResponse(response) };
+  } catch (err: any) {
+    if (err.message && err.message.includes("NOGROUP")) {
+      try {
+        await client.xgroup("CREATE", USER_MCP_JOB_STREAM, group, "0", "MKSTREAM");
+        return await pullMcpJSON(group, consumer);
+      } catch (createErr: any) {
+        if (!createErr.message.includes("BUSYGROUP")) {
+          console.error(`[Redis Helper] Failed to create consumer group for "${USER_MCP_JOB_STREAM}":`, createErr);
+        }
+      }
+    }
+
+    console.error(
+      `[Redis Helper] Failed to pull from stream "${USER_MCP_JOB_STREAM}":`,
       err,
     );
     return {
