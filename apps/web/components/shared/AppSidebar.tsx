@@ -40,7 +40,6 @@ export default function AppSidebar({
   ];
 
   const quickAccess = [
-    { name: "Personal", icon: "ti-user", route: "/home" },
     { name: "Profile", icon: "ti-id-badge", route: "/profile" },
   ];
 
