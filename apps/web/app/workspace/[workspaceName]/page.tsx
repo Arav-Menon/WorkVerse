@@ -3,9 +3,11 @@
 import React, { use, useState } from "react";
 import OrgNavbar from "../components/OrgNavbar";
 import OrgSidebar from "../components/OrgSidebar";
-import OrgRightPanel from "../components/OrgRightPanel";
 import OrgHeroSection from "../components/OrgHeroSection";
 import WorkspacesGrid from "../components/WorkspacesGrid";
+import ConnectionsDeck from "../components/ConnectionsDeck";
+import AiLabDeck from "../components/AiLabDeck";
+import AiLabRightPanel from "../components/AiLabRightPanel";
 
 interface PageProps {
   params: Promise<{ workspaceName: string }>;
@@ -84,6 +86,13 @@ export default function OrgPage({ params }: PageProps) {
                   onCreateWorkspace={() => setCreateOpen(true)}
                 />
               </>
+            ) : activeSection === "AI Lab" ? (
+              <div className="flex gap-0">
+                <AiLabDeck orgName={workspace} />
+                <AiLabRightPanel />
+              </div>
+            ) : activeSection === "Connections" ? (
+              <ConnectionsDeck workspaceName={workspace} />
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[350px] text-center gap-4 bg-zinc-950/20 border border-zinc-900 rounded-2xl p-8">
                 <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-500">
@@ -97,8 +106,6 @@ export default function OrgPage({ params }: PageProps) {
             )}
           </div>
         </main>
-
-        <OrgRightPanel />
       </div>
 
       {/* 1. Modal Command Palette search */}
