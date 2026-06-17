@@ -63,7 +63,7 @@ export const SignInForm = () => {
         </div>
       </div>
 
-      <button onClick={() => router.push('/organization')} className="w-full bg-white text-black py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2.5 group shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-[0.98]">
+      <button onClick={() => router.push('/home')} className="w-full bg-white text-black py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2.5 group shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-[0.98]">
         Enter WorkVerse <Icons.ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
       </button>
 
