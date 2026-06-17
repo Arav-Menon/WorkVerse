@@ -33,7 +33,7 @@ export default function Navbar() {
           {["Platform", "Workspace", "Agents", "Automation", "Labs", "Devs", "Pricing"].map((link) => (
             <a
               key={link}
-              href={`#${link.toLowerCase()}`}
+              href={`/${link.toLowerCase()}`}
               className="text-[11px] uppercase tracking-widest px-4 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer font-medium"
             >
               {link}
