@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-geist-sans)'],
-        mono: ['var(--font-geist-mono)'],
+        sans: ['"Raleway"', 'sans-serif'],
+        mono: ['ui-monospace', 'monospace'],
       },
       animation: {
         "slow-drift": "drift 20s ease-in-out infinite",
