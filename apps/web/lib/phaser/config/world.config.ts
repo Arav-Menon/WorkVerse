@@ -15,48 +15,48 @@ export const WorldConfig = {
     color: 0x71717a, // zinc-500
   },
   colors: {
-    // Floor — pure black base matching landing page
-    background:      0x050505,
-    floorTile:       0x0a0a0a,
-    floorTileAlt:    0x080808,
-    floorGrid:       0x18181b, // zinc-900
+    // Floor — warm light base
+    background:      0xf5f0eb,
+    floorTile:       0xf0ebe5,
+    floorTileAlt:    0xede8e2,
+    floorGrid:       0xe0dbd5,
 
-    // Walls / Room dividers — zinc tones
-    wall:            0x18181b, // zinc-900
-    wallHighlight:   0x27272a, // zinc-800
+    // Walls / Room dividers — warm light greys
+    wall:            0xc8c0b8,
+    wallHighlight:   0xb8b0a8,
 
-    // Desk / furniture — monochrome greys
-    deskBase:        0x18181b, // zinc-900
-    deskTop:         0x27272a, // zinc-800
-    deskSurface:     0x3f3f46, // zinc-700
-    chairBody:       0x18181b,
-    chairBack:       0x09090b,
-    monitorFrame:    0x09090b,
-    monitorScreen:   0x27272a, // zinc-800, dim
-    monitorGlow:     0x3f3f46, // zinc-700 glow
+    // Desk / furniture — light wood tones
+    deskBase:        0xe8e0d8,
+    deskTop:         0xf0e8e0,
+    deskSurface:     0xfaf5f0,
+    chairBody:       0xd0c8c0,
+    chairBack:       0xb8b0a8,
+    monitorFrame:    0x2a221c,
+    monitorScreen:   0x1a1512,
+    monitorGlow:     0x3d5060,
 
-    // Meeting room — subtle white accents
-    carpetMeeting:   0x0a0a0a,
-    carpetBorder:    0x27272a,
-    tableBase:       0x18181b,
-    tableTop:        0x27272a,
+    // Meeting room — light fabric tones
+    carpetMeeting:   0xe8e2dc,
+    carpetBorder:    0xc8c0b8,
+    tableBase:       0xd0c0b0,
+    tableTop:        0xe0d0c0,
 
-    // AI Lab zone — same monochrome, slight lift
-    carpetAiLab:     0x09090b,
-    aiLabAccent:     0x52525b, // zinc-600
-    aiLabGlow:       0x3f3f46, // zinc-700
-    aiServer:        0x0a0a0a,
-    aiServerLight:   0x10b981, // emerald-500 (the one accent color used on landing)
+    // AI Lab zone — warm with amber accent
+    carpetAiLab:     0xf0ebe5,
+    aiLabAccent:     0xa07050,
+    aiLabGlow:       0x6080a0,
+    aiServer:        0x3a3530,
+    aiServerLight:   0x5a9a50,
 
-    // Plants — subtle grey-greens to keep monochrome feel
-    potClay:         0x27272a,
-    leafDark:        0x3f3f46,
-    leafLight:       0x52525b,
+    // Plants — natural greens
+    potClay:         0xc0a890,
+    leafDark:        0x4a7a40,
+    leafLight:       0x60a050,
 
-    // Lighting / ambience — white only
-    lightWarm:       0xffffff,
-    lightCool:       0xa1a1aa, // zinc-400
-    glowWhite:       0xffffff,
+    // Lighting / ambience — warm whites
+    lightWarm:       0xfff8f0,
+    lightCool:       0xd8d0c8,
+    glowWhite:       0xfff8f0,
   },
 
   // Room-specific accent colors (from roomTokens)
