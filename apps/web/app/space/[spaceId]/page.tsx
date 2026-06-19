@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArenaHUD } from '../../../components/arena/ArenaHUD';
-import { ArenaClientWrapper } from '../../../components/arena/ArenaClientWrapper';
+import { ArenaWrapper } from '../../../components/arena/ArenaWrapper';
 import { BottomNavBar } from '../../../components/arena/BottomNavBar';
 import { AiLabsPanel } from '../../../components/arena/AiLabsPanel';
 
@@ -13,8 +13,8 @@ export default async function SpaceArenaPage({ params }: PageProps) {
 
   return (
     <div className="relative w-full h-screen overflow-hidden" style={{ background: '#050505' }}>
-      {/* Phaser game canvas */}
-      <ArenaClientWrapper spaceId={spaceId} />
+      {/* Phaser game canvas with interaction handling */}
+      <ArenaWrapper spaceId={spaceId} />
 
       {/* React UI overlays — all pointer-events-none at root, specific children opt back in */}
       <ArenaHUD spaceId={spaceId} />
