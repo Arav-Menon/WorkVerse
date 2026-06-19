@@ -67,8 +67,21 @@ export class OccupancySystem {
   }
 
   private updateVisuals() {
-    // Visual updates will be handled by the scene's draw methods
-    // This system only tracks state — the scene reads occupancy when drawing
+    // Draw activity indicators on occupied desks
+    this.desks.forEach(desk => {
+      if (!desk.graphics) return;
+      desk.graphics.clear();
+
+      if (desk.occupied) {
+        // Active desk — subtle glow + status dot
+        desk.graphics.fillStyle(0xa07050, 0.12);
+        desk.graphics.fillCircle(desk.x, desk.y, 40);
+        desk.graphics.fillStyle(0x4a8040, 0.9);
+        desk.graphics.fillCircle(desk.x + desk.width / 2 - 8, desk.y - desk.height / 2 + 8, 4);
+        desk.graphics.lineStyle(1, 0xffffff, 0.3);
+        desk.graphics.strokeCircle(desk.x + desk.width / 2 - 8, desk.y - desk.height / 2 + 8, 4);
+      }
+    });
   }
 
   isDeskOccupied(deskId: string): boolean {
