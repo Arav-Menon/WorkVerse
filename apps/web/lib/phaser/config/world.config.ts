@@ -1,3 +1,5 @@
+import { RoomTokens } from './roomTokens.config';
+
 export const WorldConfig = {
   bounds: {
     width: 2400,
@@ -55,5 +57,18 @@ export const WorldConfig = {
     lightWarm:       0xffffff,
     lightCool:       0xa1a1aa, // zinc-400
     glowWhite:       0xffffff,
+  },
+
+  // Room-specific accent colors (from roomTokens)
+  roomAccents: {
+    open_office: RoomTokens.open_office.accent,
+    workspace: RoomTokens.workspace.accent,
+    engineering: RoomTokens.engineering.accent,
+    design: RoomTokens.design.accent,
+    product: RoomTokens.product.accent,
+    operations: RoomTokens.operations.accent,
+    meeting: RoomTokens.meeting.accent,
+    quiet: RoomTokens.quiet.accent,
+    ai_labs: RoomTokens.ai_labs.accent,
   },
 };
