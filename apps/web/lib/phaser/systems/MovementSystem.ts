@@ -3,6 +3,7 @@ import type { Player } from '../entities/Player';
 import Phaser from "phaser";
 
 export class MovementSystem {
+  private scene: Phaser.Scene;
   private keys: {
     W: Phaser.Input.Keyboard.Key;
     A: Phaser.Input.Keyboard.Key;
@@ -11,6 +12,7 @@ export class MovementSystem {
   };
 
   constructor(scene: Phaser.Scene) {
+    this.scene = scene;
     if (!scene.input.keyboard) {
       throw new Error('Keyboard not found in scene');
     }
@@ -23,7 +25,22 @@ export class MovementSystem {
     };
   }
 
+  private isInputFocused(): boolean {
+    const active = document.activeElement;
+    return active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA' || active?.getAttribute('contenteditable') === 'true';
+  }
+
   update(player: Player, delta: number) {
+    if (this.isInputFocused()) {
+      // Release all keys so Phaser stops capturing them
+      this.scene.input.keyboard?.disableGlobalCapture();
+      player.stop();
+      return;
+    }
+
+    // Re-enable capture when not typing
+    this.scene.input.keyboard?.enableGlobalCapture();
+
     let dx = 0;
     let dy = 0;
 
