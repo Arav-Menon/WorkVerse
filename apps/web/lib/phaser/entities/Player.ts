@@ -49,6 +49,12 @@ export class Player {
     this.container = scene.add.container(x, y, [glow, body, tagBg, text, dot]);
     this.container.setSize(radius * 2, radius * 2);
     this.container.setDepth(20);
+
+    // Enable Arcade physics body on the container
+    scene.physics.world.enable(this.container);
+    (this.container.body as Phaser.Physics.Arcade.Body).setCircle(radius);
+    (this.container.body as Phaser.Physics.Arcade.Body).setOffset(-radius, -radius);
+    (this.container.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
   }
 
   getContainer() { return this.container; }
@@ -56,7 +62,14 @@ export class Player {
   getName() { return this.name; }
 
   move(dx: number, dy: number) {
-    this.container.x += dx;
-    this.container.y += dy;
+    (this.container.body as Phaser.Physics.Arcade.Body).setVelocity(dx, dy);
+  }
+
+  stop() {
+    (this.container.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+  }
+
+  getBody(): Phaser.Physics.Arcade.Body {
+    return this.container.body as Phaser.Physics.Arcade.Body;
   }
 }
