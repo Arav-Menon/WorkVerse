@@ -39,11 +39,13 @@ export class MovementSystem {
       dy /= length;
     }
 
-    // Apply movement based on delta time
-    const speed = WorldConfig.player.speed * (delta / 1000);
+    // Apply velocity — physics engine handles collision + position
+    const speed = WorldConfig.player.speed;
 
     if (dx !== 0 || dy !== 0) {
       player.move(dx * speed, dy * speed);
+    } else {
+      player.stop();
     }
   }
 }
