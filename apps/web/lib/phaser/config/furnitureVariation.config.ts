@@ -34,10 +34,10 @@ export function getDeskVariation(deskId: string): DeskVariation {
 
 export const ClutterColors: Record<ClutterType, number> = {
   none: 0x000000,
-  papers: 0xe4e4e7,   // zinc-200
-  coffee: 0x78350f,   // amber-900
-  plant: 0x22c55e,    // green-500
-  headphones: 0x18181b, // zinc-900
+  papers: 0xe8e0d8,
+  coffee: 0x6a4020,
+  plant: 0x4a8040,
+  headphones: 0x5a5048,
 };
 
 export const ClutterSizes: Record<ClutterType, { w: number; h: number }> = {
