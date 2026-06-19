@@ -57,9 +57,9 @@ export class InteractionSystem {
 
     // Keycap background
     this.promptKeycap = this.scene.add.graphics();
-    this.promptKeycap.fillStyle(0x18181b, 0.95);
+    this.promptKeycap.fillStyle(0xf0e8e0, 0.95);
     this.promptKeycap.fillRoundedRect(-60, -16, 48, 24, 4);
-    this.promptKeycap.lineStyle(1, 0x3f3f46, 1);
+    this.promptKeycap.lineStyle(1, 0xc8c0b8, 1);
     this.promptKeycap.strokeRoundedRect(-60, -16, 48, 24, 4);
 
     // Keycap text
@@ -111,8 +111,10 @@ export class InteractionSystem {
       this.promptContainer.y = playerY - 40;
     }
 
-    // Handle SPACE press
-    if (this.interactKey && Phaser.Input.Keyboard.JustDown(this.interactKey) && this.state.activeZoneId) {
+    // Handle SPACE press — skip when input is focused
+    const active = document.activeElement;
+    const inputFocused = active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA';
+    if (!inputFocused && this.interactKey && Phaser.Input.Keyboard.JustDown(this.interactKey) && this.state.activeZoneId) {
       this.triggerInteraction(nearestZone!);
     }
   }
