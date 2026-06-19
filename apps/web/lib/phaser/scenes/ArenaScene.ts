@@ -48,6 +48,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, W, H);
 
     this.drawFloor();
+    this.drawFloorTints();
     this.drawRoomDividers();
     this.drawDoorways();
     this.drawOpenOfficeZone();
@@ -105,20 +106,22 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private registerDesksForOccupancy() {
-    // Open Office desks
-    this.occupancySystem.registerDesk('desk-1', 160, 180, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-2', 380, 180, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-3', 600, 180, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-4', 160, 460, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-5', 380, 460, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-6', 600, 460, 200, 90, this.add.graphics());
-    // Workspace desks
-    this.occupancySystem.registerDesk('desk-7', 160, 800, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-8', 380, 800, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-9', 600, 800, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-10', 160, 1020, 200, 90, this.add.graphics());
-    this.occupancySystem.registerDesk('desk-11', 380, 1020, 200, 90, this.add.graphics());
-    // AI Labs desks
+    // Pod A — Engineering cluster
+    this.occupancySystem.registerDesk('desk-1', 180, 200, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-2', 400, 180, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-3', 380, 350, 200, 90, this.add.graphics());
+    // Pod B — Design cluster
+    this.occupancySystem.registerDesk('desk-4', 180, 450, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-5', 400, 470, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-6', 220, 610, 200, 90, this.add.graphics());
+    // Workspace Pod C
+    this.occupancySystem.registerDesk('desk-7', 180, 830, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-8', 400, 810, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-9', 280, 970, 200, 90, this.add.graphics());
+    // Workspace Pod D
+    this.occupancySystem.registerDesk('desk-10', 160, 1100, 200, 90, this.add.graphics());
+    this.occupancySystem.registerDesk('desk-11', 400, 1080, 200, 90, this.add.graphics());
+    // AI Labs
     this.occupancySystem.registerDesk('ai-desk-1', 1400, 120, 180, 90, this.add.graphics());
     this.occupancySystem.registerDesk('ai-desk-2', 1650, 120, 180, 90, this.add.graphics());
     this.occupancySystem.registerDesk('ai-desk-3', 1400, 460, 180, 90, this.add.graphics());
@@ -142,10 +145,16 @@ export class ArenaScene extends Phaser.Scene {
       );
     });
 
-    // Monitor screens — subtle flicker
+    // Monitor screens — subtle flicker (centered on each desk)
     const monitorPositions = [
-      { x: 260, y: 210 }, { x: 480, y: 210 }, { x: 700, y: 210 },
-      { x: 260, y: 490 }, { x: 480, y: 490 }, { x: 700, y: 490 },
+      // Pod A
+      { x: 280, y: 225 }, { x: 500, y: 205 }, { x: 480, y: 375 },
+      // Pod B
+      { x: 280, y: 475 }, { x: 500, y: 495 }, { x: 320, y: 635 },
+      // Pod C
+      { x: 280, y: 855 }, { x: 500, y: 835 }, { x: 380, y: 995 },
+      // Pod D
+      { x: 260, y: 1125 }, { x: 500, y: 1105 },
     ];
     monitorPositions.forEach((pos, i) => {
       this.microAnimationSystem.registerObject(
@@ -184,28 +193,50 @@ export class ArenaScene extends Phaser.Scene {
   private drawFloor() {
     const g = this.add.graphics();
 
-    // Checkerboard tiles 80×80
-    for (let row = 0; row < H / 80; row++) {
-      for (let col = 0; col < W / 80; col++) {
-        const color = (row + col) % 2 === 0 ? C.floorTile : C.floorTileAlt;
-        g.fillStyle(color, 1);
-        g.fillRect(col * 80, row * 80, 80, 80);
-      }
+    // Solid light floor
+    g.fillStyle(C.background, 1);
+    g.fillRect(0, 0, W, H);
+
+    // Subtle floor grain — very faint warm variation
+    g.fillStyle(0xe0d8d0, 0.5);
+    for (let i = 0; i < 40; i++) {
+      const rx = (i * 137 + 29) % W;
+      const ry = (i * 211 + 53) % H;
+      const rw = 200 + (i * 73) % 300;
+      const rh = 200 + (i * 41) % 300;
+      g.fillRect(rx, ry, rw, rh);
     }
 
-    // Subtle grid lines on top
-    g.lineStyle(1, C.floorGrid, 0.6);
-    for (let x = 0; x <= W; x += 80) {
-      g.moveTo(x, 0); g.lineTo(x, H);
-    }
-    for (let y = 0; y <= H; y += 80) {
-      g.moveTo(0, y); g.lineTo(W, y);
-    }
-    g.strokePath();
-
-    // World border
-    g.lineStyle(6, C.wallHighlight, 1);
+    // World border — thin, subtle
+    g.lineStyle(1, C.wallHighlight, 0.3);
     g.strokeRect(0, 0, W, H);
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Floor Tints  (subtle zone differentiation)
+  // ─────────────────────────────────────────────────────────
+  private drawFloorTints() {
+    const g = this.add.graphics();
+
+    // Open Office — cool blue-grey tint
+    g.fillStyle(RoomTokens.open_office.floorTint, 0.3);
+    g.fillRect(0, 0, 800, 720);
+
+    // Workspace — slightly different tint
+    g.fillStyle(RoomTokens.workspace.floorTint, 0.25);
+    g.fillRect(0, 720, 800, 1080);
+
+    // AI Labs — distinct dark surface
+    g.fillStyle(RoomTokens.ai_labs.floorTint, 0.4);
+    g.fillRect(1116, 0, W - 1116, 780);
+
+    // Meeting Room — warm carpet feel
+    g.fillStyle(RoomTokens.meeting.floorTint, 0.3);
+    g.fillRect(1150, 800, 600, 520);
+
+    // Corridor — very subtle warm strip
+    g.fillStyle(0xd8d0c8, 0.2);
+    g.fillRect(800, 718, 400, 16);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -213,29 +244,69 @@ export class ArenaScene extends Phaser.Scene {
   // ─────────────────────────────────────────────────────────
   private drawRoomDividers() {
     const g = this.add.graphics();
+
+    // ── Horizontal divider (solid wall — separates top/bottom zones) ──
     g.fillStyle(C.wall, 1);
+    g.fillRect(0, 720, 800, 12);
+    g.fillRect(1200, 720, 120, 12);
+    // Subtle highlight
+    g.fillStyle(C.wallHighlight, 0.4);
+    g.fillRect(0, 717, 800, 2);
+    g.fillRect(1200, 717, 120, 2);
 
-    // Horizontal divider: open office / bottom area (with gap at x=1000–1100)
-    g.fillRect(0, 720, 1000, 16);
-    g.fillRect(1100, 720, 220, 16);
+    // ── AI Labs glass partition (vertical, x=1100) ──
+    // Frame
+    g.fillStyle(C.wall, 1);
+    g.fillRect(1100, 0, 8, 290);
+    g.fillRect(1100, 410, 8, 760);
+    // Glass panel — semi-transparent with cyan tint
+    g.fillStyle(0xa07050, 0.06);
+    g.fillRect(1108, 0, 6, 290);
+    g.fillRect(1108, 410, 6, 760);
+    // Glass edge highlights
+    g.lineStyle(1, 0xa07050, 0.25);
+    g.beginPath(); g.moveTo(1114, 0); g.lineTo(1114, 290); g.strokePath();
+    g.beginPath(); g.moveTo(1114, 410); g.lineTo(1114, 1170); g.strokePath();
 
-    // Vertical divider: separates open office from AI Lab (doorway at y=290–410)
-    g.fillRect(1100, 0, 16, 290);
-    g.fillRect(1100, 410, 16, 760);
+    // ── Meeting Room glass walls ──
+    const meetFrame = C.wall;
+    const meetGlass = 0x9070b0;
+    const meetW = 8; // glass wall thickness
 
-    // Meeting room box walls (doorway in top wall at x=1350–1450)
-    g.fillRect(1150, 800, 200, 14);   // top wall — left segment
-    g.fillRect(1450, 800, 300, 14);   // top wall — right segment
-    g.fillRect(1150, 800, 14, 520);   // left wall
-    g.fillRect(1150, 1306, 600, 14);  // bottom wall
-    g.fillRect(1736, 800, 14, 520);   // right wall
+    // Top wall — left segment (doorway at x=1350–1450)
+    g.fillStyle(meetFrame, 1);
+    g.fillRect(1150, 800, 200, meetW);
+    g.fillRect(1450, 800, 300, meetW);
+    g.fillStyle(meetGlass, 0.06);
+    g.fillRect(1150, 808, 200, 4);
+    g.fillRect(1450, 808, 300, 4);
+    g.lineStyle(1, meetGlass, 0.2);
+    g.beginPath(); g.moveTo(1150, 812); g.lineTo(1350, 812); g.strokePath();
+    g.beginPath(); g.moveTo(1450, 812); g.lineTo(1750, 812); g.strokePath();
 
-    // Highlights on dividers
-    g.fillStyle(C.wallHighlight, 0.5);
-    g.fillRect(0, 716, 1000, 4);
-    g.fillRect(1100, 716, 220, 4);
-    g.fillRect(1100, 0, 6, 290);
-    g.fillRect(1100, 410, 6, 760);
+    // Left wall
+    g.fillStyle(meetFrame, 1);
+    g.fillRect(1150, 800, meetW, 520);
+    g.fillStyle(meetGlass, 0.06);
+    g.fillRect(1158, 800, 4, 520);
+    g.lineStyle(1, meetGlass, 0.2);
+    g.beginPath(); g.moveTo(1162, 800); g.lineTo(1162, 1320); g.strokePath();
+
+    // Bottom wall
+    g.fillStyle(meetFrame, 1);
+    g.fillRect(1150, 1306, 600, meetW);
+    g.fillStyle(meetGlass, 0.06);
+    g.fillRect(1150, 1314, 600, 4);
+    g.lineStyle(1, meetGlass, 0.2);
+    g.beginPath(); g.moveTo(1150, 1318); g.lineTo(1750, 1318); g.strokePath();
+
+    // Right wall
+    g.fillStyle(meetFrame, 1);
+    g.fillRect(1736, 800, meetW, 520);
+    g.fillStyle(meetGlass, 0.06);
+    g.fillRect(1744, 800, 4, 520);
+    g.lineStyle(1, meetGlass, 0.2);
+    g.beginPath(); g.moveTo(1748, 800); g.lineTo(1748, 1320); g.strokePath();
   }
 
   // ─────────────────────────────────────────────────────────
@@ -244,17 +315,23 @@ export class ArenaScene extends Phaser.Scene {
   private drawDoorways() {
     const g = this.add.graphics();
 
+    // Central corridor floor — subtle strip at y=720, x=800–1200
+    g.fillStyle(C.wallHighlight, 0.15);
+    g.fillRect(800, 718, 400, 16);
+    g.lineStyle(1, C.wallHighlight, 0.25);
+    g.strokeRect(800, 718, 400, 16);
+
     // AI Labs doorway — floor strip at x=1100, y=290–410
-    g.fillStyle(C.aiLabAccent, 0.15);
-    g.fillRect(1100, 290, 16, 120);
-    g.lineStyle(2, C.aiLabAccent, 0.5);
-    g.strokeRect(1100, 290, 16, 120);
+    g.fillStyle(0xa07050, 0.1);
+    g.fillRect(1100, 290, 14, 120);
+    g.lineStyle(1, 0xa07050, 0.35);
+    g.strokeRect(1100, 290, 14, 120);
 
     // Meeting Room doorway — floor strip at x=1350–1450, y=800
-    g.fillStyle(C.carpetMeeting, 0.25);
-    g.fillRect(1350, 800, 100, 14);
-    g.lineStyle(2, C.carpetBorder, 0.5);
-    g.strokeRect(1350, 800, 100, 14);
+    g.fillStyle(0x9070b0, 0.1);
+    g.fillRect(1350, 800, 100, 12);
+    g.lineStyle(1, 0x9070b0, 0.35);
+    g.strokeRect(1350, 800, 100, 12);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -263,23 +340,24 @@ export class ArenaScene extends Phaser.Scene {
   private drawOpenOfficeZone() {
     const g = this.add.graphics();
 
-    // Row 1 desks — three in a row (with desk IDs for variations)
-    this.drawDesk(g, 160, 180, 'open-desk-1-1');
-    this.drawDesk(g, 380, 180, 'open-desk-1-2');
-    this.drawDesk(g, 600, 180, 'open-desk-1-3');
+    // Pod A — Engineering cluster (top-left, tight group)
+    this.drawDesk(g, 180, 200, 'open-desk-1-1');
+    this.drawDesk(g, 400, 180, 'open-desk-1-2');
+    this.drawDesk(g, 380, 350, 'open-desk-1-3');
 
-    // Row 2 desks
-    this.drawDesk(g, 160, 460, 'open-desk-2-1');
-    this.drawDesk(g, 380, 460, 'open-desk-2-2');
-    this.drawDesk(g, 600, 460, 'open-desk-2-3');
+    // Pod B — Design cluster (bottom-left, offset arrangement)
+    this.drawDesk(g, 180, 450, 'open-desk-2-1');
+    this.drawDesk(g, 400, 470, 'open-desk-2-2');
+    this.drawDesk(g, 220, 610, 'open-desk-2-3');
 
-    // Row 3 desks (below horizontal divider)
-    this.drawDesk(g, 160, 800, 'workspace-desk-3-1');
-    this.drawDesk(g, 380, 800, 'workspace-desk-3-2');
-    this.drawDesk(g, 600, 800, 'workspace-desk-3-3');
+    // Workspace Pod C — below corridor (tighter cluster)
+    this.drawDesk(g, 180, 830, 'workspace-desk-3-1');
+    this.drawDesk(g, 400, 810, 'workspace-desk-3-2');
+    this.drawDesk(g, 280, 970, 'workspace-desk-3-3');
 
-    this.drawDesk(g, 160, 1020, 'workspace-desk-4-1');
-    this.drawDesk(g, 380, 1020, 'workspace-desk-4-2');
+    // Workspace Pod D — focus area (spread pair)
+    this.drawDesk(g, 160, 1100, 'workspace-desk-4-1');
+    this.drawDesk(g, 400, 1080, 'workspace-desk-4-2');
   }
 
   // ─────────────────────────────────────────────────────────
@@ -294,7 +372,9 @@ export class ArenaScene extends Phaser.Scene {
     g.lineStyle(3, C.carpetBorder, 0.8);
     g.strokeRect(1164, 814, 572, 492);
 
-    // Big oval-ish table (rounded rect)
+    // Big oval-ish table (rounded rect) — with shadow
+    g.fillStyle(0x8a8078, 0.18);
+    g.fillRoundedRect(1294, 904, 360, 220, 30);
     g.fillStyle(C.tableBase, 1);
     g.fillRoundedRect(1290, 900, 360, 220, 30);
     g.fillStyle(C.tableTop, 1);
@@ -359,18 +439,58 @@ export class ArenaScene extends Phaser.Scene {
     this.drawDesk(g, 1900, 620, 'ai-desk-5');
     // Small plant near entrance
     this.drawSmallPlant(g, 1140, 700);
+
+    // ── Command Hub — central focal point ──
+    this.drawCommandHub(g, 1600, 350);
+  }
+
+  // ── Command Hub (iconic centerpiece for AI Labs) ──
+  private drawCommandHub(g: Phaser.GameObjects.Graphics, cx: number, cy: number) {
+    // Outer glow ring
+    g.fillStyle(0xa07050, 0.04);
+    g.fillCircle(cx, cy, 80);
+    g.fillStyle(0xa07050, 0.06);
+    g.fillCircle(cx, cy, 60);
+
+    // Platform base
+    g.fillStyle(0xc0b8b0, 1);
+    g.fillCircle(cx, cy, 48);
+    g.lineStyle(2, 0xa07050, 0.35);
+    g.strokeCircle(cx, cy, 48);
+
+    // Inner ring
+    g.lineStyle(1, 0xa07050, 0.2);
+    g.strokeCircle(cx, cy, 32);
+
+    // Central icon — abstract node/network shape
+    g.fillStyle(0xa07050, 0.5);
+    g.fillCircle(cx, cy, 8);
+    // Node connections
+    g.lineStyle(1, 0xa07050, 0.3);
+    const angles = [0, 60, 120, 180, 240, 300];
+    angles.forEach(deg => {
+      const rad = (deg * Math.PI) / 180;
+      const nx = cx + Math.cos(rad) * 22;
+      const ny = cy + Math.sin(rad) * 22;
+      g.beginPath(); g.moveTo(cx, cy); g.lineTo(nx, ny); g.strokePath();
+      g.fillStyle(0xa07050, 0.4);
+      g.fillCircle(nx, ny, 4);
+    });
   }
 
   // ── Dashboard display (command center style) ──
   private drawDashboardDisplay(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number) {
+    // Shadow
+    g.fillStyle(0x8a8078, 0.15);
+    g.fillRoundedRect(x + 3, y + 3, w, h, 4);
     // Monitor frame
-    g.fillStyle(0x09090b, 1);
+    g.fillStyle(0x2a2520, 1);
     g.fillRoundedRect(x, y, w, h, 4);
     g.lineStyle(1, C.aiLabAccent, 0.3);
     g.strokeRoundedRect(x, y, w, h, 4);
 
     // Screen content — subtle data visualization
-    g.fillStyle(0x0d1f38, 1);
+    g.fillStyle(0xc0b8b0, 1);
     g.fillRect(x + 6, y + 6, w - 12, h - 12);
 
     // Fake chart bars (dashboard feel)
@@ -385,20 +505,23 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     // Status indicator (green dot)
-    g.fillStyle(0x22c55e, 0.8);
+    g.fillStyle(0x5a9a50, 0.8);
     g.fillCircle(x + w - 14, y + 14, 4);
   }
 
   // ── Terminal monitor (clean code editor style) ──
   private drawTerminalMonitor(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number) {
+    // Shadow
+    g.fillStyle(0x8a8078, 0.15);
+    g.fillRoundedRect(x + 3, y + 3, w, h, 4);
     // Monitor frame
-    g.fillStyle(0x09090b, 1);
+    g.fillStyle(0x2a2520, 1);
     g.fillRoundedRect(x, y, w, h, 4);
     g.lineStyle(1, C.aiLabAccent, 0.2);
     g.strokeRoundedRect(x, y, w, h, 4);
 
     // Terminal screen
-    g.fillStyle(0x0a0a0a, 1);
+    g.fillStyle(0x1e1a18, 1);
     g.fillRect(x + 4, y + 4, w - 8, h - 8);
 
     // Fake code lines (terminal feel)
@@ -416,15 +539,18 @@ export class ArenaScene extends Phaser.Scene {
 
   // ── Small plant (normal office element) ──
   private drawSmallPlant(g: Phaser.GameObjects.Graphics, x: number, y: number) {
+    // Shadow
+    g.fillStyle(0x8a8078, 0.12);
+    g.fillEllipse(x + 2, y + 12, 22, 12);
     // Pot
-    g.fillStyle(0x27272a, 1);
+    g.fillStyle(0xc0a890, 1);
     g.fillEllipse(x, y + 10, 20, 14);
     // Leaves
-    g.fillStyle(0x3f3f46, 1);
+    g.fillStyle(0x4a7a40, 1);
     g.fillCircle(x, y, 10);
     g.fillCircle(x + 6, y - 6, 8);
     g.fillCircle(x - 6, y - 6, 8);
-    g.fillStyle(0x52525b, 1);
+    g.fillStyle(0x60a050, 1);
     g.fillCircle(x, y - 3, 6);
   }
 
@@ -435,9 +561,11 @@ export class ArenaScene extends Phaser.Scene {
     const W = 200, H = 90;
     const variation = deskId ? getDeskVariation(deskId) : { monitors: 1, clutter: 'none' as const, chair: 'pushed-in' as const };
 
-    // Shadow
-    g.fillStyle(0x000000, 0.25);
-    g.fillRect(x + 6, y + 6, W, H);
+    // Shadow — soft, layered
+    g.fillStyle(0x8a8078, 0.15);
+    g.fillRoundedRect(x + 4, y + 4, W + 2, H + 2, 3);
+    g.fillStyle(0x8a8078, 0.08);
+    g.fillRoundedRect(x + 8, y + 8, W + 4, H + 4, 4);
 
     // Desk body
     g.fillStyle(C.deskBase, 1);
@@ -489,14 +617,16 @@ export class ArenaScene extends Phaser.Scene {
     const W = 180, H = 90;
     const variation = deskId ? getDeskVariation(deskId) : { monitors: 2, clutter: 'none' as const, chair: 'pushed-in' as const };
 
-    // Shadow
-    g.fillStyle(0x000000, 0.3);
-    g.fillRect(x + 6, y + 6, W, H);
+    // Shadow — soft, layered
+    g.fillStyle(0x8a8078, 0.18);
+    g.fillRoundedRect(x + 4, y + 4, W + 2, H + 2, 3);
+    g.fillStyle(0x8a8078, 0.08);
+    g.fillRoundedRect(x + 8, y + 8, W + 4, H + 4, 4);
 
     // Desk body — subtle cyan tint (restrained)
-    g.fillStyle(0x0a1628, 1);
+    g.fillStyle(0xd8d0c8, 1);
     g.fillRect(x, y, W, H);
-    g.fillStyle(0x0d1f38, 1);
+    g.fillStyle(0xc0b8b0, 1);
     g.fillRect(x + 4, y + 4, W - 8, H - 8);
 
     // Subtle accent strip (not glowing)
@@ -538,13 +668,23 @@ export class ArenaScene extends Phaser.Scene {
 
     // Chair (below desk) — position varies by chair state
     const chairOffsetY = variation.chair === 'pulled-out' ? 30 : 22;
-    g.fillStyle(0x0f1f35, 1);
-    g.fillCircle(x + W / 2, y + H + chairOffsetY, 18);
+    const chairCx = x + W / 2;
+    const chairCy = y + H + chairOffsetY;
+    // Shadow
+    g.fillStyle(0x8a8078, 0.12);
+    g.fillCircle(chairCx + 3, chairCy + 3, 18);
+    // Body
+    g.fillStyle(0xd0c8c0, 1);
+    g.fillCircle(chairCx, chairCy, 18);
     g.fillStyle(C.aiLabAccent, 0.3);
-    g.fillCircle(x + W / 2, y + H + chairOffsetY, 9);
+    g.fillCircle(chairCx, chairCy, 9);
   }
 
   private drawChair(g: Phaser.GameObjects.Graphics, cx: number, cy: number) {
+    // Shadow
+    g.fillStyle(0x8a8078, 0.12);
+    g.fillCircle(cx + 3, cy + 3, 18);
+    // Body
     g.fillStyle(C.chairBody, 1);
     g.fillCircle(cx, cy, 18);
     g.fillStyle(C.chairBack, 1);
@@ -556,6 +696,10 @@ export class ArenaScene extends Phaser.Scene {
   private drawServerRack(g: Phaser.GameObjects.Graphics, x: number, y: number) {
     const rW = 90, rH = 200;
 
+    // Shadow
+    g.fillStyle(0x8a8078, 0.18);
+    g.fillRoundedRect(x + 5, y + 5, rW + 2, rH + 2, 6);
+    // Body
     g.fillStyle(C.aiServer, 1);
     g.fillRoundedRect(x, y, rW, rH, 6);
     g.lineStyle(2, C.aiLabAccent, 0.5);
@@ -564,10 +708,10 @@ export class ArenaScene extends Phaser.Scene {
     // Server unit slots
     for (let i = 0; i < 7; i++) {
       const slotY = y + 12 + i * 26;
-      g.fillStyle(0x0a1628, 1);
+      g.fillStyle(0xd8d0c8, 1);
       g.fillRect(x + 8, slotY, rW - 16, 18);
       // Status light
-      const lightColors = [C.aiServerLight, C.aiLabAccent, 0x22c55e, C.aiServerLight, C.aiLabAccent, 0x22c55e, C.aiLabAccent];
+      const lightColors = [C.aiServerLight, C.aiLabAccent, 0x5a9a50, C.aiServerLight, C.aiLabAccent, 0x5a9a50, C.aiLabAccent];
       g.fillStyle(lightColors[i % lightColors.length]!, 0.9);
       g.fillCircle(x + rW - 16, slotY + 9, 4);
     }
@@ -585,6 +729,9 @@ export class ArenaScene extends Phaser.Scene {
       [60, 700], [900, 700],
     ];
     spots.forEach(([px, py]) => {
+      // Shadow
+      g.fillStyle(0x8a8078, 0.15);
+      g.fillEllipse(px + 3, py + 17, 34, 20);
       // Pot
       g.fillStyle(C.potClay, 1);
       g.fillEllipse(px, py + 14, 32, 22);
@@ -605,18 +752,34 @@ export class ArenaScene extends Phaser.Scene {
   // ─────────────────────────────────────────────────────────
   private drawRoomLabels() {
     const labelStyle = {
-      fontSize: '18px',
+      fontSize: '13px',
       fontFamily: '"Inter", sans-serif',
-      color: '#ffffff',
-      alpha: 0.5,
-      padding: { x: 10, y: 6 },
+      color: '#5a5048',
+      alpha: 0.7,
+      letterSpacing: 2,
+      padding: { x: 0, y: 0 },
     };
 
-    // Use accent colors from room tokens
-    this.add.text(50, 30, '🖥  Open Office', { ...labelStyle, color: RoomTokens.open_office.labelColor }).setAlpha(0.7).setDepth(2);
-    this.add.text(50, 760, '📋  Workspace', { ...labelStyle, color: RoomTokens.workspace.labelColor }).setAlpha(0.7).setDepth(2);
-    this.add.text(1170, 820, '🤝  Meeting Room', { ...labelStyle, color: RoomTokens.meeting.labelColor }).setAlpha(0.8).setDepth(2);
-    this.add.text(1130, 20, '🧠  AI Labs', { ...labelStyle, color: RoomTokens.ai_labs.labelColor }).setAlpha(0.9).setDepth(2);
+    // Clean zone labels — no emojis, just typography + accent underline
+    const labels = [
+      { text: 'OPEN OFFICE', x: 30, y: 20, color: RoomTokens.open_office.labelColor },
+      { text: 'WORKSPACE', x: 30, y: 750, color: RoomTokens.workspace.labelColor },
+      { text: 'MEETING ROOM', x: 1170, y: 810, color: RoomTokens.meeting.labelColor },
+      { text: 'AI LABS', x: 1130, y: 15, color: RoomTokens.ai_labs.labelColor },
+    ];
+
+    labels.forEach(({ text, x, y, color }) => {
+      // Label text
+      this.add.text(x, y, text, { ...labelStyle, color }).setAlpha(0.8).setDepth(2);
+      // Accent underline
+      const underline = this.add.graphics();
+      underline.fillStyle(
+        parseInt(color.replace('#', ''), 16),
+        0.4
+      );
+      underline.fillRect(x, y + 18, text.length * 7.5, 1.5);
+      underline.setDepth(2);
+    });
   }
 
   // ─────────────────────────────────────────────────────────
@@ -652,6 +815,22 @@ export class ArenaScene extends Phaser.Scene {
     aiBorder.lineStyle(2, aiToken.accent, 0.4);
     aiBorder.strokeRect(1116, 0, W - 1116, 780);
     aiBorder.setDepth(1);
+
+    // Doorway glow effects — light spilling through openings
+    const glowG = this.add.graphics();
+    glowG.setDepth(1);
+
+    // AI Labs doorway glow (cyan light bleeding into corridor)
+    glowG.fillStyle(0xa07050, 0.06);
+    glowG.fillRect(1080, 260, 60, 180);
+
+    // Meeting Room doorway glow (violet light bleeding into corridor)
+    glowG.fillStyle(0x9070b0, 0.05);
+    glowG.fillRect(1320, 780, 160, 50);
+
+    // Central corridor ambient (warm overhead feel)
+    glowG.fillStyle(0xffffff, 0.02);
+    glowG.fillRect(800, 700, 400, 50);
   }
 
   // ─────────────────────────────────────────────────────────
