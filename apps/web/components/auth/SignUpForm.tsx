@@ -42,30 +42,17 @@ export const SignUpForm = () => {
         <div className="flex-1 h-px bg-zinc-900"></div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2.5">
-          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">First name</label>
+          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Full name</label>
           <div className="relative group">
             <Icons.User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-white transition-colors" />
             <input 
               type="text" 
-              placeholder="Arjun"
+              placeholder="John doe"
               className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl px-11 py-3 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
             />
           </div>
         </div>
-        <div className="space-y-2.5">
-          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Last name</label>
-          <div className="relative group">
-            <Icons.User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-white transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Sharma"
-              className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl px-11 py-3 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
-            />
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-2.5">
         <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Work email</label>
