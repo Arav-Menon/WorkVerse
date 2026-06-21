@@ -22,6 +22,7 @@ export async function getUserOrganizations(
           id: true,
           name: true,
           slug: true,
+          description: true,
           createdAt: true,
           _count: { select: { workspaces: true } },
         },
@@ -67,6 +68,7 @@ export async function getOrganizationById(
       id: true,
       name: true,
       slug: true,
+      description: true,
       createdAt: true,
       _count: { select: { workspaces: true } },
     },
@@ -74,6 +76,53 @@ export async function getOrganizationById(
 
   if (!org) {
     throw { statusCode: 404, message: "Organization not found" };
+  }
+
+  const result = {
+    ...org,
+    workspaceCount: org._count.workspaces,
+    _count: undefined,
+  };
+
+  await fastify.cache.set(cacheKey, JSON.stringify(result), "EX", ORGS_TTL);
+
+  return result;
+}
+
+export async function getOrganizationBySlug(
+  fastify: FastifyInstance,
+  userId: string,
+  slug: string
+) {
+  const cacheKey = `org:slug:${slug}:user:${userId}`;
+
+  const cached = await fastify.cache.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
+  const org = await fastify.db.organization.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      createdAt: true,
+      _count: { select: { workspaces: true } },
+    },
+  });
+
+  if (!org) {
+    throw { statusCode: 404, message: "Organization not found" };
+  }
+
+  const membership = await fastify.db.organizationMember.findUnique({
+    where: { organizationId_userId: { organizationId: org.id, userId } },
+  });
+
+  if (!membership) {
+    throw { statusCode: 403, message: "You do not have access to this organization" };
   }
 
   const result = {
