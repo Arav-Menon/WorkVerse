@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import AppSidebar from "../../../components/shared/AppSidebar";
 import type { HomePageData } from "./home-data";
 import HomeHero from "./HomeHero";
-import HomeNavbar from "./HomeNavbar";
 import HomeStatsSection from "./HomeStatsSection";
 import OrganizationSection from "./OrganizationSection";
 import RecentActivityPanel from "./RecentActivityPanel";
@@ -27,7 +26,7 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
 
   const handleWorkspaceChange = (workspace: string) => {
     setCurrentWorkspace(workspace);
-    router.push(`/organization/${encodeURIComponent(workspace.toLowerCase())}`);
+    router.push(`/organization/${encodeURIComponent(workspace)}`);
   };
 
   const filteredOrganizations = useMemo(() => {
@@ -53,6 +52,7 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
 
   const sharedSidebarOrganizations = data.organizations.map((organization) => ({
     name: organization.name,
+    slug: organization.slug,
     desc: organization.description,
     members: organization.members,
     workspaces: organization.workspaces,
@@ -70,14 +70,6 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
         <div className="absolute left-[-10%] top-[-18%] h-[48rem] w-[48rem] rounded-full bg-white/[0.035] blur-[160px]" />
         <div className="absolute bottom-[-18%] right-[-10%] h-[42rem] w-[42rem] rounded-full bg-cyan-500/[0.06] blur-[160px]" />
       </div>
-
-      {/* <HomeNavbar
-        searchQuery={searchQuery}
-        onSearchChange={(value) => startFilterTransition(() => setSearchQuery(value))}
-        onMenuClick={() => setSidebarOpen((prev) => !prev)}
-        currentUser={data.currentUser}
-        profileMenu={data.profileMenu}
-      /> */}
 
       <AppNavbar 
               currentWorkspace={currentWorkspace}
