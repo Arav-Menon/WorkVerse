@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Icons } from "./AuthIcons";
+import {registerUser} from "@/lib/api/user.api";
+import {useRouter} from "next/navigation";
 
 export const SignUpForm = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
   const [strength, setStrength] = useState(0);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const checkStrength = (val: string) => {
     setPassword(val);
@@ -19,6 +24,15 @@ export const SignUpForm = () => {
 
   const strengthCols = ["", "#ef4444", "#f59e0b", "#84cc16", "#10b981"];
   const strengthLabels = ["Enter a secure password", "Too weak", "Could be stronger", "Good password", "Strong password"];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!email || !password || !name) return;
+    const token = await registerUser(name, email, password);
+    localStorage.setItem("token", token);
+    router.push("/home")
+  }
+
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
@@ -49,6 +63,7 @@ export const SignUpForm = () => {
             <input 
               type="text" 
               placeholder="John doe"
+              onChange={(e)=> setName(e.target.value) }
               className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl px-11 py-3 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
             />
           </div>
@@ -59,7 +74,8 @@ export const SignUpForm = () => {
         <div className="relative group">
           <Icons.Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-white transition-colors" />
           <input 
-            type="email" 
+            type="email"
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
             className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl px-11 py-3 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
           />
@@ -100,7 +116,7 @@ export const SignUpForm = () => {
         </div>
       </div>
 
-      <button className="w-full bg-white text-black py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2.5 group shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-[0.98]">
+      <button className="w-full bg-white text-black py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2.5 group shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-[0.98]" onClick={handleSubmit} >
         Create office <Icons.ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
       </button>
 
