@@ -56,7 +56,7 @@ export default function OrgsSection({
               className="bg-zinc-950/40 border border-zinc-900 rounded-xl p-5 hover:border-zinc-700 hover:bg-zinc-900/30 transition-all flex flex-col h-full cursor-pointer group" 
               role="button" 
               tabIndex={0} 
-              onClick={() => onOrgClick(org.slug)}
+              onClick={() => onOrgClick(org.id)}
               aria-label={`${org.name} — Enter organization`}
             >
               <header className="flex items-center gap-3 mb-3">
