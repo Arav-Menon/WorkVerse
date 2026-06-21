@@ -7,6 +7,7 @@ import InviteMemberModal from "./InviteMemberModal";
 import type { FetchOrganization } from "@/lib/api/org.api";
 
 export interface Org {
+  id: string;
   name: string;
   slug: string;
   desc: string;
@@ -58,8 +59,8 @@ export default function AppSidebar({
     return pathname === route;
   };
 
-  const handleOrgClick = (orgSlug: string) => {
-    router.push(`/organization/${orgSlug}`);
+  const handleOrgClick = (orgId: string) => {
+    router.push(`/organization/${orgId}`);
     setSidebarOpen(false);
   };
 
@@ -197,7 +198,7 @@ export default function AppSidebar({
                     <li key={org.name}>
                       <button
                         className="flex items-center gap-2.5 p-2 px-3 rounded-xl text-left w-full hover:bg-zinc-900/40 group transition-colors cursor-pointer"
-                        onClick={() => handleOrgClick(org.slug)}
+                        onClick={() => handleOrgClick(org.id)}
                         aria-label={`${org.name} — ${org.online} members online`}
                       >
                         <span
