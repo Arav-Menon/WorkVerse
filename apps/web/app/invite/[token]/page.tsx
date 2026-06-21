@@ -97,10 +97,10 @@ export default function InvitePage() {
     if (!invite) return;
     try {
       setState("joining");
-      await acceptInvite(token);
+      const result = await acceptInvite(token);
       setState("success");
       setTimeout(() => {
-        router.push(`/organization/${invite.organizationSlug}`);
+        router.push(`/organization/${result.organizationId}`);
       }, 2500);
     } catch (err: any) {
       const message =
