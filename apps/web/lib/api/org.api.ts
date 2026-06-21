@@ -39,11 +39,6 @@ export async function fetchOrganizationById(orgId: string): Promise<FetchOrganiz
   return res.data.data ?? res.data;
 }
 
-export async function fetchOrganizationBySlug(slug: string): Promise<FetchOrganization> {
-  const res = await apiClient.get(API_ENDPOINTS.ORGANIZATION.GET_BY_SLUG(slug));
-  return res.data.data ?? res.data;
-}
-
 export interface InviteOrganizationRequest {
   name: string;
   email: string;
@@ -56,4 +51,21 @@ export interface InviteOrganizationResponse {
 export async function inviteOrganization(orgId: string, data: InviteOrganizationRequest): Promise<InviteOrganizationResponse> {
   const res = await apiClient.post(API_ENDPOINTS.ORGANIZATION.INVITE(orgId), data);
   return res.data;
+}
+
+export interface OrgWorkspace {
+  id: string;
+  name: string;
+  createdAt: string;
+  spaceCount: number;
+}
+
+export async function fetchOrgWorkspaces(orgId: string): Promise<OrgWorkspace[]> {
+  const res = await apiClient.get(API_ENDPOINTS.WORKSPACE.GET_ALL(orgId));
+  return res.data.data ?? res.data;
+}
+
+export async function fetchWorkspaceById(orgId: string, workspaceId: string): Promise<OrgWorkspace> {
+  const res = await apiClient.get(API_ENDPOINTS.WORKSPACE.GET_BY_ID(orgId, workspaceId));
+  return res.data.data ?? res.data;
 }
