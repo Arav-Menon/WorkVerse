@@ -19,7 +19,11 @@ export async function createOrganizationController(
             userId
         );
 
-        return reply.status(201).send(organization);
+        return reply.status(201).send({
+            success: true,
+            message: "Organization created successfully",
+            data: organization,
+        });
     } catch (err: any) {
         request.log.error(err);
         if (err.statusCode) {
