@@ -129,7 +129,6 @@ export default function OrganizationPage() {
 
   const handleWorkspaceChange = (workspace: string) => {
     setCurrentWorkspace(workspace);
-    router.push(`/workspace/${encodeURIComponent(workspace.toLowerCase())}`);
   };
 
   useEffect(() => {
