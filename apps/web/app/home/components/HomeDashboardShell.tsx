@@ -51,6 +51,7 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
   }, [data.organizations, deferredQuery]);
 
   const sharedSidebarOrganizations = data.organizations.map((organization) => ({
+    id: organization.id,
     name: organization.name,
     slug: organization.slug,
     desc: organization.description,
