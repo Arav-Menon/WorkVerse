@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "mail-forger:start": "bun ./src/mail-forger"
+    "start:mail-forger": "bun ./src/mail-forger"
   },
   "devDependencies": {
     "@types/bun": "latest"
