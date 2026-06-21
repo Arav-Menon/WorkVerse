@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use, useState } from "react";
-import OrgNavbar from "../components/OrgNavbar";
+import AppNavbar from "@/components/shared/AppNavbar";
 import OrgSidebar from "../components/OrgSidebar";
 import OrgHeroSection from "../components/OrgHeroSection";
 import WorkspacesGrid from "../components/WorkspacesGrid";
@@ -20,6 +20,7 @@ export default function OrgPage({ params }: PageProps) {
   // Layout States
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("Workspaces");
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   // Search & Modal States
   const [searchOpen, setSearchOpen] = useState(false);
@@ -57,10 +58,14 @@ export default function OrgPage({ params }: PageProps) {
       </div>
 
       {/* Header navbar overlay */}
-      <OrgNavbar 
-        orgName={workspace} 
+      <AppNavbar 
+        currentWorkspace={workspace}
+        switcherOpen={switcherOpen}
+        setSwitcherOpen={setSwitcherOpen}
+        onWorkspaceChange={() => {}}
         onSearchClick={() => setSearchOpen(true)}
-        onMenuClick={() => setSidebarOpen(true)}
+        setSidebarOpen={setSidebarOpen}
+        breadcrumb={workspace}
       />
 
       {/* Content wrapper splitting Sidebar, Dashboard, and Right panel */}
