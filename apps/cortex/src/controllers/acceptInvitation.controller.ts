@@ -24,7 +24,7 @@ export async function acceptOrganizationInviteController(
       userId,
     );
 
-    return { message: organizationInviteLink };
+    return reply.status(200).send(organizationInviteLink);
   } catch (err: any) {
     request.log.error(err);
     if (err.statusCode) {

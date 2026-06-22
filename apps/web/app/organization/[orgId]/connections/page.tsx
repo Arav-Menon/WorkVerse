@@ -1,11 +1,11 @@
 "use client";
 
 import React, { use, useState } from "react";
-import OrgNavbar from "../../../organization/components/HomeNavbar";
+import AppNavbar from "@/components/shared/AppNavbar";
 import OrgSidebar from "../../../organization/components/HomeSidebar";
 
 interface PageProps {
-  params: Promise<{ workspaceName: string }>;
+  params: Promise<{ orgId: string }>;
 }
 
 const connectedServices = [
@@ -86,12 +86,13 @@ const healthStats = [
 
 export default function ConnectionsPage({ params }: PageProps) {
   const unwrappedParams = use(params);
-  const workspace = decodeURIComponent(unwrappedParams.workspaceName);
+  const workspace = decodeURIComponent(unwrappedParams.orgId);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("Connections");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const filteredConnected = connectedServices.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -109,11 +110,14 @@ export default function ConnectionsPage({ params }: PageProps) {
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/[0.012] rounded-full blur-[120px] -translate-y-1/2" />
       </div>
 
-      <OrgNavbar
-          //@ts-ignore
-        orgName={workspace}
+      <AppNavbar
+        currentWorkspace={workspace}
+        switcherOpen={switcherOpen}
+        setSwitcherOpen={setSwitcherOpen}
+        onWorkspaceChange={() => {}}
         onSearchClick={() => {}}
-        onMenuClick={() => setSidebarOpen(true)}
+        setSidebarOpen={setSidebarOpen}
+        breadcrumb={workspace}
       />
 
       <div className="flex flex-1 h-[calc(100vh-56px)] overflow-hidden relative z-10">

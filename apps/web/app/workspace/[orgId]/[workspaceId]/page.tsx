@@ -1,32 +1,41 @@
 "use client";
 
-import React, { use, useState } from "react";
-import OrgNavbar from "../components/OrgNavbar";
-import OrgSidebar from "../components/OrgSidebar";
-import OrgHeroSection from "../components/OrgHeroSection";
-import WorkspacesGrid from "../components/WorkspacesGrid";
-import ConnectionsDeck from "../components/ConnectionsDeck";
-import AiLabDeck from "../components/AiLabDeck";
-import AiLabRightPanel from "../components/AiLabRightPanel";
+import React, { use, useState, useEffect } from "react";
+import AppNavbar from "@/components/shared/AppNavbar";
+import OrgSidebar from "../../components/OrgSidebar";
+import OrgHeroSection from "../../components/OrgHeroSection";
+import WorkspacesGrid from "../../components/WorkspacesGrid";
+import ConnectionsDeck from "../../components/ConnectionsDeck";
+import AiLabDeck from "../../components/AiLabDeck";
+import AiLabRightPanel from "../../components/AiLabRightPanel";
+import { fetchWorkspaceById } from "@/lib/api/org.api";
 
 interface PageProps {
-  params: Promise<{ workspaceName: string }>;
+  params: Promise<{ orgId: string; workspaceId: string }>;
 }
 
 export default function OrgPage({ params }: PageProps) {
   const unwrappedParams = use(params);
-  const workspace = decodeURIComponent(unwrappedParams.workspaceName);
+  const orgId = unwrappedParams.orgId;
+  const workspaceId = unwrappedParams.workspaceId;
 
-  // Layout States
+  const [workspaceName, setWorkspaceName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("Workspaces");
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
-  // Search & Modal States
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [newWorkspaceDesc, setNewWorkspaceDesc] = useState("");
   const [newWorkspaceType, setNewWorkspaceType] = useState("Engineering");
+
+  useEffect(() => {
+    if (!orgId || !workspaceId) return;
+    fetchWorkspaceById(orgId, workspaceId)
+      .then((ws) => setWorkspaceName(ws.name))
+      .catch(() => setWorkspaceName("Workspace"));
+  }, [orgId, workspaceId]);
 
   const handleEnterWorkspace = (name: string) => {
     alert(`Connecting to ${name} realtime voice channels and nodes...`);
@@ -57,10 +66,14 @@ export default function OrgPage({ params }: PageProps) {
       </div>
 
       {/* Header navbar overlay */}
-      <OrgNavbar 
-        orgName={workspace} 
+      <AppNavbar 
+        currentWorkspace={workspaceName}
+        switcherOpen={switcherOpen}
+        setSwitcherOpen={setSwitcherOpen}
+        onWorkspaceChange={() => {}}
         onSearchClick={() => setSearchOpen(true)}
-        onMenuClick={() => setSidebarOpen(true)}
+        setSidebarOpen={setSidebarOpen}
+        breadcrumb={workspaceName}
       />
 
       {/* Content wrapper splitting Sidebar, Dashboard, and Right panel */}
@@ -78,8 +91,8 @@ export default function OrgPage({ params }: PageProps) {
             {activeSection === "Workspaces" || activeSection === "Home" ? (
               <>
                 <OrgHeroSection 
-                  orgName={workspace} 
-                  onLaunchClick={() => alert(`Spawning voice server nodes inside ${workspace}...`)}
+                  orgName={workspaceName} 
+                  onLaunchClick={() => alert(`Spawning voice server nodes inside ${workspaceName}...`)}
                 />
                 <WorkspacesGrid 
                   onEnterWorkspace={handleEnterWorkspace}
@@ -88,11 +101,11 @@ export default function OrgPage({ params }: PageProps) {
               </>
             ) : activeSection === "AI Lab" ? (
               <div className="flex gap-0">
-                <AiLabDeck orgName={workspace} />
+                <AiLabDeck orgName={workspaceName} />
                 <AiLabRightPanel />
               </div>
             ) : activeSection === "Connections" ? (
-              <ConnectionsDeck workspaceName={workspace} />
+              <ConnectionsDeck workspaceName={workspaceName} />
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[350px] text-center gap-4 bg-zinc-950/20 border border-zinc-900 rounded-2xl p-8">
                 <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-500">
@@ -162,7 +175,7 @@ export default function OrgPage({ params }: PageProps) {
           >
             <div className="space-y-1.5">
               <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Create Workspace</h3>
-              <p className="text-[11px] text-zinc-500">Launch a brand new team cockpit within {workspace}.</p>
+              <p className="text-[11px] text-zinc-500">Launch a brand new team cockpit within {workspaceName}.</p>
             </div>
 
             <div className="space-y-4">

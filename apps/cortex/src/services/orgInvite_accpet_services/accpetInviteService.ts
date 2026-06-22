@@ -32,7 +32,7 @@ export async function registerAcceptInviteService(
       where: { token },
       data: { status: "ACCEPTED" }
     });
-    return { message: "You are already a member of this organization" };
+    return { message: "You are already a member of this organization", organizationId: invite.organizationId };
   }
 
   await fastify.db.$transaction(async (tx) => {
@@ -52,5 +52,5 @@ export async function registerAcceptInviteService(
 
   await fastify.cache.set(`user:${userId}:access`, JSON.stringify(invite.organizationId), "EX", 24 * 60 * 60);
 
-  return { message: "Joined organization successfully" };
+  return { message: "Joined organization successfully", organizationId: invite.organizationId };
 }

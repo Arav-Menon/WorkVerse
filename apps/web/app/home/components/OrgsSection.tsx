@@ -4,6 +4,7 @@ import React from "react";
 
 interface Org {
   name: string;
+  slug: string;
   desc: string;
   members: number;
   workspaces: number;

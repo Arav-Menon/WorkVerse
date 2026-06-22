@@ -25,7 +25,7 @@ export default function OrgSidebar({
   setActiveSection,
 }: OrgSidebarProps) {
   const params = useParams();
-  const workspaceName = params?.workspaceName as string ?? "";
+  const workspaceId = (params?.workspaceId as string) ?? "";
 
   const navigation = [
     { name: "Workspaces", icon: "ti-layout-grid", badge: 12 },

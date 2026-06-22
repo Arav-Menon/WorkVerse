@@ -24,6 +24,7 @@ import { authJsonSchemas } from "../src/validationSchemas";
 import workspaceRoutes from "./routes/workspace/workspace.routes";
 import organizationInviteLinkRoutes from "./routes/organization_invite/organization.inviteLink.routes";
 import organizationAcceptInviteRoutes from "./routes/organization_invite/organization.acceptInvite.routes";
+import organizationValidateInviteRoutes from "./routes/organization_invite/organization.validateInvite.routes";
 import createRoomRoutes from "./routes/create_room/create_room.route";
 import redisPlugin from "./plugins/redis";
 import { ingestPromptRoutes } from "./routes";
@@ -57,6 +58,9 @@ fastify.register(organizationInviteLinkRoutes, {
 });
 fastify.register(organizationAcceptInviteRoutes, {
   prefix: "/api/v1/accept-invite",
+});
+fastify.register(organizationValidateInviteRoutes, {
+  prefix: "/api/v1/invite",
 });
 fastify.register(createRoomRoutes, { prefix: "/api/v1/open-room" });
 fastify.register(ingestPromptRoutes, { prefix: "/api/v1/ingest-prompt" });

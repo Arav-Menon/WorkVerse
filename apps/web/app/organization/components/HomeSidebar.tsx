@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 interface Org {
   name: string;
+  slug: string;
   desc: string;
   members: number;
   workspaces: number;

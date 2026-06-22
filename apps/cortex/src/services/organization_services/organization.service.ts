@@ -5,8 +5,8 @@ export async function registerOrganisation(
   fastify: FastifyInstance,
   input: RegisterOrganizationBody,
   userId: string
-): Promise<{ id: string; name: string; slug: string; createdById: string }> {
-  const { name, slug } = input;
+): Promise<{ id: string; name: string; slug: string; description: string | null; createdById: string }> {
+  const { name, slug, description } = input;
 
   const existing = await fastify.db.organization.findUnique({
     where: {
@@ -22,8 +22,8 @@ export async function registerOrganisation(
 
   const organization = await fastify.db.$transaction(async (tx) => {
     const organization = await tx.organization.create({
-      data: { name, slug, createdById: userId },
-      select: { id: true, name: true, slug: true, createdById: true },
+      data: { name, slug, description: description ?? null, createdById: userId },
+      select: { id: true, name: true, slug: true, description: true, createdById: true },
     });
 
     await tx.organizationMember.create({
@@ -38,6 +38,7 @@ export async function registerOrganisation(
   })
 
   await fastify.cache.set(`user:${userId}:access`, JSON.stringify(organization.id), "EX", 24 * 60 * 60);
+  await fastify.cache.del(`orgs:user:${userId}`);
 
   return organization;
 }

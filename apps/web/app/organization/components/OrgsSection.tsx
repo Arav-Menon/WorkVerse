@@ -3,7 +3,9 @@
 import React from "react";
 
 interface Org {
+  id: string;
   name: string;
+  slug: string;
   desc: string;
   members: number;
   workspaces: number;
@@ -15,14 +17,14 @@ interface Org {
 
 interface OrgsSectionProps {
   orgs: Org[];
-  onWorkspaceChange: (ws: string) => void;
+  onOrgClick: (orgId: string) => void;
   onCreateClick: () => void;
   onViewAllClick: () => void;
 }
 
 export default function OrgsSection({
   orgs,
-  onWorkspaceChange,
+  onOrgClick,
   onCreateClick,
   onViewAllClick,
 }: OrgsSectionProps) {
@@ -54,7 +56,7 @@ export default function OrgsSection({
               className="bg-zinc-950/40 border border-zinc-900 rounded-xl p-5 hover:border-zinc-700 hover:bg-zinc-900/30 transition-all flex flex-col h-full cursor-pointer group" 
               role="button" 
               tabIndex={0} 
-              onClick={() => onWorkspaceChange(org.name)}
+              onClick={() => onOrgClick(org.id)}
               aria-label={`${org.name} — Enter organization`}
             >
               <header className="flex items-center gap-3 mb-3">

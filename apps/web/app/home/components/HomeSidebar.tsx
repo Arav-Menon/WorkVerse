@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 export interface Org {
+  id: string;
   name: string;
+  slug: string;
   desc: string;
   members: number;
   workspaces: number;
@@ -52,8 +54,8 @@ export default function AppSidebar({
     return pathname === route;
   };
 
-  const handleOrgClick = (orgName: string) => {
-    router.push(`/organization/${encodeURIComponent(orgName.toLowerCase())}`);
+  const handleOrgClick = (orgId: string) => {
+    router.push(`/organization/${orgId}`);
     setSidebarOpen(false);
   };
 
@@ -186,7 +188,7 @@ export default function AppSidebar({
                     <li key={org.name}>
                       <button
                         className="flex items-center gap-2.5 p-2 px-3 rounded-xl text-left w-full hover:bg-zinc-900/40 group transition-colors cursor-pointer"
-                        onClick={() => handleOrgClick(org.name)}
+                        onClick={() => handleOrgClick(org.id)}
                         aria-label={`${org.name} — ${org.online} members online`}
                       >
                         <span

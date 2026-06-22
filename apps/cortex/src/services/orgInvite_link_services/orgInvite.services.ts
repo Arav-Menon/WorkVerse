@@ -14,14 +14,16 @@ export async function registerOrganizationInviteLink(
   const { name, email } = input;
 
   const token = crypto.randomUUID();
-  const inviteLink = `http://localhost:3000/invite?token=${token}`;
+  const inviteLink = `http://localhost:3000/invite/${token}`;
 
-  const existMail = await fastify.db.organizationInvite.findUnique({
-    where: { email },
+  const existMail = await fastify.db.organizationInvite.findFirst({
+    where: { organizationId: orgId, email },
   });
 
   if (existMail) {
-    await fastify.db.organizationInvite.delete({ where: { email } });
+    await fastify.db.organizationInvite.delete({
+      where: { organizationId_email: { organizationId: orgId, email } },
+    });
   }
 
   const orgInvite = await fastify.db.organizationInvite.create({

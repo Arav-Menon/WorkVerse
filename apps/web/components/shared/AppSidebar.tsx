@@ -1,11 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import InviteMemberModal from "./InviteMemberModal";
+import type { FetchOrganization } from "@/lib/api/org.api";
 
 export interface Org {
+  id: string;
   name: string;
+  slug: string;
   desc: string;
   members: number;
   workspaces: number;
@@ -19,6 +23,7 @@ interface AppSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
   orgs: Org[];
+  fetchOrganizations?: FetchOrganization[];
 }
 
 
@@ -26,9 +31,11 @@ export default function AppSidebar({
   sidebarOpen,
   setSidebarOpen,
   orgs,
+  fetchOrganizations = [],
 }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const primaryNav = [
     { name: "Home", icon: "ti-home", route: "/home" },
@@ -41,6 +48,7 @@ export default function AppSidebar({
 
   const quickAccess = [
     { name: "Profile", icon: "ti-id-badge", route: "/profile" },
+    { name: "Invite member", icon: "ti-user-plus", action: "invite" },
   ];
 
   const isActiveRoute = (route: string) => {
@@ -51,8 +59,8 @@ export default function AppSidebar({
     return pathname === route;
   };
 
-  const handleOrgClick = (orgName: string) => {
-    router.push(`/organization/${encodeURIComponent(orgName.toLowerCase())}`);
+  const handleOrgClick = (orgId: string) => {
+    router.push(`/organization/${orgId}`);
     setSidebarOpen(false);
   };
 
@@ -67,13 +75,13 @@ export default function AppSidebar({
       )}
 
       <aside
-        className={`bg-black/95 md:bg-black border-r border-zinc-900 p-4 py-6 flex flex-col gap-1 fixed md:relative top-[56px] md:top-auto left-0 bottom-0 w-[248px] h-[calc(100vh-56px)] md:h-full overflow-y-auto md:overflow-hidden z-[150] transition-transform duration-200 ease-in-out md:translate-x-0 shrink-0 backdrop-blur-xl ${
+        className={`bg-black/95 md:bg-black border-r border-zinc-900 p-4 py-6 flex flex-col fixed md:relative top-[56px] md:top-auto left-0 bottom-0 w-[248px] h-[calc(100vh-56px)] md:h-full z-[150] transition-transform duration-200 ease-in-out md:translate-x-0 shrink-0 backdrop-blur-xl ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Main navigation"
       >
-        <nav className="flex h-full flex-col justify-between" aria-label="Primary navigation">
-          <div className="space-y-6">
+        <nav className="flex h-full flex-col overflow-hidden" aria-label="Primary navigation">
+          <div className="flex-1 space-y-6 overflow-y-auto pr-1">
             <div className="rounded-2xl border border-zinc-900 bg-zinc-950/60 p-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -150,7 +158,7 @@ export default function AppSidebar({
               </p>
               <ul role="list" className="space-y-0.5">
                 {quickAccess.map((item) => {
-                  const isActive = isActiveRoute(item.route);
+                  const isActive = item.route ? isActiveRoute(item.route) : false;
 
                   return (
                     <li key={item.name}>
@@ -161,7 +169,12 @@ export default function AppSidebar({
                             : "text-zinc-400 hover:bg-zinc-900/60 hover:text-white"
                         }`}
                         onClick={() => {
-                          router.push(item.route);
+                          if (item.action === "invite") {
+                            setInviteOpen(true);
+                            setSidebarOpen(false);
+                            return;
+                          }
+                          router.push(item.route!);
                           setSidebarOpen(false);
                         }}
                       >
@@ -185,7 +198,7 @@ export default function AppSidebar({
                     <li key={org.name}>
                       <button
                         className="flex items-center gap-2.5 p-2 px-3 rounded-xl text-left w-full hover:bg-zinc-900/40 group transition-colors cursor-pointer"
-                        onClick={() => handleOrgClick(org.name)}
+                        onClick={() => handleOrgClick(org.id)}
                         aria-label={`${org.name} — ${org.online} members online`}
                       >
                         <span
@@ -235,6 +248,12 @@ export default function AppSidebar({
           </div>
         </nav>
       </aside>
+
+      <InviteMemberModal
+        isOpen={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        organizations={fetchOrganizations}
+      />
     </>
   );
 }

@@ -1,10 +1,21 @@
 import React, { useState } from "react";
 import { Icons } from "./AuthIcons";
 import { useRouter } from "next/navigation";
+import {loginUser} from "@/lib/api/user.api";
 
 export const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault()
+      const token = await  loginUser(email, password);
+      console.log(token);
+      localStorage.setItem("token", token);
+      router.push("/home");
+  }
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
@@ -36,6 +47,7 @@ export const SignInForm = () => {
             <input 
               type="email" 
               placeholder="you@company.com"
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl px-11 py-3 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
             />
           </div>
@@ -49,7 +61,8 @@ export const SignInForm = () => {
           <div className="relative group">
             <Icons.Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-white transition-colors" />
             <input 
-              type={showPassword ? "text" : "password"} 
+              type={showPassword ? "text" : "password"}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl px-11 py-3 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
             />
@@ -63,7 +76,7 @@ export const SignInForm = () => {
         </div>
       </div>
 
-      <button onClick={() => router.push('/home')} className="w-full bg-white text-black py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2.5 group shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-[0.98]">
+      <button onClick={handleSubmit} className="w-full bg-white text-black py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2.5 group shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-[0.98]">
         Enter WorkVerse <Icons.ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
       </button>
 

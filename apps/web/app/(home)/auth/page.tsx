@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { AuthBackground } from "../../../components/auth/AuthBackground";
-import { BrandingPanel } from "../../../components/auth/BrandingPanel";
-import { SignInForm } from "../../../components/auth/SignInForm";
-import { SignUpForm } from "../../../components/auth/SignUpForm";
+import { AuthBackground } from "@/components/auth/AuthBackground";
+import { BrandingPanel } from "@/components/auth/BrandingPanel";
+import { SignInForm } from "@/components/auth/SignInForm";
+import { SignUpForm } from "@/components/auth/SignUpForm";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"in" | "up">("in");

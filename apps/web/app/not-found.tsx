@@ -187,7 +187,7 @@ export default function NotFound() {
         <div className="w-full max-w-lg mx-auto">
            <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-4 text-center">Recent Destinations</h3>
            <div className="flex flex-col gap-2">
-              <Link href="/workspace/engineering" className="flex items-center justify-between px-4 py-3 rounded-xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all duration-200 group text-left bg-transparent">
+               <Link href="/organization" className="flex items-center justify-between px-4 py-3 rounded-xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all duration-200 group text-left bg-transparent">
                  <div className="flex items-center gap-4">
                     <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-zinc-800 transition-colors">
                        <i className="ti ti-code text-zinc-400 text-[14px] group-hover:text-white transition-colors"></i>
@@ -200,7 +200,7 @@ export default function NotFound() {
                  <i className="ti ti-arrow-right text-zinc-600 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-3 group-hover:translate-x-0"></i>
               </Link>
               
-              <Link href="/workspace/design" className="flex items-center justify-between px-4 py-3 rounded-xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all duration-200 group text-left bg-transparent">
+               <Link href="/organization" className="flex items-center justify-between px-4 py-3 rounded-xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all duration-200 group text-left bg-transparent">
                  <div className="flex items-center gap-4">
                     <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-zinc-800 transition-colors">
                        <i className="ti ti-palette text-zinc-400 text-[14px] group-hover:text-white transition-colors"></i>
