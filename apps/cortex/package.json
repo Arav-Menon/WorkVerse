@@ -26,6 +26,7 @@
     "@repo/mcp": "*",
     "@repo/queue": "*",
     "@repo/redis": "*",
+    "@repo/rbac" :  "*",
     "@repo/schemas": "*",
     "@repo/rate-limit": "*",
     "axios": "^1.7.0",
