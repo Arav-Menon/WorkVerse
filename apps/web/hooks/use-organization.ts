@@ -2,9 +2,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   fetchOrganizationById,
   fetchAllOrganizations,
+  fetchMyMembership,
   inviteOrganization,
   type FetchOrganization,
   type InviteOrganizationRequest,
+  type Membership,
 } from "@/lib/api/org.api";
 
 export function useOrganizations() {
@@ -27,5 +29,14 @@ export function useOrganization(orgId: string) {
 export function useInviteMember(orgId: string) {
   return useMutation({
     mutationFn: (data: InviteOrganizationRequest) => inviteOrganization(orgId, data),
+  });
+}
+
+export function useOrganizationMembership(orgId: string) {
+  return useQuery<Membership>({
+    queryKey: ["membership", orgId],
+    queryFn: () => fetchMyMembership(orgId),
+    enabled: !!orgId,
+    staleTime: 120_000,
   });
 }
