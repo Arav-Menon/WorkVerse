@@ -11,7 +11,7 @@ import FeedSection from "./components/FeedSection";
 import QuickActionsSection from "./components/QuickActionsSection";
 import CreateOrgModal from "./components/CreateOrgModal";
 import CommandPaletteModal from "./components/CommandPaletteModal";
-import { registerOrganization, fetchAllOrganizations, type FetchOrganization } from "@/lib/api/org.api";
+import { registerOrganization, fetchAllOrganizations } from "@/lib/api/org.api";
 
 interface Org {
   id: string;
@@ -60,7 +60,6 @@ export default function OrganizationPage() {
   const [cmdSearch, setCmdSearch] = useState("");
 
   const [orgs, setOrgs] = useState<Org[]>([]);
-  const [rawOrgs, setRawOrgs] = useState<FetchOrganization[]>([]);
   const [orgsLoading, setOrgsLoading] = useState(true);
   const [orgsError, setOrgsError] = useState<string | null>(null);
 
@@ -100,7 +99,6 @@ export default function OrganizationPage() {
         setOrgsLoading(true);
         setOrgsError(null);
         const data = await fetchAllOrganizations();
-        setRawOrgs(data);
         const mapped: Org[] = data.map((org) => ({
           id: org.id,
           name: org.name,
@@ -279,7 +277,6 @@ export default function OrganizationPage() {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           orgs={orgs}
-          fetchOrganizations={rawOrgs}
         />
 
         <main className="flex-1 p-6 sm:p-8 md:p-10 max-w-none w-full overflow-y-auto relative z-10" id="main-content">
@@ -376,7 +373,6 @@ export default function OrganizationPage() {
             onScheduleMeetingClick={() => setActiveTab("Schedule")}
             onCreateAutomationClick={() => setActiveTab("Automations")}
             onOpenRecentRoomClick={() => alert("Connecting virtual office audio rooms…")}
-            onSendInviteClick={() => alert("Invite link copied to clipboard!")}
             onOpenCommandPaletteClick={() => setCmdPaletteOpen(true)}
           />
 
