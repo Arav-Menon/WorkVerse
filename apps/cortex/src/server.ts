@@ -32,6 +32,7 @@ import oauthRoutes from "./routes/oauth/oauth.route";
 import profileRoutes from "./routes/profile/profile.route";
 import organizationGetRoutes from "./routes/organization/organization.get.routes";
 import workspaceGetRoutes from "./routes/organization/workspace.get.routes";
+import workspaceStandaloneRoutes from "./routes/workspace/workspace.get.routes";
 for (const schema of authJsonSchemas) {
   fastify.addSchema(schema);
 }
@@ -68,4 +69,5 @@ fastify.register(oauthRoutes, { prefix: "/api/v1/oauth" });
 fastify.register(profileRoutes, { prefix: "/api/v1/profile" });
 fastify.register(organizationGetRoutes, { prefix: "/api/v1/organizations" });
 fastify.register(workspaceGetRoutes, { prefix: "/api/v1/organizations" });
+fastify.register(workspaceStandaloneRoutes, { prefix: "/api/v1/workspaces" });
 fastify.get("/health", async () => ({ status: "ok" }));
