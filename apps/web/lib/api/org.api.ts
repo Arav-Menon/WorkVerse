@@ -22,6 +22,7 @@ export interface FetchOrganization {
   description: string | null;
   createdAt: string;
   workspaceCount: number;
+  memberCount: number;
 }
 
 export async function registerOrganization(data: CreateOrganizationRequest): Promise<OrganizationResponse> {
@@ -36,6 +37,17 @@ export async function fetchAllOrganizations(): Promise<FetchOrganization[]> {
 
 export async function fetchOrganizationById(orgId: string): Promise<FetchOrganization> {
   const res = await apiClient.get(API_ENDPOINTS.ORGANIZATION.GET_BY_ID(orgId));
+  return res.data.data ?? res.data;
+}
+
+export interface Membership {
+  organizationId: string;
+  role: string;
+  joinedAt: string;
+}
+
+export async function fetchMyMembership(orgId: string): Promise<Membership> {
+  const res = await apiClient.get(API_ENDPOINTS.ORGANIZATION.MEMBERSHIP(orgId));
   return res.data.data ?? res.data;
 }
 
