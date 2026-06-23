@@ -9,6 +9,7 @@ export function middleware(req: NextRequest) {
         "/arena",
         "/settings",
         "/connections",
+        "/organization",
     ];
 
     const isProtected = protectedRoutes.some((route) =>
