@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import InviteMemberModal from "./InviteMemberModal";
-import type { FetchOrganization } from "@/lib/api/org.api";
 
 export interface Org {
   id: string;
@@ -23,7 +21,6 @@ interface AppSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
   orgs: Org[];
-  fetchOrganizations?: FetchOrganization[];
 }
 
 
@@ -31,11 +28,9 @@ export default function AppSidebar({
   sidebarOpen,
   setSidebarOpen,
   orgs,
-  fetchOrganizations = [],
 }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [inviteOpen, setInviteOpen] = useState(false);
 
   const primaryNav = [
     { name: "Home", icon: "ti-home", route: "/home" },
@@ -48,7 +43,6 @@ export default function AppSidebar({
 
   const quickAccess = [
     { name: "Profile", icon: "ti-id-badge", route: "/profile" },
-    { name: "Invite member", icon: "ti-user-plus", action: "invite" },
   ];
 
   const isActiveRoute = (route: string) => {
@@ -169,11 +163,6 @@ export default function AppSidebar({
                             : "text-zinc-400 hover:bg-zinc-900/60 hover:text-white"
                         }`}
                         onClick={() => {
-                          if (item.action === "invite") {
-                            setInviteOpen(true);
-                            setSidebarOpen(false);
-                            return;
-                          }
                           router.push(item.route!);
                           setSidebarOpen(false);
                         }}
@@ -248,12 +237,6 @@ export default function AppSidebar({
           </div>
         </nav>
       </aside>
-
-      <InviteMemberModal
-        isOpen={inviteOpen}
-        onClose={() => setInviteOpen(false)}
-        organizations={fetchOrganizations}
-      />
     </>
   );
 }
