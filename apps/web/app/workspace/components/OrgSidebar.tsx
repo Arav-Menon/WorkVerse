@@ -16,6 +16,7 @@ interface OrgSidebarProps {
   setSidebarOpen: (val: boolean) => void;
   activeSection: string;
   setActiveSection: (val: string) => void;
+  orgId?: string;
 }
 
 export default function OrgSidebar({
@@ -23,6 +24,7 @@ export default function OrgSidebar({
   setSidebarOpen,
   activeSection,
   setActiveSection,
+  orgId,
 }: OrgSidebarProps) {
   const params = useParams();
   const workspaceId = (params?.workspaceId as string) ?? "";
@@ -118,11 +120,7 @@ export default function OrgSidebar({
           </div>
 
           <div className="pt-4 border-t border-zinc-900 mt-6 space-y-1">
-            <button className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer">
-              <i className="ti ti-users text-base"></i>
-              <span>Invite colleagues</span>
-            </button>
-            <Link href="/home" className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left">
+            <Link href={orgId ? "/organization" : "/home"} className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left">
               <i className="ti ti-arrow-left text-base"></i>
               <span>Exit workspace</span>
             </Link>
