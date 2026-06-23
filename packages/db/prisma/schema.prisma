@@ -122,13 +122,15 @@ model OrganizationMember {
 }
 
 model Workspace {
-  id             String       @id @default(uuid())
-  name           String       @unique
+  id             String        @id @default(uuid())
+  name           String        @unique
+  slug           String        @unique
+  description    String?
   organizationId String
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime      @default(now())
   createdById    String
-  createdBy      User         @relation(fields: [createdById], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id])
 
   agents       Agent[]
   channels     Channel[]
