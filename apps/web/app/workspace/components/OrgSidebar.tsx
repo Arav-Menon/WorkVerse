@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 
 interface Member {
   name: string;
@@ -14,27 +14,33 @@ interface Member {
 interface OrgSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
-  activeSection: string;
-  setActiveSection: (val: string) => void;
   orgId?: string;
+  workspaceId?: string;
 }
 
 export default function OrgSidebar({
   sidebarOpen,
   setSidebarOpen,
-  activeSection,
-  setActiveSection,
   orgId,
+  workspaceId,
 }: OrgSidebarProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
-  const workspaceId = (params?.workspaceId as string) ?? "";
+
+  const resolvedOrgId = orgId || (params?.orgId as string) || "";
+  const resolvedWorkspaceId = workspaceId || (params?.workspaceId as string) || "";
+
+  const basePath = resolvedWorkspaceId
+    ? `/workspace/${resolvedOrgId}/${resolvedWorkspaceId}`
+    : `/organization/${resolvedOrgId}`;
 
   const navigation = [
-    { name: "Workspaces", icon: "ti-layout-grid", badge: 12 },
-    { name: "AI Lab", icon: "ti-robot" },
-    { name: "Automations", icon: "ti-arrows-split" },
-    { name: "Schedule", icon: "ti-calendar" },
-    { name: "Connections", icon: "ti-plug-connected",},
+    { name: "Workspaces", icon: "ti-layout-grid", route: `${basePath}/workspaces` },
+    { name: "AI Lab", icon: "ti-robot", route: `${basePath}/ai-lab` },
+    { name: "Automations", icon: "ti-arrows-split", route: `${basePath}/automations` },
+    { name: "Schedule", icon: "ti-calendar", route: `${basePath}/schedule` },
+    { name: "Connections", icon: "ti-plug-connected", route: `${basePath}/connections` },
   ];
 
   const members: Member[] = [
@@ -44,6 +50,10 @@ export default function OrgSidebar({
     { name: "Sam M.", avatar: "SM", status: "away", color: "bg-amber-950/60 border-amber-800 text-amber-400" },
     { name: "Rohan B.", avatar: "RB", status: "offline", color: "bg-zinc-900 border-zinc-800 text-zinc-500" },
   ];
+
+  const isActiveRoute = (route: string) => {
+    return pathname === route || pathname.startsWith(route + "/");
+  };
 
   return (
     <>
@@ -61,8 +71,6 @@ export default function OrgSidebar({
         }`}
         aria-label="Organization sidebar navigation"
       >
-
-
         <nav className="flex-grow flex flex-col justify-between" aria-label="Main sections">
           <div className="space-y-6">
             <div>
@@ -72,27 +80,22 @@ export default function OrgSidebar({
                   <li key={item.name}>
                     <button 
                       className={`flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900/60 hover:text-white transition-colors w-full text-left cursor-pointer ${
-                        activeSection === item.name ? "bg-zinc-900 text-white font-medium" : ""
+                        isActiveRoute(item.route) ? "bg-zinc-900 text-white font-medium" : ""
                       }`}
                       onClick={() => {
-                          setActiveSection(item.name);
+                        router.push(item.route);
                         setSidebarOpen(false);
                       }}
                     >
                       <i className={`ti ${item.icon} text-base`}></i>
                       <span className="flex-grow">{item.name}</span>
-                      {item.badge && (
-                        <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] px-2 py-0.5 rounded-full">
-                          {item.badge}
-                        </span>
-                      )}
                     </button>
                   </li>
                 ))}
               </ul>
             </div>
 
-                  {/* Office-presence */}
+            {/* Office-presence */}
             <div>
               <p className="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase px-3 mb-2.5 select-none">Office Presence</p>
               <ul className="space-y-0.5">
@@ -120,7 +123,7 @@ export default function OrgSidebar({
           </div>
 
           <div className="pt-4 border-t border-zinc-900 mt-6 space-y-1">
-            <Link href={orgId ? "/organization" : "/home"} className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left">
+            <Link href={resolvedOrgId ? "/organization" : "/home"} className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left">
               <i className="ti ti-arrow-left text-base"></i>
               <span>Exit workspace</span>
             </Link>
