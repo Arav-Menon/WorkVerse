@@ -15,8 +15,8 @@ export async function createWorkspaceController(
 
     if (!userId) {
       return reply.status(401).send({
-        error: "Unauthorized",
-        message: "User not found in request. Missing Middleware?",
+        success: false,
+        message: "Unauthorized",
       });
     }
 
@@ -27,12 +27,16 @@ export async function createWorkspaceController(
       userId,
     );
 
-    return reply.status(201).send(workspace);
+    return reply.status(201).send({
+      success: true,
+      message: "Workspace created successfully",
+      data: workspace,
+    });
   } catch (err: any) {
     request.log.error(err);
-    if (err.statusCode) {
-      return reply.status(err.statusCode).send(err);
-    }
-    return reply.status(500).send({ error: "Internal server Error" });
+    return reply.status(err.statusCode ?? 500).send({
+      success: false,
+      message: err.message ?? "Internal Server Error",
+    });
   }
 }
