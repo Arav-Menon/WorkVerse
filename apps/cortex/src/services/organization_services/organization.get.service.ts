@@ -13,7 +13,7 @@ export async function getUserOrganizations(
     return JSON.parse(cached);
   }
 
-  // Fetch all orgs the user is a member of, with workspace count — single query, no N+1
+  // Fetch all orgs the user is a member of, with workspace count and member count — single query, no N+1
   const memberships = await fastify.db.organizationMember.findMany({
     where: { userId },
     select: {
@@ -24,7 +24,7 @@ export async function getUserOrganizations(
           slug: true,
           description: true,
           createdAt: true,
-          _count: { select: { workspaces: true } },
+          _count: { select: { workspaces: true, members: true } },
         },
       },
     },
@@ -33,6 +33,7 @@ export async function getUserOrganizations(
   const organizations = memberships.map((m) => ({
     ...m.organization,
     workspaceCount: m.organization._count.workspaces,
+    memberCount: m.organization._count.members,
     _count: undefined,
   }));
 
