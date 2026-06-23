@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 export interface Org {
@@ -227,13 +226,17 @@ export default function AppSidebar({
                 </div>
               </div>
             </div>
-            <Link
-              href="/auth"
-              className="flex items-center gap-2.5 p-2.5 px-3 rounded-xl text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left"
+            <button
+              className="flex items-center gap-2.5 p-2.5 px-3 rounded-xl text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer"
+              onClick={() => {
+                localStorage.removeItem("token");
+                sessionStorage.clear();
+                router.push("/auth");
+              }}
             >
               <i className="ti ti-logout text-base" aria-hidden="true" />
               <span>Sign out</span>
-            </Link>
+            </button>
           </div>
         </nav>
       </aside>
