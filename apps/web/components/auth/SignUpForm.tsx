@@ -30,7 +30,13 @@ export const SignUpForm = () => {
     if(!email || !password || !name) return;
     const token = await registerUser(name, email, password);
     localStorage.setItem("token", token);
-    router.push("/home")
+    const inviteRedirect = sessionStorage.getItem("inviteRedirect");
+    if (inviteRedirect) {
+      sessionStorage.removeItem("inviteRedirect");
+      router.push(inviteRedirect);
+    } else {
+      router.push("/home");
+    }
   }
 
 
