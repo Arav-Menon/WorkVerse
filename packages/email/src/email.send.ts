@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { InviteEmailTemplate } from "./sendInviteTemplate";
 
-const resendMail = new Resend("onboarding@resend.dev");
+const resendMail = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendInviteEmail(
   email: string,
