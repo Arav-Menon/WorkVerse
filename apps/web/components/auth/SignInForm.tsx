@@ -11,10 +11,15 @@ export const SignInForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
-      const token = await  loginUser(email, password);
-      console.log(token);
+      const token = await loginUser(email, password);
       localStorage.setItem("token", token);
-      router.push("/home");
+      const inviteRedirect = sessionStorage.getItem("inviteRedirect");
+      if (inviteRedirect) {
+        sessionStorage.removeItem("inviteRedirect");
+        router.push(inviteRedirect);
+      } else {
+        router.push("/home");
+      }
   }
 
   return (
