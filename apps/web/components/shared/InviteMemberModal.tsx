@@ -1,11 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { inviteOrganization, type FetchOrganization } from "@/lib/api/org.api";
+import type { FetchOrganization } from "@/lib/api/org.api";
 
 interface InviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (data: { name: string; email: string }) => Promise<void>;
+  isSubmitting: boolean;
+  error: string | null;
+  success: boolean;
   organizations: FetchOrganization[];
   preselectedOrgId?: string;
 }
@@ -13,17 +17,17 @@ interface InviteMemberModalProps {
 export default function InviteMemberModal({
   isOpen,
   onClose,
+  onSubmit,
+  isSubmitting,
+  error,
+  success,
   organizations = [],
   preselectedOrgId,
 }: InviteMemberModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Derive the effective org ID: preselected > single org auto-select > manual selection
   const [manualOrgId, setManualOrgId] = useState("");
   const effectiveOrgId =
     preselectedOrgId ||
@@ -34,8 +38,6 @@ export default function InviteMemberModal({
     if (isOpen) {
       setName("");
       setEmail("");
-      setError(null);
-      setSuccess(false);
       setManualOrgId("");
       setTimeout(() => nameInputRef.current?.focus(), 100);
     }
@@ -47,27 +49,10 @@ export default function InviteMemberModal({
     e.preventDefault();
     if (!canSubmit) return;
 
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(false);
-
-    try {
-      await inviteOrganization(effectiveOrgId, {
-        name: name.trim(),
-        email: email.trim(),
-      });
-      setSuccess(true);
-      setName("");
-      setEmail("");
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to send invite. Please try again.";
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await onSubmit({
+      name: name.trim(),
+      email: email.trim(),
+    });
   };
 
   if (!isOpen) return null;
@@ -120,7 +105,7 @@ export default function InviteMemberModal({
               </div>
             )}
 
-            {organizations.length > 1 && (
+            {organizations.length > 1 && !preselectedOrgId && (
               <div className="flex flex-col gap-1.5">
                 <label
                   className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest"
@@ -144,10 +129,12 @@ export default function InviteMemberModal({
               </div>
             )}
 
-            {organizations.length === 1 && (
+            {effectiveOrgId && (
               <div className="flex items-center gap-2.5 p-3 rounded-lg bg-zinc-950 border border-zinc-900 text-xs">
                 <i className="ti ti-building text-zinc-500"></i>
-                <span className="text-zinc-300 font-medium">{organizations[0]?.name}</span>
+                <span className="text-zinc-300 font-medium">
+                  {organizations.find((o) => o.id === effectiveOrgId)?.name || "Organization"}
+                </span>
               </div>
             )}
 
