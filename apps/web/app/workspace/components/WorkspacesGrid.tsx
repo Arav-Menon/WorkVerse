@@ -4,166 +4,70 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface WorkspaceCard {
+  id: string;
   name: string;
-  type: "Engineering" | "Product" | "Design" | "AI Lab" | "Ops" | "Marketing" | "Meetings";
+  slug: string;
+  description: string | null;
+  type: "Workspace";
   desc: string;
   icon: string;
   stripeColor: string;
-  membersCount: number;
-  onlineCount: number;
-  indicators: string[];
+  spaceCount: number;
   activity: string;
   activityColor: string;
-  membersAvatars: { text: string; bg: string; color: string }[];
   active: boolean;
+}
+
+interface ApiWorkspace {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  organizationId: string;
+  createdAt: string;
+  spaceCount: number;
 }
 
 interface WorkspacesGridProps {
   onEnterWorkspace: (name: string) => void;
   onCreateWorkspace: () => void;
+  workspaces?: ApiWorkspace[];
+  orgId?: string;
 }
 
+const mapApiWorkspaceToCard = (ws: ApiWorkspace): WorkspaceCard => ({
+  id: ws.id,
+  name: ws.name,
+  slug: ws.slug,
+  description: ws.description,
+  type: "Workspace",
+  desc: ws.description || `${ws.spaceCount} spaces configured`,
+  icon: "ti-layout-grid",
+  stripeColor: "bg-emerald-500",
+  spaceCount: ws.spaceCount,
+  activity: `Created ${new Date(ws.createdAt).toLocaleDateString()}`,
+  activityColor: "bg-zinc-500",
+  active: true,
+});
+
 export default function WorkspacesGrid({
-  onEnterWorkspace,
   onCreateWorkspace,
+  workspaces,
+  orgId,
 }: WorkspacesGridProps) {
   const router = useRouter();
-  const [filterType, setFilterType] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [layoutView, setLayoutView] = useState<"grid" | "list">("grid");
 
-  const cards: WorkspaceCard[] = [
-    {
-      name: "Engineering Hub",
-      type: "Engineering",
-      desc: "Backend systems, CI/CD pipelines, and architecture. Where the real building happens.",
-      icon: "ti-code",
-      stripeColor: "bg-emerald-500",
-      membersCount: 18,
-      onlineCount: 7,
-      indicators: ["Voice active", "CI/CD running"],
-      activity: "DevOps sync started 4m ago",
-      activityColor: "bg-emerald-500",
-      membersAvatars: [
-        { text: "PR", bg: "bg-emerald-950/60", color: "text-emerald-400" },
-        { text: "JL", bg: "bg-blue-950/60", color: "text-blue-400" },
-        { text: "AK", bg: "bg-purple-950/60", color: "text-purple-400" },
-      ],
-      active: true,
-    },
-    {
-      name: "Product Strategy",
-      type: "Product",
-      desc: "Roadmaps, sprint planning, and cross-functional strategy. One source of truth.",
-      icon: "ti-box",
-      stripeColor: "bg-amber-500",
-      membersCount: 24,
-      onlineCount: 11,
-      indicators: ["Meeting active"],
-      activity: "Q3 roadmap updated 9m ago",
-      activityColor: "bg-purple-500",
-      membersAvatars: [
-        { text: "AK", bg: "bg-purple-950/60", color: "text-purple-400" },
-        { text: "SM", bg: "bg-amber-950/60", color: "text-amber-400" },
-      ],
-      active: true,
-    },
-    {
-      name: "Design System",
-      type: "Design",
-      desc: "Components, tokens, prototyping, and brand guidelines. Pixel-perfect execution.",
-      icon: "ti-palette",
-      stripeColor: "bg-pink-500",
-      membersCount: 9,
-      onlineCount: 4,
-      indicators: ["3 collaborating"],
-      activity: "Design tokens updated 22m ago",
-      activityColor: "bg-pink-500",
-      membersAvatars: [
-        { text: "JL", bg: "bg-blue-950/60", color: "text-blue-400" },
-        { text: "NK", bg: "bg-pink-950/60", color: "text-pink-400" },
-      ],
-      active: true,
-    },
-    {
-      name: "AI Research Lab",
-      type: "AI Lab",
-      desc: "Autonomous agents, workflow automation, and machine intelligence experiments.",
-      icon: "ti-robot",
-      stripeColor: "bg-teal-500",
-      membersCount: 7,
-      onlineCount: 3,
-      indicators: ["3 agents running", "n8n workflow"],
-      activity: "Lead outreach agent active",
-      activityColor: "bg-teal-500",
-      membersAvatars: [
-        { text: "NK", bg: "bg-pink-950/60", color: "text-pink-400" },
-        { text: "AK", bg: "bg-purple-950/60", color: "text-purple-400" },
-      ],
-      active: true,
-    },
-    {
-      name: "Operations",
-      type: "Ops",
-      desc: "Founder ops, hiring pipelines, finance tracking, and legal documentation.",
-      icon: "ti-settings",
-      stripeColor: "bg-zinc-500",
-      membersCount: 6,
-      onlineCount: 1,
-      indicators: ["Payroll run completed"],
-      activity: "Weekly ops report generated",
-      activityColor: "bg-zinc-500",
-      membersAvatars: [
-        { text: "SM", bg: "bg-amber-950/60", color: "text-amber-400" },
-      ],
-      active: false,
-    },
-    {
-      name: "Marketing",
-      type: "Marketing",
-      desc: "Campaigns, content calendar, growth experiments, and launch coordination.",
-      icon: "ti-speakerphone",
-      stripeColor: "bg-orange-500",
-      membersCount: 11,
-      onlineCount: 2,
-      indicators: ["Outreach scheduled"],
-      activity: "Product Hunt draft updated",
-      activityColor: "bg-orange-500",
-      membersAvatars: [
-        { text: "RB", bg: "bg-zinc-900", color: "text-zinc-400" },
-      ],
-      active: false,
-    },
-    {
-      name: "All-Hands Room",
-      type: "Meetings",
-      desc: "Company-wide syncs, town halls, and investor calls. Structured and recorded.",
-      icon: "ti-video",
-      stripeColor: "bg-blue-500",
-      membersCount: 94,
-      onlineCount: 0,
-      indicators: ["Next: Fri 11am"],
-      activity: "Last call summary compiled",
-      activityColor: "bg-zinc-500",
-      membersAvatars: [],
-      active: false,
-    },
-  ];
+  const cards: WorkspaceCard[] = workspaces
+    ? workspaces.map(mapApiWorkspaceToCard)
+    : [];
 
-  const filterPills = [
-    { name: "All", dot: "bg-zinc-500" },
-    { name: "Engineering", dot: "bg-emerald-500" },
-    { name: "Product", dot: "bg-amber-500" },
-    { name: "Design", dot: "bg-pink-500" },
-    { name: "AI Lab", dot: "bg-teal-500" },
-  ];
-
-  // Filtering Logic
   const filteredCards = cards.filter((card) => {
-    const matchesFilter = filterType === "All" || card.type === filterType;
-    const matchesSearch = card.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          card.desc.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesSearch =
+      card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      card.desc.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
   });
 
   return (
@@ -173,31 +77,13 @@ export default function WorkspacesGrid({
         {/* Search Input */}
         <div className="flex items-center gap-2.5 bg-zinc-950 border border-zinc-900 focus-within:border-zinc-800 rounded-xl px-3 py-1.5 w-full min-[540px]:max-w-[260px]">
           <i className="ti ti-search text-zinc-500 text-xs"></i>
-          <input 
-            type="search" 
-            placeholder="Filter workspaces..." 
+          <input
+            type="search"
+            placeholder="Filter workspaces..."
             className="bg-transparent border-none outline-none text-xs text-white placeholder:text-zinc-600 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-
-        {/* Filter Categories pills */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {filterPills.map((pill) => (
-            <button 
-              key={pill.name}
-              className={`flex items-center gap-1.5 p-1.5 px-3 rounded-full border text-[11px] font-medium transition-all cursor-pointer ${
-                filterType === pill.name
-                  ? "bg-zinc-900 border-zinc-800 text-white"
-                  : "bg-zinc-950/40 border-zinc-900 text-zinc-500 hover:border-zinc-800 hover:text-zinc-300"
-              }`}
-              onClick={() => setFilterType(pill.name)}
-            >
-              <span className={`w-1 h-1 rounded-full shrink-0 ${pill.dot}`} />
-              {pill.name}
-            </button>
-          ))}
         </div>
 
         {/* Spacer */}
@@ -205,7 +91,7 @@ export default function WorkspacesGrid({
 
         {/* Layout selector */}
         <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-900 rounded-lg p-1 shrink-0 self-start min-[540px]:self-center">
-          <button 
+          <button
             className={`w-7 h-6 rounded flex items-center justify-center text-xs transition-colors cursor-pointer ${
               layoutView === "grid" ? "bg-zinc-900 text-white" : "text-zinc-600 hover:text-zinc-400"
             }`}
@@ -214,7 +100,7 @@ export default function WorkspacesGrid({
           >
             <i className="ti ti-layout-grid"></i>
           </button>
-          <button 
+          <button
             className={`w-7 h-6 rounded flex items-center justify-center text-xs transition-colors cursor-pointer ${
               layoutView === "list" ? "bg-zinc-900 text-white" : "text-zinc-600 hover:text-zinc-400"
             }`}
@@ -231,15 +117,40 @@ export default function WorkspacesGrid({
         <span className="text-[10px] text-zinc-600 font-mono">{filteredCards.length} total matched</span>
       </div>
 
+      {/* Empty state */}
+      {filteredCards.length === 0 && (
+        <div className="border border-dashed border-zinc-800 rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+            <i className="ti ti-layout-grid"></i>
+          </div>
+          <p className="text-sm text-zinc-300 font-medium">
+            {workspaces?.length === 0 ? "No workspaces yet" : "No workspaces match your search"}
+          </p>
+          <p className="text-xs text-zinc-500 max-w-[260px]">
+            {workspaces?.length === 0
+              ? "Create your first workspace to start collaborating with your team."
+              : "Try a different search term."}
+          </p>
+          {workspaces?.length === 0 && (
+            <button
+              onClick={onCreateWorkspace}
+              className="mt-2 p-2 px-4 text-xs font-bold rounded-lg text-black bg-white hover:bg-zinc-200 transition-all cursor-pointer"
+            >
+              Create Workspace
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Grid listing */}
-      {layoutView === "grid" ? (
+      {filteredCards.length > 0 && layoutView === "grid" ? (
         <ul className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 min-[1600px]:grid-cols-4 gap-4" role="list">
           {filteredCards.map((card) => (
-            <li key={card.name} className="flex">
+            <li key={card.id} className="flex">
               <article className="bg-zinc-950/40 border border-zinc-900 hover:border-zinc-800 hover:bg-zinc-900/10 rounded-2xl flex flex-col justify-between overflow-hidden cursor-pointer select-none transition-all w-full relative group">
                 {/* Accent stripe */}
                 <div className={`h-[3px] w-full ${card.stripeColor} opacity-70 group-hover:opacity-100 transition-opacity`} />
-                
+
                 <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                   {/* Card head info */}
                   <div className="space-y-3">
@@ -254,7 +165,7 @@ export default function WorkspacesGrid({
 
                     <div className="space-y-1">
                       <h3 className="text-[13px] font-semibold text-white group-hover:text-zinc-200 transition-colors">{card.name}</h3>
-                      <p className="text-[11px] text-zinc-500 font-medium">{card.type}</p>
+                      <p className="text-[11px] text-zinc-500 font-mono">{card.slug}</p>
                     </div>
 
                     <p className="text-[11px] text-zinc-500 leading-relaxed truncate-2-lines">{card.desc}</p>
@@ -263,19 +174,8 @@ export default function WorkspacesGrid({
                   {/* Core indicators */}
                   <div className="space-y-3 pt-3 border-t border-zinc-900/60">
                     <div className="flex items-center justify-between text-[10px] text-zinc-500">
-                      <span>👥 {card.membersCount} members</span>
-                      {card.onlineCount > 0 && <span className="text-emerald-400">{card.onlineCount} online</span>}
+                      <span>{card.spaceCount} spaces</span>
                     </div>
-
-                    {card.indicators.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {card.indicators.map((ind, i) => (
-                          <span key={i} className="text-[9px] font-semibold bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-400 select-none whitespace-nowrap">
-                            {ind}
-                          </span>
-                        ))}
-                      </div>
-                    )}
 
                     {/* Latest Activity message */}
                     <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 bg-zinc-950/80 rounded px-2 py-1.5">
@@ -287,22 +187,13 @@ export default function WorkspacesGrid({
 
                 {/* Footer details links */}
                 <footer className="border-t border-zinc-900/80 p-3 px-5 flex items-center justify-between bg-zinc-950/20">
-                  <div className="flex -space-x-1.5 shrink-0">
-                    {card.membersAvatars.map((av, idx) => (
-                      <div key={idx} className={`w-5 h-5 rounded-full border border-black flex items-center justify-center text-[7px] font-bold shrink-0 ${av.bg} ${av.color}`}>
-                        {av.text}
-                      </div>
-                    ))}
-                    {card.membersCount > 3 && (
-                      <div className="w-5 h-5 rounded-full border border-black bg-zinc-900 text-zinc-500 flex items-center justify-center text-[8px] font-semibold">
-                        +{card.membersCount - 3}
-                      </div>
-                    )}
-                  </div>
-
-                  <button 
+                  <button
                     className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:translate-x-1 duration-200 transition-all cursor-pointer"
-                    onClick={() => router.push(`/space/${encodeURIComponent(card.name.toLowerCase().replace(/\s+/g, '-'))}`)}
+                    onClick={() => {
+                      if (orgId && card.id) {
+                        router.push(`/workspace/${orgId}/${card.id}`);
+                      }
+                    }}
                   >
                     Enter
                     <i className="ti ti-arrow-right text-[11px]"></i>
@@ -314,7 +205,7 @@ export default function WorkspacesGrid({
 
           {/* Create workspace triggers */}
           <li className="flex">
-            <button 
+            <button
               className="bg-transparent border border-dashed border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/10 rounded-2xl p-6 min-h-[220px] flex-grow flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer"
               onClick={onCreateWorkspace}
             >
@@ -326,11 +217,11 @@ export default function WorkspacesGrid({
             </button>
           </li>
         </ul>
-      ) : (
+      ) : filteredCards.length > 0 ? (
         /* List layout mode */
         <ul className="space-y-2" role="list">
           {filteredCards.map((card) => (
-            <li key={card.name}>
+            <li key={card.id}>
               <article className="bg-zinc-950/40 border border-zinc-900 hover:border-zinc-800 hover:bg-zinc-900/10 rounded-xl p-3 px-4 flex flex-col min-[600px]:flex-row min-[600px]:items-center justify-between gap-4 cursor-pointer select-none transition-all group">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 text-base shrink-0">
@@ -340,7 +231,7 @@ export default function WorkspacesGrid({
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-[13px] font-semibold text-white group-hover:text-zinc-200 transition-colors truncate">{card.name}</h3>
                       <span className="text-[9px] font-mono bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.2 text-zinc-500 shrink-0">
-                        {card.type}
+                        {card.slug}
                       </span>
                     </div>
                     <p className="text-[11px] text-zinc-500 truncate mt-0.5">{card.desc}</p>
@@ -348,11 +239,15 @@ export default function WorkspacesGrid({
                 </div>
 
                 <div className="flex items-center gap-6 self-start min-[600px]:self-center shrink-0">
-                  <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline-block">👥 {card.membersCount} members</span>
+                  <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline-block">{card.spaceCount} spaces</span>
                   <span className="text-[10px] text-zinc-600 font-mono truncate max-w-[160px]">{card.activity}</span>
-                  <button 
+                  <button
                     className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:translate-x-1 duration-200 transition-all cursor-pointer"
-                    onClick={() => router.push(`/space/${encodeURIComponent(card.name.toLowerCase().replace(/\s+/g, '-'))}`)}
+                    onClick={() => {
+                      if (orgId && card.id) {
+                        router.push(`/workspace/${orgId}/${card.id}`);
+                      }
+                    }}
                   >
                     Enter
                     <i className="ti ti-arrow-right text-[11px]"></i>
@@ -362,7 +257,7 @@ export default function WorkspacesGrid({
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </section>
   );
 }
