@@ -16,7 +16,8 @@ export interface InviteDetails {
 
 export async function validateInvite(token: string): Promise<InviteDetails> {
   const res = await apiClient.get(
-    API_ENDPOINTS.ORGANIZATION.INVITE_VALIDATE(token)
+    API_ENDPOINTS.ORGANIZATION.INVITE_VALIDATE(token),
+    { timeout: 10000 }
   );
   return res.data.data;
 }
