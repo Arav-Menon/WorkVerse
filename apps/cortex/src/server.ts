@@ -6,6 +6,7 @@ import clerkPlugin from "./plugins/auth_plugins/clerk";
 import authGuardPlugin from "./plugins/auth_plugins/authGuard";
 import corsPlugin from "./plugins/auth_plugins/cors";
 import { rateLimitPlugin } from "@repo/rate-limit";
+import authorizePlugin from "./plugins/authorize";
 
 import authRoutes from "./routes/auth/auth.routes";
 import clerkWebhookRoutes from "./routes/auth/webhooks/clerk.routes";
@@ -43,6 +44,7 @@ fastify.register(cachePlugin);
 fastify.register(jwtPlugin);
 fastify.register(clerkPlugin);
 fastify.register(authGuardPlugin);
+fastify.register(authorizePlugin);
 fastify.register(redisPlugin);
 fastify.register(rateLimitPlugin);
 
