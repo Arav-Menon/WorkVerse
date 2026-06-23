@@ -56,6 +56,9 @@ export async function inviteOrganization(orgId: string, data: InviteOrganization
 export interface OrgWorkspace {
   id: string;
   name: string;
+  slug: string;
+  description: string | null;
+  organizationId: string;
   createdAt: string;
   spaceCount: number;
 }
