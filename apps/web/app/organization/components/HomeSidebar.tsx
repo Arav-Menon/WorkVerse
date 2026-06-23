@@ -43,6 +43,15 @@ export default function HomeSidebar({
     { name: "Schedule", icon: "ti-calendar" },
   ];
 
+  const handleSubmit = (e : React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const reomveToken = localStorage.removeItem("token");
+    if(reomveToken as any){
+      router.push("/");
+    }
+
+  }
+
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -135,10 +144,11 @@ export default function HomeSidebar({
               <i className="ti ti-user text-base" aria-hidden="true"></i>
               <span>Arav Kumar</span>
             </button>
-            <Link href="/auth" className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left">
+            <button onClick={handleSubmit}
+              className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer">
               <i className="ti ti-logout text-base" aria-hidden="true"></i>
               <span>Sign out</span>
-            </Link>
+            </button>
           </div>
         </nav>
       </aside>
