@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
         CREATE: (orgId : string) => `/api/v1/register-workspace/${orgId}`,
         GET_ALL: (orgId : string) => `/api/v1/organizations/${orgId}/workspaces`,
         GET_BY_ID: (orgId : string, workspaceId : string) => `/api/v1/organizations/${orgId}/workspaces/${workspaceId}`,
+        GET: (workspaceId : string) => `/api/v1/workspaces/${workspaceId}`,
     },
     PROFILE: {
         ME: "/api/v1/profile/me",
