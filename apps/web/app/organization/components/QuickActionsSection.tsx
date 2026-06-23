@@ -9,7 +9,6 @@ interface QuickActionsSectionProps {
   onScheduleMeetingClick: () => void;
   onCreateAutomationClick: () => void;
   onOpenRecentRoomClick: () => void;
-  onSendInviteClick: () => void;
   onOpenCommandPaletteClick: () => void;
 }
 
@@ -20,7 +19,6 @@ export default function QuickActionsSection({
   onScheduleMeetingClick,
   onCreateAutomationClick,
   onOpenRecentRoomClick,
-  onSendInviteClick,
   onOpenCommandPaletteClick,
 }: QuickActionsSectionProps) {
   const actions = [
@@ -59,12 +57,6 @@ export default function QuickActionsSection({
       sub: "Jump back in",
       icon: "ti-layout-2",
       action: onOpenRecentRoomClick,
-    },
-    {
-      label: "Send invite",
-      sub: "Add team members",
-      icon: "ti-mail-forward",
-      action: onSendInviteClick,
     },
     {
       label: "Open command",
