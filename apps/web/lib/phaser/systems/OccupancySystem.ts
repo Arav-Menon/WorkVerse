@@ -16,7 +16,8 @@ export interface DeskState {
 export class OccupancySystem {
   private scene: Phaser.Scene;
   private desks: Map<string, DeskState> = new Map();
-  private occupancyThreshold: number = 80; // pixels from desk center to be "at" the desk
+  private occupancyThreshold: number = 80;
+  private dirty: boolean = false;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -36,6 +37,12 @@ export class OccupancySystem {
   }
 
   update(localPlayer: Player, remotePlayers: Map<string, RemotePlayer>) {
+    // Snapshot previous occupancy
+    const prevOccupancy = new Map<string, boolean>();
+    this.desks.forEach((desk, id) => {
+      prevOccupancy.set(id, desk.occupied);
+    });
+
     // Reset all desks
     this.desks.forEach(desk => {
       desk.occupied = false;
@@ -52,8 +59,18 @@ export class OccupancySystem {
       this.checkPlayerAtDesk(remotePlayer.getId(), container.x, container.y);
     });
 
-    // Update visual states
-    this.updateVisuals();
+    // Check if any desk changed state
+    this.dirty = false;
+    this.desks.forEach((desk, id) => {
+      if (desk.occupied !== prevOccupancy.get(id)) {
+        this.dirty = true;
+      }
+    });
+
+    // Only redraw when something changed
+    if (this.dirty) {
+      this.updateVisuals();
+    }
   }
 
   private checkPlayerAtDesk(playerId: string, playerX: number, playerY: number) {
@@ -67,13 +84,11 @@ export class OccupancySystem {
   }
 
   private updateVisuals() {
-    // Draw activity indicators on occupied desks
     this.desks.forEach(desk => {
       if (!desk.graphics) return;
       desk.graphics.clear();
 
       if (desk.occupied) {
-        // Active desk — subtle glow + status dot
         desk.graphics.fillStyle(0xa07050, 0.12);
         desk.graphics.fillCircle(desk.x, desk.y, 40);
         desk.graphics.fillStyle(0x4a8040, 0.9);
