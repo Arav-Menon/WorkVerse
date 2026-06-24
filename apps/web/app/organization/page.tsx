@@ -6,12 +6,11 @@ import AppNavbar from "../../components/shared/AppNavbar";
 import AppSidebar from "../../components/shared/AppSidebar";
 import StatsSection from "./components/StatsSection";
 import OrgsSection from "./components/OrgsSection";
-import RecentWorkSection from "./components/RecentWorkSection";
-import FeedSection from "./components/FeedSection";
 import QuickActionsSection from "./components/QuickActionsSection";
 import CreateOrgModal from "./components/CreateOrgModal";
 import CommandPaletteModal from "./components/CommandPaletteModal";
 import { registerOrganization, fetchAllOrganizations } from "@/lib/api/org.api";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 interface Org {
   id: string;
@@ -20,29 +19,14 @@ interface Org {
   desc: string;
   members: number;
   workspaces: number;
-  online: number;
   avatar: string;
   color: "purple" | "teal" | "coral" | "blue";
-  updated: string;
-}
-
-interface Activity {
-  id: string;
-  dotColor: "purple" | "green" | "amber" | "blue" | "coral";
-  text: string;
-  time: string;
-  user?: string;
-}
-
-interface AiTask {
-  id: string;
-  text: string;
-  tag: string;
-  status: "completed" | "running";
+  createdAt: string;
 }
 
 export default function OrganizationPage() {
   const router = useRouter();
+  const { user } = useCurrentUser();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -62,25 +46,6 @@ export default function OrganizationPage() {
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [orgsLoading, setOrgsLoading] = useState(true);
   const [orgsError, setOrgsError] = useState<string | null>(null);
-
-  const [activities, setActivities] = useState<Activity[]>([
-    { id: "1", dotColor: "green", text: "joined Product Workspace", time: "just now", user: "Priya" },
-    { id: "2", dotColor: "purple", text: "AI Agent completed email automation", time: "2m ago" },
-    { id: "3", dotColor: "blue", text: "Design room updated with 3 new assets", time: "8m ago", user: "Design room" },
-    { id: "4", dotColor: "amber", text: "Meeting scheduled — Investor sync Thu 3pm", time: "15m ago" },
-    { id: "5", dotColor: "coral", text: "SkyForge workspace created by Rohan", time: "1h ago" },
-  ]);
-
-  const [aiTasks, setAiTasks] = useState<AiTask[]>([
-    { id: "1", text: "Weekly report generated for ClevenStudios", tag: "report", status: "completed" },
-    { id: "2", text: "Investor call transcript summarized", tag: "summary", status: "completed" },
-    { id: "3", text: "Lead outreach emails sent (24 contacts)", tag: "outreach", status: "completed" },
-    { id: "4", text: "n8n workflow executed — CI/CD trigger", tag: "workflow", status: "completed" },
-    { id: "5", text: "Daily standup drafted and sent to team", tag: "ops", status: "completed" },
-    { id: "6", text: "Processing sales pipeline update…", tag: "running", status: "running" },
-  ]);
-
-  const [activeTab, setActiveTab] = useState("Home");
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -103,13 +68,12 @@ export default function OrganizationPage() {
           id: org.id,
           name: org.name,
           slug: org.slug,
-          desc: org.description ?? "Team collaboration hub",
-          members: 1,
+          desc: org.description ?? "No description",
+          members: org.memberCount,
           workspaces: org.workspaceCount,
-          online: 1,
           avatar: org.name.substring(0, 2).toUpperCase(),
           color: "purple" as const,
-          updated: "Just now",
+          createdAt: org.createdAt,
         }));
         setOrgs(mapped);
       } catch (err: any) {
@@ -129,59 +93,8 @@ export default function OrganizationPage() {
     setCurrentWorkspace(workspace);
   };
 
-  useEffect(() => {
-    const events: Omit<Activity, "id" | "time">[] = [
-      { dotColor: "blue", text: "Agent synced workspace changes with GitHub", user: "GitNode" },
-      { dotColor: "green", text: "joined Audio Room #3", user: "Aleksey" },
-      { dotColor: "purple", text: "Autonomous Agent completed leads validation pipeline", user: "AI Validator" },
-      { dotColor: "amber", text: "Meeting Alert: Standup starting in 5m", user: "Scheduler" },
-      { dotColor: "coral", text: "deployed Axiom main build to production", user: "VercelNode" },
-    ];
-
-    const aiTasksPool: Omit<AiTask, "id">[] = [
-      { text: "Optimized distributed system message queues", tag: "infra", status: "completed" },
-      { text: "Analyzed user engagement metrics for Q3 review", tag: "analysis", status: "completed" },
-      { text: "Scheduled automated social campaigns based on queue", tag: "outreach", status: "completed" },
-      { text: "Synthesized product sync audio recordings", tag: "summary", status: "completed" },
-    ];
-
-    let taskCounter = 0;
-
-    const interval = setInterval(() => {
-      const randEvent = events[Math.floor(Math.random() * events.length)];
-      if (randEvent) {
-        setActivities((prev) => [
-          {
-            id: `act-${Date.now()}-${Math.random()}`,
-            dotColor: randEvent.dotColor,
-            text: randEvent.text,
-            time: "just now",
-            user: randEvent.user,
-          },
-          ...prev.slice(0, 7),
-        ]);
-      }
-
-      if (Math.random() > 0.4) {
-        const randTask = aiTasksPool[Math.floor(Math.random() * aiTasksPool.length)];
-        if (randTask) {
-          taskCounter++;
-          setAiTasks((prev) => [
-            {
-              id: `task-${taskCounter}`,
-              text: randTask.text,
-              tag: randTask.tag,
-              status: randTask.status,
-            },
-            ...prev.filter((t) => t.status === "completed").slice(0, 4),
-            { id: `running-${taskCounter}`, text: "Updating distributed node logs…", tag: "running", status: "running" },
-          ]);
-        }
-      }
-    }, 18000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const totalWorkspaces = orgs.reduce((sum, o) => sum + o.workspaces, 0);
+  const totalMembers = orgs.reduce((sum, o) => sum + o.members, 0);
 
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,13 +114,12 @@ export default function OrganizationPage() {
         id: created.id,
         name: created.name,
         slug: created.slug,
-        desc: created.description ?? "Team collaboration hub",
+        desc: created.description ?? "No description",
         members: 1,
-        workspaces: 1,
-        online: 1,
+        workspaces: 0,
         avatar: created.name.substring(0, 2).toUpperCase(),
         color: newOrgColor,
-        updated: "Just now",
+        createdAt: new Date().toISOString(),
       };
 
       setOrgs((prev) => [...prev, newOrg]);
@@ -216,17 +128,6 @@ export default function OrganizationPage() {
       setNewOrgDesc("");
       setNewOrgColor("purple");
       setCreateOrgOpen(false);
-
-      setActivities((prev) => [
-        {
-          id: `act-${Date.now()}`,
-          dotColor: "green",
-          text: `created organization ${newOrg.name}`,
-          time: "just now",
-          user: "Arav",
-        },
-        ...prev,
-      ]);
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
@@ -240,10 +141,7 @@ export default function OrganizationPage() {
 
   const allCommands = [
     { name: "Create organization", sub: "Launch a new collaborative workspace", icon: "ti-building", action: () => setCreateOrgOpen(true) },
-    { name: "Launch AI lab", sub: "Run autonomous prompt execution nodes", icon: "ti-robot", action: () => setActiveTab("AI Lab") },
-    { name: "View Schedule", sub: "Check calendar events & sync team", icon: "ti-calendar", action: () => setActiveTab("Schedule") },
-    { name: "Switch to NexaLabs", sub: "Enter Next-gen Workspace", icon: "ti-arrow-right", action: () => handleWorkspaceChange("NexaLabs") },
-    { name: "Open Command Terminal", sub: "Run MCP command line", icon: "ti-terminal", action: () => alert("Terminal loaded successfully!") },
+    { name: "Open command terminal", sub: "Keyboard shortcut", icon: "ti-terminal", action: () => setCmdPaletteOpen(true) },
   ];
 
   const filteredCommands = allCommands.filter((cmd) =>
@@ -281,7 +179,12 @@ export default function OrganizationPage() {
 
         <main className="flex-1 p-6 sm:p-8 md:p-10 max-w-none w-full overflow-y-auto relative z-10" id="main-content">
 
-          <StatsSection orgCount={orgs.length} />
+          <StatsSection
+            orgCount={orgs.length}
+            totalWorkspaces={totalWorkspaces}
+            totalMembers={totalMembers}
+            userName={user?.name ?? "User"}
+          />
 
           {orgsLoading ? (
             <div className="mb-8">
@@ -339,42 +242,17 @@ export default function OrganizationPage() {
               orgs={orgs}
               onOrgClick={(orgId) => router.push(`/organization/${orgId}`)}
               onCreateClick={() => setCreateOrgOpen(true)}
-              onViewAllClick={() => setActiveTab("Organizations")}
             />
           )}
 
-          <div className="flex items-center gap-2.5 my-7" role="separator">
-            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase whitespace-nowrap select-none">Continue recent work</span>
-            <div className="flex-grow h-px bg-zinc-900" aria-hidden="true"></div>
-          </div>
-
-          <RecentWorkSection onViewAllClick={() => alert("Recently opened index is up to date.")} />
-
-          <div className="flex items-center gap-2.5 my-7" role="separator">
-            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase whitespace-nowrap select-none">Live feed</span>
-            <div className="flex-grow h-px bg-zinc-900" aria-hidden="true"></div>
-          </div>
-
-          <FeedSection
-            activities={activities}
-            aiTasks={aiTasks}
-            onAiViewAllClick={() => setActiveTab("AI Lab")}
-          />
-
-          <div className="flex items-center gap-2.5 my-7" role="separator">
-            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase whitespace-nowrap select-none">Quick actions</span>
-            <div className="flex-grow h-px bg-zinc-900" aria-hidden="true"></div>
-          </div>
-
-          <QuickActionsSection
-            onCreateOrgClick={() => setCreateOrgOpen(true)}
-            onJoinWorkspaceClick={() => setCmdPaletteOpen(true)}
-            onLaunchAiLabClick={() => setActiveTab("AI Lab")}
-            onScheduleMeetingClick={() => setActiveTab("Schedule")}
-            onCreateAutomationClick={() => setActiveTab("Automations")}
-            onOpenRecentRoomClick={() => alert("Connecting virtual office audio rooms…")}
-            onOpenCommandPaletteClick={() => setCmdPaletteOpen(true)}
-          />
+          {!orgsLoading && orgs.length > 0 && (
+            <div className="mt-8">
+              <QuickActionsSection
+                onCreateOrgClick={() => setCreateOrgOpen(true)}
+                onOpenCommandPaletteClick={() => setCmdPaletteOpen(true)}
+              />
+            </div>
+          )}
 
         </main>
       </div>
