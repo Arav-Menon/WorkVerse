@@ -36,7 +36,7 @@ export default function OrgSidebar({
     : `/organization/${resolvedOrgId}`;
 
   const navigation = [
-    { name: "Workspaces", icon: "ti-layout-grid", route: `${basePath}/workspaces` },
+    { name: "Workspaces", icon: "ti-layout-grid", route: `/organization/${resolvedOrgId}/workspaces` },
     { name: "AI Lab", icon: "ti-robot", route: `${basePath}/ai-lab` },
     { name: "Automations", icon: "ti-arrows-split", route: `${basePath}/automations` },
     { name: "Schedule", icon: "ti-calendar", route: `${basePath}/schedule` },
