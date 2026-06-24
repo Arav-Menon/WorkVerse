@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import AppNavbar from "@/components/shared/AppNavbar";
 import OrgSidebar from "@/app/workspace/components/OrgSidebar";
 import { useOrganization } from "@/hooks/use-organization";
@@ -12,13 +12,22 @@ export default function OrganizationLayout({
   children: React.ReactNode;
 }) {
   const params = useParams();
+  const pathname = usePathname();
   const orgId = params.orgId as string;
+
+  const isSpaceMode = pathname.includes("/space/");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const { data: org } = useOrganization(orgId);
 
+  // Space mode: render children with zero dashboard chrome
+  if (isSpaceMode) {
+    return <>{children}</>;
+  }
+
+  // Dashboard mode: full chrome
   return (
     <div className="h-screen max-h-screen flex flex-col relative overflow-hidden bg-black text-zinc-50 font-sans selection:bg-white/10 selection:text-white">
       {/* Background */}
