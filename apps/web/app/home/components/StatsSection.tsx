@@ -4,14 +4,15 @@ import React from "react";
 
 interface StatsSectionProps {
   orgCount: number;
+  userName: string;
 }
 
-export default function StatsSection({ orgCount }: StatsSectionProps) {
+export default function StatsSection({ orgCount, userName }: StatsSectionProps) {
   return (
     <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between mb-8 select-none">
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight mb-1">
-          Welcome back, <span className="text-zinc-400">Arav</span>
+          Welcome back, <span className="text-zinc-400">{userName}</span>
         </h1>
         <p className="text-xs text-zinc-500">Your teams are active. Continue where you left off.</p>
         
