@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useCurrentUser, getInitials } from "@/hooks/use-current-user";
 
 export interface Org {
   id: string;
@@ -10,10 +11,9 @@ export interface Org {
   desc: string;
   members: number;
   workspaces: number;
-  online: number;
   avatar: string;
   color: "purple" | "teal" | "coral" | "blue";
-  updated: string;
+  createdAt: string;
 }
 
 interface AppSidebarProps {
@@ -30,6 +30,7 @@ export default function AppSidebar({
 }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isLoading, isError } = useCurrentUser();
 
   const primaryNav = [
     { name: "Home", icon: "ti-home", route: "/home" },
@@ -187,7 +188,7 @@ export default function AppSidebar({
                       <button
                         className="flex items-center gap-2.5 p-2 px-3 rounded-xl text-left w-full hover:bg-zinc-900/40 group transition-colors cursor-pointer"
                         onClick={() => handleOrgClick(org.id)}
-                        aria-label={`${org.name} — ${org.online} members online`}
+                        aria-label={`${org.name} — ${org.members} members`}
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -202,8 +203,8 @@ export default function AppSidebar({
                         <span className="text-[12px] text-zinc-400 group-hover:text-white transition-colors truncate flex-1">
                           {org.name}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono" aria-label={`${org.online} online`}>
-                          {org.online}
+                        <span className="text-[10px] text-zinc-500 font-mono" aria-label={`${org.members} members`}>
+                          {org.members}
                         </span>
                       </button>
                     </li>
@@ -216,15 +217,27 @@ export default function AppSidebar({
           {/* Bottom: Profile + Sign out */}
           <div className="pt-4 border-t border-zinc-900 mt-6">
             <div className="mb-2 rounded-2xl border border-zinc-900 bg-zinc-950/60 p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-[11px] font-semibold text-zinc-200">
-                  AK
+              {isLoading ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 animate-pulse" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 w-24 bg-zinc-900 rounded animate-pulse" />
+                    <div className="h-2.5 w-20 bg-zinc-900 rounded animate-pulse" />
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-medium text-white">Arav Kumar</p>
-                  <p className="truncate text-[11px] text-zinc-500">Personal workspace</p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-[11px] font-semibold text-zinc-200">
+                    {isError || !user ? "--" : getInitials(user.name)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-white">
+                      {isError || !user ? "Unknown User" : user.name}
+                    </p>
+                    <p className="truncate text-[11px] text-zinc-500">Workspace Member</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             <button
               className="flex items-center gap-2.5 p-2.5 px-3 rounded-xl text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer"
