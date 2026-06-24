@@ -13,5 +13,6 @@ export function usePermission(orgId: string) {
     canInviteMembers: role === "ADMIN" || role === "OWNER",
     canCreateWorkspace: role === "ADMIN" || role === "OWNER",
     canRemoveMember: role === "ADMIN" || role === "OWNER",
+    canManageIntegrations: role === "ADMIN" || role === "OWNER",
   };
 }
