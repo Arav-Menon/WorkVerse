@@ -73,6 +73,7 @@ export interface OrgWorkspace {
   organizationId: string;
   createdAt: string;
   spaceCount: number;
+  spaces: { id: string; name: string }[];
 }
 
 export async function fetchOrgWorkspaces(orgId: string): Promise<OrgWorkspace[]> {
