@@ -40,6 +40,7 @@ export async function getOrgWorkspaces(
       organizationId: true,
       createdAt: true,
       _count: { select: { spaces: true } },
+      spaces: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -47,6 +48,7 @@ export async function getOrgWorkspaces(
   const result = workspaces.map((ws) => ({
     ...ws,
     spaceCount: ws._count.spaces,
+    spaces: ws.spaces,
     _count: undefined,
   }));
 
@@ -80,6 +82,7 @@ export async function getWorkspaceById(
       organizationId: true,
       createdAt: true,
       _count: { select: { spaces: true } },
+      spaces: { select: { id: true, name: true } },
     },
   });
 
@@ -90,6 +93,7 @@ export async function getWorkspaceById(
   const result = {
     ...workspace,
     spaceCount: workspace._count.spaces,
+    spaces: workspace.spaces,
     _count: undefined,
   };
 
@@ -119,6 +123,7 @@ export async function getWorkspace(
       organizationId: true,
       createdAt: true,
       _count: { select: { spaces: true } },
+      spaces: { select: { id: true, name: true } },
     },
   });
 
@@ -129,6 +134,7 @@ export async function getWorkspace(
   const result = {
     ...workspace,
     spaceCount: workspace._count.spaces,
+    spaces: workspace.spaces,
     _count: undefined,
   };
 
