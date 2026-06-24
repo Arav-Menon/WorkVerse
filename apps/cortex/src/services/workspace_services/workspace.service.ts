@@ -6,7 +6,7 @@ export async function registerWorkspace(
   input: RegisterWorkspaceBody,
   orgId: string,
   userId: string,
-): Promise<{ id: string; name: string; slug: string; description: string | null; createdById: string; organizationId: string }> {
+): Promise<{ id: string; name: string; slug: string; description: string | null; createdById: string; organizationId: string; space: { id: string; name: string } }> {
   const { name, slug, description } = input;
 
   const existingName = await fastify.db.workspace.findUnique({
@@ -31,7 +31,7 @@ export async function registerWorkspace(
     };
   }
 
-  const workspace_space = await fastify.db.$transaction(async (tx) => {
+  const result = await fastify.db.$transaction(async (tx) => {
     const workspace = await tx.workspace.create({
       data: {
         name,
@@ -50,21 +50,26 @@ export async function registerWorkspace(
       },
     });
 
-    await tx.space.create({
+    const space = await tx.space.create({
       data: {
+        name: "Main",
         orgId,
         workspaceId: workspace.id,
         createdById: userId,
         userId: userId,
       },
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
-    return workspace;
+    return { ...workspace, space };
   });
 
   await fastify.cache.set(
-    `workspace_space${workspace_space.id}:access`,
-    JSON.stringify(workspace_space),
+    `workspace_space${result.id}:access`,
+    JSON.stringify(result),
     "EX",
     3600
   );
@@ -76,5 +81,5 @@ export async function registerWorkspace(
     await fastify.cache.del(...keys);
   }
 
-  return workspace_space;
+  return result;
 }
