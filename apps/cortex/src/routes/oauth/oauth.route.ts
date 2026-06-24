@@ -7,7 +7,6 @@ export default async function oauthRoutes(fastify: FastifyInstance) {
     });
 
     fastify.get("/:provider/callback", {
-        preHandler: [fastify.authenticate],
         handler: oauthController.callback.bind(oauthController),
     });
 }
