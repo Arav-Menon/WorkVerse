@@ -345,6 +345,7 @@ model OAuthConnection {
 
 model Space {
   id          String       @id @default(uuid())
+  name        String       @default("Main")
   orgId       String
   workspaceId String
   createdById String
