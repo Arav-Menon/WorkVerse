@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 interface Org {
   name: string;
@@ -34,6 +35,7 @@ export default function HomeSidebar({
   onWorkspaceChange,
 }: HomeSidebarProps) {
   const router = useRouter();
+  const { user } = useCurrentUser();
   const primaryNav = [
     { name: "Home", icon: "ti-home" },
     { name: "Organizations", icon: "ti-layout-grid", badge: orgs?.length },
@@ -142,7 +144,7 @@ export default function HomeSidebar({
           <div className="pt-4 border-t border-zinc-900 mt-6">
             <button className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer">
               <i className="ti ti-user text-base" aria-hidden="true"></i>
-              <span>Arav Kumar</span>
+              <span>{user?.name ?? "Unknown User"}</span>
             </button>
             <button onClick={handleSubmit}
               className="flex items-center gap-2.5 p-2 px-3 rounded-lg text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer">
