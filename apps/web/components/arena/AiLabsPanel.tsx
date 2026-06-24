@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import {
   AiLabsHeader,
   AiLabsWorkspaceContext,
-  AiLabsSuggestions,
-  AiLabsActivityFeed,
-  AiLabsExecutions,
+  // AiLabsSuggestions,
+  // AiLabsActivityFeed,
+  // AiLabsExecutions,
   AiLabsMemory,
   AiLabsChat,
   AiLabsInput,
@@ -160,29 +160,6 @@ export function AiLabsPanel() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
-          <AiLabsWorkspaceContext
-            currentRoom={WORKSPACE_CONTEXT.currentRoom}
-            membersOnline={WORKSPACE_CONTEXT.membersOnline}
-          />
-
-          <div className="h-px bg-white/5" />
-
-          <AiLabsSuggestions
-            suggestions={SMART_SUGGESTIONS}
-            onSelect={sendMessage}
-          />
-
-          <div className="h-px bg-white/5" />
-
-          <AiLabsActivityFeed items={ACTIVITY_FEED} />
-
-          <div className="h-px bg-white/5" />
-
-          <AiLabsExecutions items={EXECUTIONS} />
-
-          <div className="h-px bg-white/5" />
-
-          <AiLabsMemory memory={WORKSPACE_MEMORY} />
 
           {messages.length > 0 && (
             <>
@@ -194,7 +171,7 @@ export function AiLabsPanel() {
           {messages.length === 0 && (
             <section className="flex flex-col items-center justify-center py-8 text-center">
               <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-2xl mb-3">
-                🧠
+                🖕
               </div>
               <p className="text-[13px] text-zinc-400 font-medium mb-1">No active tasks</p>
               <p className="text-[11px] text-zinc-600">Try asking about your workspace</p>
