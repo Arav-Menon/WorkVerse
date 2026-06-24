@@ -20,5 +20,10 @@ export const API_ENDPOINTS = {
     },
     PROFILE: {
         ME: "/api/v1/profile/me",
+    },
+    INTEGRATION: {
+        STATUS: (orgId : string) => `/api/v1/organizations/${orgId}/integrations`,
+        DISCONNECT: (orgId : string, provider : string) => `/api/v1/organizations/${orgId}/integrations/${provider}`,
+        CONNECT: (provider : string) => `/api/v1/oauth/${provider}/connect`,
     }
 }
