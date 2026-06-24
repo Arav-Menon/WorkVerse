@@ -14,6 +14,7 @@ export interface CreateWorkspaceResponse {
   description: string | null;
   createdById: string;
   organizationId: string;
+  space: { id: string; name: string };
 }
 
 export async function createWorkspace(orgId: string, data: CreateWorkspaceRequest): Promise<CreateWorkspaceResponse> {
@@ -29,6 +30,7 @@ export interface WorkspaceResponse {
   organizationId: string;
   createdAt: string;
   spaceCount: number;
+  spaces: { id: string; name: string }[];
 }
 
 export async function fetchWorkspace(workspaceId: string): Promise<WorkspaceResponse> {
