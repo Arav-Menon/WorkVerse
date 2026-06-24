@@ -57,10 +57,9 @@ export default function HomeDashboardShell({ data }: HomeDashboardShellProps) {
     desc: organization.description,
     members: organization.members,
     workspaces: organization.workspaces,
-    online: organization.online,
     avatar: organization.avatar,
     color: organization.color,
-    updated: organization.updated,
+    createdAt: organization.createdAt,
   }));
 
   return (
