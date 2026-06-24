@@ -1,10 +1,10 @@
 import axios from "axios";
-import { OAuthProvders } from "../../oauth/index";
+import { OAuthProviders } from "../../oauth/index";
 import { db } from "@repo/db/db";
 
 class OAuthService {
     getProvider(provider: string) {
-        const config = OAuthProvders[provider as keyof typeof OAuthProvders];
+        const config = OAuthProviders[provider as keyof typeof OAuthProviders];
 
         if (!config) {
             throw new Error("Provider not supported");
@@ -13,13 +13,18 @@ class OAuthService {
         return config;
     }
 
-    getLoginUrl(provider: string) {
+    getLoginUrl(provider: string, state?: string) {
         const config = this.getProvider(provider);
 
         const params = new URLSearchParams({
             client_id: config.clientId,
             scope: config.scopes,
+            redirect_uri: config.redirectUri,
         });
+
+        if (state) {
+            params.set("state", state);
+        }
 
         return `${config.authUrl}?${params}`;
     }
@@ -33,6 +38,7 @@ class OAuthService {
                 client_id: config.clientId,
                 client_secret: config.clientSecret,
                 code,
+                redirect_uri: config.redirectUri,
             },
             {
                 headers: {
@@ -69,6 +75,30 @@ class OAuthService {
         });
 
         return accessToken;
+    }
+
+    async fetchGitHubUser(accessToken: string) {
+        const { data } = await axios.get("https://api.github.com/user", {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                Accept: "application/json",
+            },
+        });
+
+        return {
+            username: data.login,
+            avatar: data.avatar_url,
+            profileUrl: data.html_url,
+        };
+    }
+
+    async disconnect(userId: string, provider: string) {
+        await db.oAuthConnection.deleteMany({
+            where: {
+                userId,
+                provider: provider.toUpperCase() as any,
+            },
+        });
     }
 }
 
