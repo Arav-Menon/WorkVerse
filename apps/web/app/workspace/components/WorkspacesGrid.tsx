@@ -13,6 +13,7 @@ interface WorkspaceCard {
   icon: string;
   stripeColor: string;
   spaceCount: number;
+  spaces: { id: string; name: string }[];
   activity: string;
   activityColor: string;
   active: boolean;
@@ -26,6 +27,7 @@ interface ApiWorkspace {
   organizationId: string;
   createdAt: string;
   spaceCount: number;
+  spaces: { id: string; name: string }[];
 }
 
 interface WorkspacesGridProps {
@@ -45,6 +47,7 @@ const mapApiWorkspaceToCard = (ws: ApiWorkspace): WorkspaceCard => ({
   icon: "ti-layout-grid",
   stripeColor: "bg-emerald-500",
   spaceCount: ws.spaceCount,
+  spaces: ws.spaces || [],
   activity: `Created ${new Date(ws.createdAt).toLocaleDateString()}`,
   activityColor: "bg-zinc-500",
   active: true,
@@ -190,8 +193,9 @@ export default function WorkspacesGrid({
                   <button
                     className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:translate-x-1 duration-200 transition-all cursor-pointer"
                     onClick={() => {
-                      if (orgId && card.id) {
-                        router.push(`/workspace/${orgId}/${card.id}`);
+                      const firstSpace = card.spaces?.[0];
+                      if (orgId && card.id && firstSpace) {
+                        router.push(`/organization/${orgId}/workspace/${card.id}/space/${firstSpace.id}`);
                       }
                     }}
                   >
@@ -244,8 +248,9 @@ export default function WorkspacesGrid({
                   <button
                     className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:translate-x-1 duration-200 transition-all cursor-pointer"
                     onClick={() => {
-                      if (orgId && card.id) {
-                        router.push(`/workspace/${orgId}/${card.id}`);
+                      const firstSpace = card.spaces?.[0];
+                      if (orgId && card.id && firstSpace) {
+                        router.push(`/organization/${orgId}/workspace/${card.id}/space/${firstSpace.id}`);
                       }
                     }}
                   >
