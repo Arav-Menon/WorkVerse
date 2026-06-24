@@ -1,35 +1,50 @@
 import { oauthService } from "../services/oauth_services/oauth.service";
 
+const FRONTEND_URL = process.env.CORS_ORIGIN || "http://localhost:3009";
+
 class OAuthController {
     async connect(req: any, reply: any) {
         const { provider } = req.params;
+        const { state } = req.query;
 
-        const url = oauthService.getLoginUrl(provider);
+        const url = oauthService.getLoginUrl(provider, state);
 
         return reply.redirect(url);
     }
 
     async callback(req: any, reply: any) {
         const { provider } = req.params;
-        const { code } = req.query;
+        const { code, state } = req.query;
 
-        const userId: string = req.user?.userId;
-
-        if (!userId) {
-            return reply.status(401).send({ success: false, message: "Unauthorized" });
-        }
+        // State encodes "userId:orgId"
+        const stateStr = String(state || "");
+        const [userId, orgId] = stateStr.split(":");
 
         if (!code) {
-            return reply.status(400).send({ success: false, message: "Missing code parameter" });
+            return reply.redirect(
+                `${FRONTEND_URL}/organization/${orgId || ""}/connections/callback?provider=${provider}&status=error&message=no_code`
+            );
         }
 
-        await oauthService.exchangeCode(provider, code, userId);
+        if (!userId) {
+            return reply.redirect(
+                `${FRONTEND_URL}/organization/${orgId || ""}/connections/callback?provider=${provider}&status=error&message=unauthorized`
+            );
+        }
 
-        return reply.send({
-            success: true,
-            provider,
-            message: `${provider} connected successfully`,
-        });
+        try {
+            await oauthService.exchangeCode(provider, code, userId);
+
+            return reply.redirect(
+                `${FRONTEND_URL}/organization/${orgId}/connections/callback?provider=${provider}&status=success`
+            );
+        } catch (error: any) {
+            console.error(`OAuth callback error for ${provider}:`, error.message);
+
+            return reply.redirect(
+                `${FRONTEND_URL}/organization/${orgId || ""}/connections/callback?provider=${provider}&status=error&message=exchange_failed`
+            );
+        }
     }
 }
 
