@@ -37,17 +37,6 @@ function getColor(index: number) {
   return ORG_COLORS[index % ORG_COLORS.length] ?? "purple";
 }
 
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
 function mapOrgToHome(
   org: FetchOrganization,
   index: number
@@ -59,10 +48,9 @@ function mapOrgToHome(
     description: org.description || "No description",
     members: org.memberCount,
     workspaces: org.workspaceCount,
-    online: 0,
     avatar: getInitials(org.name),
     color: getColor(index),
-    updated: formatRelativeTime(org.createdAt),
+    createdAt: org.createdAt,
     role: "Member",
     tags: [] as string[],
   };
@@ -143,10 +131,9 @@ export default function HomePage() {
     desc: org.description,
     members: org.members,
     workspaces: org.workspaces,
-    online: org.online,
     avatar: org.avatar,
     color: org.color,
-    updated: org.updated,
+    createdAt: org.createdAt,
   }));
 
   const handleWorkspaceChange = (workspace: string) => {
