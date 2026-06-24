@@ -8,12 +8,21 @@ export function initGame(
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: parent,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000000',
+    width: 800,
+    height: 600,
+    backgroundColor: '#050505',
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    fps: {
+      target: 60,
+      forceSetTimeOut: false,
+    },
+    render: {
+      antialias: false,
+      pixelArt: true,
+      roundPixels: true,
     },
     physics: {
       default: 'arcade',
@@ -22,7 +31,6 @@ export function initGame(
       },
     },
     scene: [ArenaScene],
-    // Essential for transparent overlay / React integration
     transparent: true,
   };
 
