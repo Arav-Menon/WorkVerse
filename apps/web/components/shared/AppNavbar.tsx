@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import NotificationPanel from "./NotificationPanel";
+import { useCurrentUser, getInitials } from "@/hooks/use-current-user";
 
 export interface Notification {
   id: string;
@@ -55,6 +56,7 @@ export default function AppNavbar({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState(defaultNotifications);
   const notifRef = useRef<HTMLDivElement>(null);
+  const { user } = useCurrentUser();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -92,7 +94,7 @@ export default function AppNavbar({
           <i className="ti ti-menu" aria-hidden="true"></i>
         </button>
 
-        <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+        <div className="flex items-center gap-2 group cursor-pointer">
           <div
             className="w-6 h-6 flex items-center justify-center group-hover:scale-105 transition-transform"
             aria-hidden="true"
@@ -113,20 +115,6 @@ export default function AppNavbar({
           <div className="text-[15px] font-bold tracking-tight text-white select-none">
             Work<span className="text-zinc-500">Verse</span>
           </div>
-        </Link>
-
-        {/* Live indicator */}
-        <div
-          className="hidden min-[480px]:flex items-center gap-1.5 ml-1 select-none"
-          aria-label="System live"
-        >
-          <div
-            className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
-            role="presentation"
-          ></div>
-          <span className="font-mono text-[9px] text-emerald-500/80 tracking-widest uppercase">
-            live
-          </span>
         </div>
 
         {/* Breadcrumb (optional) */}
@@ -206,9 +194,9 @@ export default function AppNavbar({
         <Link
           href="/profile"
           className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-400 select-none cursor-pointer hover:bg-zinc-800 transition-colors"
-          aria-label="Arav Kumar — profile menu"
+          aria-label={user ? `${user.name} — profile menu` : "Profile"}
         >
-          AK
+          {user ? getInitials(user.name) : "?"}
         </Link>
 
         {/* Workspace Switcher */}
