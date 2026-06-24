@@ -1,97 +1,98 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { useIntegrationStatus, useDisconnectIntegration } from "@/hooks/use-integrations";
+import { usePermission } from "@/lib/rbac/usePermission";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { getConnectUrl } from "@/lib/api/integration.api";
 
-const connectedServices = [
-  {
-    id: "github",
-    name: "GitHub",
-    icon: "ti-brand-github",
-    account: "arav@clevenstudios.com",
-    status: "connected",
-    synced: "2 minutes ago",
-    health: "healthy",
-    permissions: ["Read repositories", "Read pull requests", "Read issues", "Write comments"],
-    aiAccess: ["Read repos", "Read issues", "Create PR comments"],
-  },
-  {
-    id: "google",
-    name: "Google Calendar",
-    icon: "ti-calendar-event",
-    account: "arav@clevenstudios.com",
-    status: "connected",
-    synced: "5 minutes ago",
-    health: "healthy",
-    permissions: ["Read events", "Create events", "Read contacts"],
-    aiAccess: ["Read events", "Create meetings"],
-  },
-  {
-    id: "slack",
-    name: "Slack",
-    icon: "ti-brand-slack",
-    account: "clevenstudios.slack.com",
-    status: "connected",
-    synced: "12 minutes ago",
-    health: "healthy",
-    permissions: ["Read messages", "Send messages", "Read channels"],
-    aiAccess: ["Send messages", "Read channels"],
-  },
-  {
-    id: "notion",
-    name: "Notion",
-    icon: "ti-brand-notion",
-    account: "arav@clevenstudios.com",
-    status: "attention",
-    synced: "3 days ago",
-    health: "expired",
-    permissions: ["Read pages", "Create pages", "Read databases"],
-    aiAccess: ["Create pages", "Read pages"],
-  },
-  {
-    id: "linear",
-    name: "Linear",
-    icon: "ti-chart-line",
-    account: "arav@clevenstudios.com",
-    status: "connected",
-    synced: "1 hour ago",
-    health: "healthy",
-    permissions: ["Read issues", "Create issues", "Read teams"],
-    aiAccess: ["Create issues", "Read issues"],
-  },
-];
+const INTEGRATION_REGISTRY: Record<string, { name: string; icon: string; desc: string; category: string }> = {
+  github: { name: "GitHub", icon: "ti-brand-github", desc: "Connect repositories, pull requests, and issues", category: "dev" },
+  google: { name: "Google Calendar", icon: "ti-calendar-event", desc: "Sync events and schedules", category: "productivity" },
+  slack: { name: "Slack", icon: "ti-brand-slack", desc: "Send messages and notifications", category: "communication" },
+};
 
-const availableIntegrations = [
-  { id: "gmail", name: "Gmail", icon: "ti-mail", desc: "Read and send emails via AI" },
-  { id: "figma", name: "Figma", icon: "ti-brand-figma", desc: "Access designs and assets" },
-  { id: "jira", name: "Jira", icon: "ti-list-check", desc: "Sync tasks and sprints" },
-  { id: "discord", name: "Discord", icon: "ti-brand-discord", desc: "Send team notifications" },
-  { id: "dropbox", name: "Dropbox", icon: "ti-brand-dropbox", desc: "Access and sync files" },
-  { id: "drive", name: "Google Drive", icon: "ti-brand-google-drive", desc: "Read and create documents" },
-  { id: "hubspot", name: "HubSpot", icon: "ti-building-store", desc: "CRM sync and deal tracking" },
-  { id: "zoom", name: "Zoom", icon: "ti-video", desc: "Schedule and join meetings" },
-];
-
-const healthStats = [
-  { label: "Active", count: 4, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", dot: "bg-emerald-500" },
-  { label: "Attention", count: 1, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", dot: "bg-amber-500" },
-  { label: "Errors", count: 0, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", dot: "bg-red-500" },
-  { label: "Available", count: 8, color: "text-zinc-400", bg: "bg-zinc-900/50 border-zinc-800", dot: "bg-zinc-600" },
-];
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
 
 export default function ConnectionsPage() {
   const params = useParams();
   const orgId = params.orgId as string;
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useCurrentUser();
+  const { canManageIntegrations } = usePermission(orgId);
+  const { data: integrations, isLoading, isError, refetch } = useIntegrationStatus(orgId);
+  const disconnectMutation = useDisconnectIntegration(orgId);
+
   const [expandedService, setExpandedService] = useState<string | null>(null);
 
-  const filteredConnected = connectedServices.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleConnect = useCallback((provider: string) => {
+    if (!user) return;
+    const url = getConnectUrl(orgId, provider, user.id);
+    window.open(url, "oauth", "width=600,height=700");
+
+    // Listen for OAuth result from popup
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "oauth-result" && event.data.orgId === orgId) {
+        refetch();
+        window.removeEventListener("message", handler);
+      }
+    };
+    window.addEventListener("message", handler);
+  }, [orgId, user, refetch]);
+
+  const handleDisconnect = useCallback((provider: string) => {
+    if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
+    disconnectMutation.mutate(provider);
+  }, [disconnectMutation]);
+
+  const connectedProviders = integrations
+    ? Object.entries(integrations).filter(([, status]) => status.connected)
+    : [];
+
+  const availableProviders = Object.entries(INTEGRATION_REGISTRY).filter(
+    ([key]) => !integrations?.[key]?.connected
   );
-  const filteredAvailable = availableIntegrations.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-10">
+          <div className="h-8 w-48 bg-zinc-900 rounded animate-pulse mb-2"></div>
+          <div className="h-4 w-96 bg-zinc-900 rounded animate-pulse"></div>
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-zinc-950/40 border border-zinc-900 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <p className="font-medium mb-1">Failed to load integration status</p>
+          <button onClick={() => refetch()} className="text-red-300 underline text-xs">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -113,112 +114,159 @@ export default function ConnectionsPage() {
             Connect tools and services that WorkVerse can access on your behalf. Connected accounts are available to AI, automations, and MCP executions.
           </p>
         </div>
-
-        {/* Search */}
-        <div className="relative shrink-0 w-full sm:w-64">
-          <i className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm"></i>
-          <input
-            type="text"
-            placeholder="Search integrations..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-[13px] text-zinc-300 placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors"
-          />
-        </div>
       </div>
 
       {/* Connection Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-        {healthStats.map(stat => (
-          <div key={stat.label} className={`flex items-center gap-3 border rounded-xl px-4 py-3.5 ${stat.bg}`}>
-            <span className={`w-2 h-2 rounded-full shrink-0 ${stat.dot}`} />
-            <div>
-              <p className={`text-lg font-bold leading-none mb-1 ${stat.color}`}>{stat.count}</p>
-              <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">{stat.label}</p>
-            </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
+        <div className="flex items-center gap-3 border rounded-xl px-4 py-3.5 bg-emerald-500/10 border-emerald-500/20">
+          <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
+          <div>
+            <p className="text-lg font-bold leading-none mb-1 text-emerald-400">{connectedProviders.length}</p>
+            <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Connected</p>
           </div>
-        ))}
+        </div>
+        <div className="flex items-center gap-3 border rounded-xl px-4 py-3.5 bg-zinc-900/50 border-zinc-800">
+          <span className="w-2 h-2 rounded-full shrink-0 bg-zinc-600" />
+          <div>
+            <p className="text-lg font-bold leading-none mb-1 text-zinc-400">{availableProviders.length}</p>
+            <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Available</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 border rounded-xl px-4 py-3.5 bg-zinc-900/50 border-zinc-800">
+          <span className="w-2 h-2 rounded-full shrink-0 bg-zinc-600" />
+          <div>
+            <p className="text-lg font-bold leading-none mb-1 text-zinc-400">{Object.keys(INTEGRATION_REGISTRY).length}</p>
+            <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Total</p>
+          </div>
+        </div>
       </div>
 
       {/* Connected Services */}
-      {filteredConnected.length > 0 && (
+      {connectedProviders.length > 0 && (
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
               <i className="ti ti-check-circle text-emerald-500"></i>
               Connected Services
             </h2>
-            <span className="text-[11px] text-zinc-600">{filteredConnected.length} services</span>
+            <span className="text-[11px] text-zinc-600">{connectedProviders.length} services</span>
           </div>
 
           <div className="space-y-3">
-            {filteredConnected.map(service => (
-              <div key={service.id} className="bg-zinc-950/40 border border-zinc-900 rounded-2xl overflow-hidden hover:border-zinc-800 transition-colors">
-                {/* Card Header */}
-                <div className="p-5 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
-                    <i className={`ti ${service.icon} text-zinc-200 text-xl`}></i>
+            {connectedProviders.map(([provider, status]) => {
+              const config = INTEGRATION_REGISTRY[provider];
+              if (!config) return null;
+
+              return (
+                <div key={provider} className="bg-zinc-950/40 border border-emerald-500/20 rounded-2xl overflow-hidden">
+                  <div className="p-5 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                      <i className={`ti ${config.icon} text-zinc-200 text-xl`}></i>
+                    </div>
+
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <p className="text-[14px] font-bold text-zinc-100">{config.name}</p>
+                        <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/25 text-emerald-400">
+                          Active
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-[12px] text-zinc-500">
+                        {status.username && (
+                          <span className="truncate">{status.username}</span>
+                        )}
+                        {status.connectedAt && (
+                          <span className="shrink-0">Connected {timeAgo(status.connectedAt)}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {status.profileUrl && (
+                        <a
+                          href={status.profileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg border border-zinc-800 hover:bg-zinc-900 hover:text-white text-zinc-400 text-[12px] font-medium transition-colors flex items-center gap-1.5"
+                        >
+                          <i className="ti ti-external-link text-[11px]"></i>
+                          Profile
+                        </a>
+                      )}
+                      {canManageIntegrations && (
+                        <>
+                          <button
+                            onClick={() => setExpandedService(expandedService === provider ? null : provider)}
+                            className="px-3 py-1.5 rounded-lg border border-zinc-800 hover:bg-zinc-900 hover:text-white text-zinc-400 text-[12px] font-medium transition-colors flex items-center gap-1.5"
+                          >
+                            Details
+                            <i className={`ti ${expandedService === provider ? "ti-chevron-up" : "ti-chevron-down"} text-[11px]`}></i>
+                          </button>
+                          <button
+                            onClick={() => handleDisconnect(provider)}
+                            disabled={disconnectMutation.isPending}
+                            className="px-3 py-1.5 rounded-lg border border-red-900/40 hover:bg-red-950/30 hover:border-red-800 hover:text-red-400 text-zinc-500 text-[12px] font-medium transition-colors disabled:opacity-50"
+                          >
+                            {disconnectMutation.isPending ? "Disconnecting..." : "Disconnect"}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-2.5 mb-1">
-                      <p className="text-[14px] font-bold text-zinc-100">{service.name}</p>
-                      <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-                        service.health === "healthy"
-                          ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
-                          : "bg-amber-500/10 border-amber-500/25 text-amber-400"
-                      }`}>
-                        {service.health === "healthy" ? "Active" : "Attention"}
-                      </span>
+                  {/* Expanded Details */}
+                  {expandedService === provider && status.scopes && (
+                    <div className="border-t border-zinc-900 px-5 pb-5 pt-4">
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">Granted Scopes</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {status.scopes.split(" ").map((scope) => (
+                          <span key={scope} className="text-[11px] text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-full px-2.5 py-1">
+                            {scope}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 text-[12px] text-zinc-500">
-                      <span className="truncate">{service.account}</span>
-                      <span className="shrink-0">· Synced {service.synced}</span>
-                    </div>
-                  </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button className="p-2 rounded-lg border border-zinc-800 hover:bg-zinc-900 hover:text-white text-zinc-500 transition-colors">
-                      <i className="ti ti-refresh text-[14px]"></i>
-                    </button>
-                    <button
-                      onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
-                      className="px-3 py-1.5 rounded-lg border border-zinc-800 hover:bg-zinc-900 hover:text-white text-zinc-400 text-[12px] font-medium transition-colors flex items-center gap-1.5"
-                    >
-                      Details
-                      <i className={`ti ${expandedService === service.id ? "ti-chevron-up" : "ti-chevron-down"} text-[11px]`}></i>
-                    </button>
-                    <button className="px-3 py-1.5 rounded-lg border border-red-900/40 hover:bg-red-950/30 hover:border-red-800 hover:text-red-400 text-zinc-500 text-[12px] font-medium transition-colors">
-                      Disconnect
-                    </button>
+      {/* Available Integrations */}
+      {availableProviders.length > 0 && (
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+              <i className="ti ti-plus-circle text-zinc-400"></i>
+              Available Integrations
+            </h2>
+            <span className="text-[11px] text-zinc-600">{availableProviders.length} available</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {availableProviders.map(([provider, config]) => (
+              <div key={provider} className="bg-zinc-950/30 border border-zinc-900/80 rounded-2xl p-5 flex flex-col gap-4 hover:border-zinc-800 hover:bg-zinc-950/60 transition-all group">
+                <div className="flex items-start justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-zinc-700 transition-colors">
+                    <i className={`ti ${config.icon} text-zinc-400 text-lg group-hover:text-zinc-200 transition-colors`}></i>
                   </div>
                 </div>
-
-                {/* Expanded Details */}
-                {expandedService === service.id && (
-                  <div className="border-t border-zinc-900 px-5 pb-5 pt-4 grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">Permissions Granted</h4>
-                      <ul className="space-y-2">
-                        {service.permissions.map(p => (
-                          <li key={p} className="flex items-center gap-2 text-[12px] text-zinc-400">
-                            <i className="ti ti-check text-emerald-500 text-[12px] shrink-0"></i>
-                            {p}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">AI Can Access</h4>
-                      <ul className="space-y-2">
-                        {service.aiAccess.map(a => (
-                          <li key={a} className="flex items-center gap-2 text-[12px] text-zinc-400">
-                            <i className="ti ti-robot text-blue-400 text-[12px] shrink-0"></i>
-                            {a}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                <div>
+                  <p className="text-[13px] font-bold text-zinc-200 mb-1">{config.name}</p>
+                  <p className="text-[12px] text-zinc-500 leading-relaxed">{config.desc}</p>
+                </div>
+                {canManageIntegrations ? (
+                  <button
+                    onClick={() => handleConnect(provider)}
+                    className="w-full py-2 rounded-lg border border-zinc-800 text-[12px] font-semibold text-zinc-300 hover:bg-white hover:text-black hover:border-white transition-all"
+                  >
+                    Connect {config.name}
+                  </button>
+                ) : (
+                  <div className="w-full py-2 rounded-lg border border-zinc-800 text-[12px] font-semibold text-zinc-600 text-center cursor-not-allowed">
+                    Admin access required
                   </div>
                 )}
               </div>
@@ -227,69 +275,25 @@ export default function ConnectionsPage() {
         </section>
       )}
 
-      {/* Available Integrations */}
-      {filteredAvailable.length > 0 && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-              <i className="ti ti-plus-circle text-zinc-400"></i>
-              Available Integrations
-            </h2>
-            <span className="text-[11px] text-zinc-600">{filteredAvailable.length} available</span>
+      {/* Empty State */}
+      {connectedProviders.length === 0 && availableProviders.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
+            <i className="ti ti-plug-connected text-zinc-500 text-xl"></i>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {filteredAvailable.map(int => (
-              <div key={int.id} className="bg-zinc-950/30 border border-zinc-900/80 rounded-2xl p-5 flex flex-col gap-4 hover:border-zinc-800 hover:bg-zinc-950/60 transition-all group">
-                <div className="flex items-start justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-zinc-700 transition-colors">
-                    <i className={`ti ${int.icon} text-zinc-400 text-lg group-hover:text-zinc-200 transition-colors`}></i>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[13px] font-bold text-zinc-200 mb-1">{int.name}</p>
-                  <p className="text-[12px] text-zinc-500 leading-relaxed">{int.desc}</p>
-                </div>
-                <button className="w-full py-2 rounded-lg border border-zinc-800 text-[12px] font-semibold text-zinc-300 hover:bg-white hover:text-black hover:border-white transition-all">
-                  Connect
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
+          <p className="text-sm text-zinc-400 font-medium">No integrations available</p>
+          <p className="text-xs text-zinc-600 mt-1">Contact your administrator to set up integrations.</p>
+        </div>
       )}
 
-      {/* AI Access Transparency */}
-      <section className="mb-10">
-        <div className="mb-5">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2 mb-1">
-            <i className="ti ti-robot text-blue-400"></i>
-            AI Access Overview
-          </h2>
-          <p className="text-[12px] text-zinc-600">What WorkVerse AI can do on your behalf</p>
+      {/* RBAC notice for members */}
+      {!canManageIntegrations && connectedProviders.length === 0 && (
+        <div className="text-center py-8 border border-dashed border-zinc-800 rounded-xl">
+          <p className="text-sm text-zinc-500">
+            Only organization owners and admins can connect integrations.
+          </p>
         </div>
-
-        <div className="bg-zinc-950/30 border border-zinc-900 rounded-2xl overflow-hidden">
-          {connectedServices.filter(s => s.health === "healthy").map((service, i, arr) => (
-            <div key={service.id} className={`flex items-start gap-4 px-5 py-4 ${i < arr.length - 1 ? "border-b border-zinc-900/60" : ""}`}>
-              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
-                <i className={`ti ${service.icon} text-zinc-400 text-base`}></i>
-              </div>
-              <div className="flex-grow">
-                <p className="text-[13px] font-semibold text-zinc-200 mb-2">{service.name}</p>
-                <div className="flex flex-wrap gap-2">
-                  {service.aiAccess.map(a => (
-                    <span key={a} className="flex items-center gap-1.5 text-[11px] text-zinc-400 bg-zinc-900/60 border border-zinc-800 rounded-full px-2.5 py-1">
-                      <i className="ti ti-check text-emerald-500 text-[10px]"></i>
-                      {a}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      )}
     </div>
   );
 }
