@@ -18,9 +18,9 @@ export default function AiLabPage() {
   const [currentWorkspace, setCurrentWorkspace] = useState("Personal");
 
   const [orgs] = useState([
-    { id: "org-1", name: "ClevenStudios", slug: "clevenstudios", desc: "Product design & dev", members: 12, workspaces: 4, online: 8, avatar: "CS", color: "purple" as const, updated: "5m ago" },
-    { id: "org-2", name: "NexaLabs", slug: "nexalabs", desc: "AI research & infra", members: 31, workspaces: 7, online: 14, avatar: "NX", color: "teal" as const, updated: "1m ago" },
-    { id: "org-3", name: "SkyForge", slug: "skyforge", desc: "Cloud infrastructure", members: 9, workspaces: 3, online: 2, avatar: "SK", color: "coral" as const, updated: "18m ago" },
+    { id: "org-1", name: "ClevenStudios", slug: "clevenstudios", desc: "Product design & dev", members: 12, workspaces: 4, avatar: "CS", color: "purple" as const, createdAt: "2025-01-15T00:00:00Z" },
+    { id: "org-2", name: "NexaLabs", slug: "nexalabs", desc: "AI research & infra", members: 31, workspaces: 7, avatar: "NX", color: "teal" as const, createdAt: "2025-02-10T00:00:00Z" },
+    { id: "org-3", name: "SkyForge", slug: "skyforge", desc: "Cloud infrastructure", members: 9, workspaces: 3, avatar: "SK", color: "coral" as const, createdAt: "2025-03-05T00:00:00Z" },
   ]);
 
   const handleNavChange = (ws: string) => {
