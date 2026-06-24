@@ -50,12 +50,13 @@ export class MicroAnimationSystem {
   }
 
   update(time: number) {
+    // Use camera's actual viewport for culling (not world bounds)
+    const cam = this.scene.cameras.main;
+    const view = cam.worldView;
+
     this.animatedObjects.forEach(obj => {
       // Only animate objects within camera view (performance optimization)
-      if (this.cameraBounds) {
-        const inView = this.cameraBounds.contains(obj.x, obj.y);
-        if (!inView) return;
-      }
+      if (!view.contains(obj.x, obj.y)) return;
 
       // Calculate animation based on type
       switch (obj.type) {
