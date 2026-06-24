@@ -13,16 +13,9 @@ export default async function SpaceArenaPage({ params }: PageProps) {
 
   return (
     <div className="relative w-full h-screen overflow-hidden" style={{ background: '#050505' }}>
-      {/* Phaser game canvas with interaction handling */}
       <ArenaWrapper spaceId={spaceId} />
-
-      {/* React UI overlays — all pointer-events-none at root, specific children opt back in */}
       <ArenaHUD spaceId={spaceId} />
-
-      {/* AI Labs slide-in panel + trigger button */}
       <AiLabsPanel />
-
-      {/* Bottom control bar */}
       <BottomNavBar />
     </div>
   );
