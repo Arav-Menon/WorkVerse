@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import OrgHeroSection from "@/app/workspace/components/OrgHeroSection";
 import WorkspacesGrid from "@/app/workspace/components/WorkspacesGrid";
 import InviteMemberModal from "@/components/shared/InviteMemberModal";
@@ -11,6 +11,7 @@ import { usePermission } from "@/lib/rbac/usePermission";
 
 export default function WorkspacesPage() {
   const params = useParams();
+  const router = useRouter();
   const orgId = params.orgId as string;
 
   const { data: org } = useOrganization(orgId);
@@ -54,11 +55,15 @@ export default function WorkspacesPage() {
         description: newWorkspaceDesc.trim() || undefined,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           setCreateOpen(false);
           setNewWorkspaceName("");
           setNewWorkspaceSlug("");
           setNewWorkspaceDesc("");
+          // Redirect straight to the arena
+          if (data?.id && data?.space?.id) {
+            router.push(`/organization/${orgId}/workspace/${data.id}/space/${data.space.id}`);
+          }
         },
         onError: (err: Error) => {
           const axiosErr = err as Error & { response?: { data?: { message?: string } } };
