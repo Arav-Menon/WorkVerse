@@ -17,7 +17,7 @@ interface AiLabsActivityFeedProps {
 const ACTIVITY_COLORS: Record<string, string> = {
   workflow: 'border-emerald-500/50',
   integration: 'border-blue-500/50',
-  document: 'border-purple-500/50',
+  document: 'border-zinc-400/50',
   meeting: 'border-amber-500/50',
   agent: 'border-cyan-500/50',
 };
