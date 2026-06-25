@@ -3,6 +3,12 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
+interface OnlineUser {
+  userId: string;
+  username: string;
+  color: string;
+}
+
 interface ArenaHUDProps {
   spaceId: string;
   orgName?: string;
@@ -10,26 +16,36 @@ interface ArenaHUDProps {
   spaceName?: string;
   orgId?: string;
   workspaceId?: string;
+  onlineCount?: number;
+  onlineUsers?: OnlineUser[];
+  onLeave?: () => void;
 }
 
-const ONLINE_USERS = [
-  { name: 'Ansh',  color: '#52525b' },
-  { name: 'Raj',   color: '#3f3f46' },
-  { name: 'Sarah', color: '#27272a' },
-  { name: 'Alex',  color: '#52525b' },
-  { name: 'Priya', color: '#3f3f46' },
-];
-
-export function ArenaHUD({ spaceId, orgName, workspaceName, spaceName, orgId }: ArenaHUDProps) {
+export function ArenaHUD({
+  spaceId,
+  orgName,
+  workspaceName,
+  spaceName,
+  orgId,
+  workspaceId,
+  onlineCount = 0,
+  onlineUsers = [],
+  onLeave,
+}: ArenaHUDProps) {
   const router = useRouter();
-  const onlineCount = ONLINE_USERS.length + 1;
 
   const handleLeave = () => {
-    if (orgId) {
-      router.push(`/organization/${orgId}/workspaces`);sdaad
-    } else {
-      router.push('/home');
-    }
+    // Send SPACE_LEAVE event to server first
+    onLeave?.();
+
+    // Navigate after a brief delay to ensure the leave event is sent
+    setTimeout(() => {
+      if (orgId) {
+        router.push(`/organization/${orgId}/workspaces`);
+      } else {
+        router.push('/home');
+      }
+    }, 200);
   };
 
   return (
@@ -37,20 +53,12 @@ export function ArenaHUD({ spaceId, orgName, workspaceName, spaceName, orgId }: 
       {/* Top-Left: Space Info */}
       <div className="absolute top-4 left-4 pointer-events-auto">
         <div className="flex items-center gap-3 bg-gray-950/80 backdrop-blur-md border border-white/10 rounded-xl px-4 py-2.5 shadow-2xl">
-          <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-black/40">
-            W
-          </div>
           <div>
             <p className="text-[10px] font-medium text-gray-500 uppercase tracking-widest leading-none">WorkVerse</p>
             <p className="text-sm font-semibold text-white leading-tight mt-0.5">
               {orgName && <span>{orgName}</span>}
               {workspaceName && <span className="text-gray-400"> / {workspaceName}</span>}
-              {spaceName && <span className="text-gray-500"> / {spaceName}</span>}
             </p>
-          </div>
-          <div className="flex items-center gap-1.5 ml-2 border-l border-white/10 pl-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/60" title={spaceId} />
-            <span className="text-[11px] text-emerald-400 font-medium">Live</span>
           </div>
         </div>
       </div>
@@ -67,14 +75,14 @@ export function ArenaHUD({ spaceId, orgName, workspaceName, spaceName, orgId }: 
             >
               Y
             </div>
-            {ONLINE_USERS.map((u, i) => (
+            {onlineUsers.slice(0, 6).map((u, i) => (
               <div
-                key={u.name}
+                key={u.userId}
                 className="w-7 h-7 rounded-full border border-black flex items-center justify-center text-[10px] font-bold text-white shadow"
                 style={{ background: u.color, zIndex: 9 - i }}
-                title={u.name}
+                title={u.username}
               >
-                {u.name[0]}
+                {u.username[0]}
               </div>
             ))}
           </div>
