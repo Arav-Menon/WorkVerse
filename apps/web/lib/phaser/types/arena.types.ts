@@ -34,6 +34,7 @@ export type ServerEvent =
   | { type: 'USER_LEFT'; userId: string; onlineCount: number }
   | { type: 'PLAYER_MOVED'; userId: string; position: { x: number; y: number } }
   | { type: 'SPACE_PRESENCE_UPDATED'; onlineCount: number }
+  | { type: 'CHAT'; workSpaceId: string; userId: string; chatMessage: string; timestamp: number; username: string; color: string }
   | { type: 'INFO'; message: string; activeUsers?: number }
   | { type: 'PONG' }
   | { type: 'ERROR'; message: string };
@@ -43,6 +44,7 @@ export type ClientEvent =
   | { type: 'SPACE_JOIN'; userId: string; organizationId: string; workspaceId: string; spaceId: string }
   | { type: 'SPACE_LEAVE' }
   | { type: 'PLAYER_MOVE'; payload: { x: number; y: number } }
+  | { type: 'CHAT'; payload: { chatMessage: string } }
   | { type: 'PING' };
 
 // Color palette for remote player avatars (matches backend AVATAR_COLORS)
