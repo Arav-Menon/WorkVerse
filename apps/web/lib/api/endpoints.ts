@@ -25,5 +25,9 @@ export const API_ENDPOINTS = {
         STATUS: (orgId : string) => `/api/v1/organizations/${orgId}/integrations`,
         DISCONNECT: (orgId : string, provider : string) => `/api/v1/organizations/${orgId}/integrations/${provider}`,
         CONNECT: (provider : string) => `/api/v1/oauth/${provider}/connect`,
+    },
+    AI_CHAT: {
+        HISTORY: (workspaceId : string) => `/api/v1/ai-chats`,
+        DELETE_HISTORY: (workspaceId : string) => `/api/v1/ai-chats`,
     }
 }
