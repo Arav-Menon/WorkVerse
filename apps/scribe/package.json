@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start:scribe": "bun src/scribe.worker.ts"
+    "start:scribe": "bun src/worker.resMessage.ts"
+
   },
   "devDependencies": {
     "@types/bun": "latest"
