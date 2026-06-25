@@ -11,6 +11,7 @@ export interface SpaceClientOptions {
   onUserJoined?: (user: SpaceUser) => void;
   onUserLeft?: (userId: string) => void;
   onPlayerMoved?: (userId: string, position: { x: number; y: number }) => void;
+  onChatMessage?: (data: { userId: string; chatMessage: string; timestamp: number; username: string; color: string }) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
   onOnlineCount?: (count: number) => void;
@@ -105,6 +106,18 @@ export class SpaceClient {
           return;
         }
 
+        if (data.type === "CHAT") {
+          console.log(`[CHAT_RECEIVED] userId=${data.userId} username=${data.username} message=${data.chatMessage}`);
+          this.options.onChatMessage?.({
+            userId: data.userId,
+            chatMessage: data.chatMessage,
+            timestamp: data.timestamp,
+            username: data.username,
+            color: data.color,
+          });
+          return;
+        }
+
         if (data.type === "INFO") {
           console.log(`[SpaceClient] ${data.message}`);
           if (data.activeUsers !== undefined) {
@@ -187,6 +200,11 @@ export class SpaceClient {
       type: "PLAYER_MOVE",
       payload: { x, y },
     });
+  }
+
+  sendChat(chatMessage: string) {
+    console.log(`[CHAT_SENT] message=${chatMessage}`);
+    this.send({ type: "CHAT", payload: { chatMessage } });
   }
 
   send(event: any) {
