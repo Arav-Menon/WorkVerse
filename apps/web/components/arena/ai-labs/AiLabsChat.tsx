@@ -36,7 +36,11 @@ export function AiLabsChat({ messages, isTyping }: AiLabsChatProps) {
                 border: '1px solid rgba(255,255,255,0.1)'
               }}
             >
-              {msg.role === 'assistant' ? '🧠' : 'A'}
+              {msg.role === 'assistant' ? (
+                <img src="/icon.svg" alt="AI" className="w-full h-full" />
+              ) : (
+                'A'
+              )}
             </div>
             <div
               className={`max-w-[85%] rounded-xl px-3 py-2 text-[12px] leading-relaxed ${
@@ -58,8 +62,8 @@ export function AiLabsChat({ messages, isTyping }: AiLabsChatProps) {
         ))}
         {isTyping && (
           <div className="flex gap-2.5">
-            <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] bg-zinc-800 border border-white/10">
-              🧠
+            <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] bg-zinc-800 border border-white/10 overflow-hidden">
+              <img src="/icon.svg" alt="AI" className="w-full h-full" />
             </div>
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl rounded-tl-sm" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
               {[0, 1, 2].map(i => (
