@@ -6,7 +6,15 @@ interface PageProps {
 }
 
 export default async function SpaceArenaPage({ params }: PageProps) {
-  const { spaceId } = await params;
+  const { orgId, workspaceId, spaceId } = await params;
 
-  return <ArenaWrapper spaceId={spaceId} />;
+  return (
+    <div className="relative w-full h-screen overflow-hidden" style={{ background: '#050505' }}>
+      <ArenaWrapper
+        spaceId={spaceId}
+        orgId={orgId}
+        workspaceId={workspaceId}
+      />
+    </div>
+  );
 }
