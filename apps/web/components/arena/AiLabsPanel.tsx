@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AiLabsHeader,
   AiLabsChat,
@@ -9,6 +9,8 @@ import {
 import { useAiLabs } from '../../hooks/use-ai-labs';
 
 interface AiLabsPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
   workspaceId: string;
   spaceId: string;
   organizationId: string;
@@ -18,6 +20,8 @@ interface AiLabsPanelProps {
 }
 
 export function AiLabsPanel({
+  isOpen,
+  onClose,
   workspaceId,
   spaceId,
   organizationId,
@@ -25,8 +29,6 @@ export function AiLabsPanel({
   contextCount = 0,
   toolsCount = 0,
 }: AiLabsPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   const {
     messages,
     isConnected,
@@ -45,21 +47,6 @@ export function AiLabsPanel({
 
   return (
     <>
-      {/* Floating trigger button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="absolute bottom-5 right-5 z-40 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl font-semibold text-sm text-white transition-all duration-200 hover:scale-105 active:scale-95 pointer-events-auto"
-          style={{
-            background: 'rgba(9, 9, 11, 0.9)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 4px 30px rgba(0,0,0,0.5)',
-          }}
-        >
-          AI Labs
-        </button>
-      )}
-
       {/* Slide-in Panel */}
       <div
         className="absolute top-0 right-0 h-full z-30 pointer-events-auto flex flex-col transition-transform duration-300 ease-in-out"
@@ -78,7 +65,7 @@ export function AiLabsPanel({
           contextCount={contextCount}
           toolsCount={toolsCount}
           onClearHistory={clearHistory}
-          onClose={() => setIsOpen(false)}
+          onClose={onClose}
         />
 
         {/* Connection status */}
