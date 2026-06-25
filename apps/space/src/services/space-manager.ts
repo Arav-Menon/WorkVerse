@@ -190,20 +190,35 @@ export class spaceManager {
 
     async chatMessage(workSpaceId: string, userId: string, chatMessage: string) {
         const timestamp = Date.now();
+
+        let username = "Anonymous";
+        let color = pickColor(userId);
+        const userRaw = await client.hget(`space:${workSpaceId}:users`, userId);
+        if (userRaw) {
+            try {
+                const spaceUser: SpaceUser = JSON.parse(userRaw);
+                username = spaceUser.username;
+                color = spaceUser.color;
+            } catch {}
+        }
+
         const data = {
             workSpaceId,
             userId,
             chatMessage,
-            timestamp
+            timestamp,
+            username,
+            color
         };
 
         const historyKey = `space:${workSpaceId}:chat`;
         await client.rpush(historyKey, JSON.stringify(data));
         await client.ltrim(historyKey, -50, -1);
-        console.log(`[SpaceManager] Chat saved to Redis: ${historyKey}`);
+        console.log(`[CHAT_HISTORY] Saved to Redis: ${historyKey}`);
 
         await client.lpush("chat_persistence_queue", JSON.stringify(data));
 
+        console.log(`[CHAT_BROADCAST] space=${workSpaceId} userId=${userId} username=${username}`);
         await this.redisManager.publish(`space:${workSpaceId}`, {
             type: "CHAT",
             ...data
