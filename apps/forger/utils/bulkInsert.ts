@@ -12,3 +12,21 @@ export const insertBulk = async (payload: ChatCompletedEvent) => {
         status: "completed"
     })
 }
+
+export const insertBulkUserMessage = async (payload: {
+    promptId: string
+    userId: string
+    organizationId: string
+    workspaceId: string
+    content: string
+}) => {
+    await bulkInsertChatResponseQueue.add("chat_user_msg", {
+        promptId: payload.promptId,
+        userId: payload.userId,
+        organizationId: payload.organizationId,
+        workspaceId: payload.workspaceId,
+        content: payload.content,
+        role: "USER",
+        status: "completed"
+    })
+}
