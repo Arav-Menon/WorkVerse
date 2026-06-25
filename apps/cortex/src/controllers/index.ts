@@ -5,3 +5,4 @@ export * from "./acceptInvitation.controller";
 export * from "./validateInvite.controller";
 export * from "./create-room.controller";
 export * from "./ingestPrompt.controller";
+export * from "./aiChat.controller";
