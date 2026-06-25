@@ -14,8 +14,8 @@ export async function createWorkflow(
       workflowJson,
       {
         headers: {
-          "accept": "application/json",
-          "X-N8N-API-KEY": `${process.env.N8N_API_KEY}`,
+          accept: "application/json",
+          "X-N8N-API-KEY": `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZjc3YzYyYi1kNTNjLTQ4YmEtYjM0MC1hOGY2MzliNDJlODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNjAzYzA4ZGUtNDE4Ni00YjAyLWEyZTEtZjliNzA2NTYyN2M5IiwiaWF0IjoxNzgyMzkxNDA5LCJleHAiOjE3ODQ5NTIwMDB9.YTWVHJYlkLpxtNxiC6J0C3qeHckExQQW9-f8Ch8aeJI`,
         },
       },
     );
@@ -23,6 +23,8 @@ export async function createWorkflow(
     return response.data;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message;
-    throw new Error(`Failed to create n8n workflow: ${errorMessage} statuscode : ${errorMessage.statuscode}`);
+    throw new Error(
+      `Failed to create n8n workflow: ${errorMessage} statuscode : ${errorMessage.statuscode}`,
+    );
   }
 }
