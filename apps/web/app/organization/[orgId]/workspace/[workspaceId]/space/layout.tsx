@@ -40,7 +40,12 @@ export default function SpaceLayout({
       />
 
       {/* AI Labs slide-in panel */}
-      <AiLabsPanel />
+      <AiLabsPanel
+        workspaceId={workspaceId}
+        spaceId={spaceId}
+        organizationId={orgId}
+        teamName={workspace?.name ?? 'Workspace'}
+      />
 
       {/* Bottom control bar */}
       <BottomNavBar />
