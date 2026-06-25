@@ -1,6 +1,9 @@
 export class RedisManager {
     private pubClient: any;
-    private subClient: any
+    private subClient: any;
+    private subConnected = false;
+    private pubConnected = false;
+    private messageHandlers: Map<string, (message: string) => void> = new Map();
 
     constructor(pubClient: any) {
         this.pubClient = pubClient;
@@ -15,23 +18,66 @@ export class RedisManager {
             console.log("Redis Pub Client Error", err),
         );
 
+        // Handle messages via the 'message' event (ioredis standard API)
+        this.subClient.on("message", (channel: string, message: string) => {
+            console.log(`[REDIS SUB] channel=${channel}`);
+            const handler = this.messageHandlers.get(channel);
+            if (handler) {
+                handler(message);
+            } else {
+                console.log(`[REDIS SUB] No handler for channel: ${channel}`);
+            }
+        });
+
         await Promise.all([
             this.subClient.connect(),
             this.pubClient.connect()
         ]);
 
+        this.subConnected = true;
+        this.pubConnected = true;
         console.log("Redis Pub and Sub clients are connected");
     }
+
     async subscribe(channel: string, callback: (message: string) => void) {
-        if (!this.subClient.isOpen) {
-            await this.subClient.connect();
+        if (!this.subConnected) {
+            try {
+                await this.subClient.connect();
+                this.subConnected = true;
+            } catch (err: any) {
+                if (err.message?.includes("already connecting")) {
+                    // Already connecting, just wait
+                } else {
+                    throw err;
+                }
+            }
         }
-        await this.subClient.subscribe(channel, callback);
+
+        // Store handler for this channel
+        this.messageHandlers.set(channel, callback);
+
+        // Subscribe if not already subscribed to this channel
+        // ioredis deduplicates subscriptions internally
+        await this.subClient.subscribe(channel);
+    }
+
+    async unsubscribe(channel: string) {
+        this.messageHandlers.delete(channel);
+        await this.subClient.unsubscribe(channel);
     }
 
     async publish(channel: string, message: any) {
-        if (!this.pubClient.isOpen) {
-            await this.pubClient.connect();
+        if (!this.pubConnected) {
+            try {
+                await this.pubClient.connect();
+                this.pubConnected = true;
+            } catch (err: any) {
+                if (err.message?.includes("already connecting")) {
+                    // Already connecting, just wait
+                } else {
+                    throw err;
+                }
+            }
         }
         const payload = typeof message === "string" ? message : JSON.stringify(message);
         await this.pubClient.publish(channel, payload);
