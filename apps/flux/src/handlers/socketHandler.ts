@@ -8,6 +8,7 @@ export const handleConnection = (socket: WebSocket) => {
 
   socket.on("message", async (raw) => {
     let parsed: {
+      type?: string;
       token: string;
       workspaceId: string;
       userPrompt: string;
@@ -18,14 +19,19 @@ export const handleConnection = (socket: WebSocket) => {
     try {
       parsed = JSON.parse(raw.toString());
     } catch {
-      socket.send(JSON.stringify({ error: "Invalid JSON payload" }));
+      socket.send(JSON.stringify({ type: "error", error: "Invalid JSON payload" }));
+      return;
+    }
+
+    if (parsed.type === "ping") {
+      socket.send(JSON.stringify({ type: "pong" }));
       return;
     }
 
     const { token, workspaceId, userPrompt, organizationId, spaceId } = parsed;
 
     if (!token || !workspaceId || !userPrompt || !organizationId || !spaceId) {
-      socket.send(JSON.stringify({ error: "Missing required fields" }));
+      socket.send(JSON.stringify({ type: "error", error: "Missing required fields" }));
       return;
     }
 
@@ -41,7 +47,7 @@ export const handleConnection = (socket: WebSocket) => {
       );
 
       socket.send(JSON.stringify({
-        status: "queued",
+        type: "prompt_queued",
         promptId,
         message: "Your prompt has been queued for processing.",
       }));
@@ -50,7 +56,7 @@ export const handleConnection = (socket: WebSocket) => {
     } catch (err: any) {
       console.error("[Flux] Failed to enqueue prompt:", err);
       socketStore.remove(promptId);
-      socket.send(JSON.stringify({ error: "Failed to enqueue prompt", promptId }));
+      socket.send(JSON.stringify({ type: "error", error: "Failed to enqueue prompt", promptId }));
     }
   });
 
