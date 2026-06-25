@@ -77,8 +77,32 @@ while (true) {
     // await db.workflowJob.update({ where : { promptId } }); 
     await EventBus.publish("workflow_event", workflowPayload);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("[Workflow Forger] Error in worker loop:", error);
+
+    try {
+      const record = (error as any)?.record;
+      const promptId = record?.message?.promptId;
+      const userId = record?.message?.userId;
+      const workspaceId = record?.message?.workspaceId;
+      const spaceId = record?.message?.spaceId;
+      const organizationId = record?.message?.organizationId;
+
+      if (promptId) {
+        await EventBus.publish("workflow_event", {
+          promptId,
+          userId: userId ?? "",
+          workspaceId: workspaceId ?? "",
+          spaceId: spaceId ?? "",
+          organizationId: organizationId ?? "",
+          status: "failed",
+          message: error?.message ?? "Workflow execution failed",
+        });
+      }
+    } catch (pubError) {
+      console.error("[Workflow Forger] Failed to publish failure event:", pubError);
+    }
+
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 }
