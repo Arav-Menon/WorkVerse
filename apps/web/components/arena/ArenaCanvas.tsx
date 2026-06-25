@@ -24,6 +24,8 @@ interface ArenaCanvasProps {
   onInteraction?: (data: InteractionData) => void;
   onOnlineCountChange?: (count: number) => void;
   onUsersChange?: (users: SpaceUser[]) => void;
+  onChatMessage?: (data: { userId: string; chatMessage: string; timestamp: number; username: string; color: string }) => void;
+  onChatHistory?: (history: any[]) => void;
   spaceClientRef?: React.MutableRefObject<SpaceClient | null>;
 }
 
@@ -36,6 +38,8 @@ export default function ArenaCanvas({
   onInteraction,
   onOnlineCountChange,
   onUsersChange,
+  onChatMessage,
+  onChatHistory,
   spaceClientRef,
 }: ArenaCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,10 +55,14 @@ export default function ArenaCanvas({
       organizationId,
       workspaceId,
       spaceId,
-      onSpaceState: (users) => {
+      onSpaceState: (users, chatHistory) => {
         const scene = gameRef.current?.scene.getScene('ArenaScene') as unknown as ArenaScene | undefined;
         scene?.handleSpaceState(users);
         onUsersChange?.(users.filter(u => u.userId !== userId));
+        if (chatHistory && chatHistory.length > 0) {
+          console.log(`[CHAT_HISTORY] Loaded ${chatHistory.length} messages from SPACE_STATE`);
+          onChatHistory?.(chatHistory);
+        }
       },
       onUserJoined: (user) => {
         const scene = gameRef.current?.scene.getScene('ArenaScene') as unknown as ArenaScene | undefined;
@@ -67,6 +75,9 @@ export default function ArenaCanvas({
       onPlayerMoved: (uid, pos) => {
         const scene = gameRef.current?.scene.getScene('ArenaScene') as unknown as ArenaScene | undefined;
         scene?.handlePlayerMoved(uid, pos);
+      },
+      onChatMessage: (data) => {
+        onChatMessage?.(data);
       },
       onOnlineCount: (count) => {
         onOnlineCountChange?.(count);
