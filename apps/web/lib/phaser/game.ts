@@ -1,9 +1,12 @@
 import Phaser from 'phaser';
 import { ArenaScene } from './scenes/ArenaScene';
+import type { SpaceClient } from '../ws/space-client';
 
 export function initGame(
   parent: HTMLDivElement,
-  spaceId: string
+  spaceId: string,
+  localUserId: string,
+  spaceClient: SpaceClient,
 ): Phaser.Game {
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -36,8 +39,7 @@ export function initGame(
 
   const game = new Phaser.Game(config);
 
-  // Pass data to the initial scene
-  game.scene.start('ArenaScene', { spaceId });
+  game.scene.start('ArenaScene', { spaceId, localUserId, spaceClient });
 
   return game;
 }
