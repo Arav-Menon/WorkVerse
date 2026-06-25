@@ -46,7 +46,7 @@ export const worker = new Worker('bulk_insert_chat-response-queue', async (job) 
             workspaceId: data.workspaceId,
             userId: data.userId,
             conversationId: data.promptId,
-            role: "ASSISTANT",
+            role: data.role === "USER" ? "USER" : "ASSISTANT",
             content: data.content,
             createdAt: new Date()
         });
