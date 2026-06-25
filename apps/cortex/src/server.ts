@@ -35,6 +35,7 @@ import organizationGetRoutes from "./routes/organization/organization.get.routes
 import workspaceGetRoutes from "./routes/organization/workspace.get.routes";
 import workspaceStandaloneRoutes from "./routes/workspace/workspace.get.routes";
 import integrationRoutes from "./routes/integration/integration.routes";
+import { aiChatRoutes } from "./routes/aiChat/aiChat.routes";
 for (const schema of authJsonSchemas) {
   fastify.addSchema(schema);
 }
@@ -74,4 +75,5 @@ fastify.register(integrationRoutes, { prefix: "/api/v1/organizations" });
 fastify.register(organizationGetRoutes, { prefix: "/api/v1/organizations" });
 fastify.register(workspaceGetRoutes, { prefix: "/api/v1/organizations" });
 fastify.register(workspaceStandaloneRoutes, { prefix: "/api/v1/workspaces" });
+fastify.register(aiChatRoutes, { prefix: "/api/v1/ai-chats" });
 fastify.get("/health", async () => ({ status: "ok" }));
