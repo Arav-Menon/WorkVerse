@@ -1,16 +1,6 @@
 import Phaser from "phaser";
 import { WorldConfig } from '../config/world.config';
-
-// Warm distinct avatar colors — each remote player gets a unique one
-const AVATAR_COLORS = [
-  { bg: 0xd06858, label: '#ffffff' },  // coral
-  { bg: 0x4a70c0, label: '#ffffff' },  // blue
-  { bg: 0x5a9060, label: '#ffffff' },  // green
-  { bg: 0x9070b0, label: '#ffffff' },  // purple
-  { bg: 0xc09030, label: '#ffffff' },  // amber
-  { bg: 0x708898, label: '#ffffff' },  // slate
-];
-let colorIndex = 0;
+import { hexColorToNumber } from '../types/arena.types';
 
 export class RemotePlayer {
   private container: Phaser.GameObjects.Container;
@@ -18,11 +8,12 @@ export class RemotePlayer {
   private name: string;
   private avatarColor: { bg: number; label: string };
 
-  constructor(scene: Phaser.Scene, id: string, name: string, x: number, y: number) {
+  constructor(scene: Phaser.Scene, id: string, name: string, x: number, y: number, colorHex?: string) {
     this.id = id;
     this.name = name;
-    this.avatarColor = AVATAR_COLORS[colorIndex % AVATAR_COLORS.length]!;
-    colorIndex++;
+
+    const bgColor = colorHex ? hexColorToNumber(colorHex) : 0x708898;
+    this.avatarColor = { bg: bgColor, label: '#ffffff' };
 
     const radius = WorldConfig.remotePlayer.radius;
 
