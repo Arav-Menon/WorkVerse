@@ -17,12 +17,6 @@ export async function getProfile(fastify: FastifyInstance, userId: string) {
       workspace: {
         select: { id: true },
       },
-      oauthConnections: {
-        select: {
-          provider: true,
-          createdAt: true,
-        },
-      },
     },
   });
 
@@ -40,9 +34,5 @@ export async function getProfile(fastify: FastifyInstance, userId: string) {
       workspaces: user.workspace.length,
       spaces: 0,
     },
-    connectedAccounts: user.oauthConnections.map((c) => ({
-      provider: c.provider,
-      connectedAt: c.createdAt.toISOString(),
-    })),
   };
 }
