@@ -16,8 +16,9 @@ export async function fetchIntegrationStatus(orgId: string): Promise<Record<stri
   return res.data.data;
 }
 
-export async function disconnectIntegration(orgId: string, provider: string): Promise<void> {
-  await apiClient.delete(API_ENDPOINTS.INTEGRATION.DISCONNECT(orgId, provider));
+export async function disconnectIntegration(orgId: string, provider: string) {
+  const res = await apiClient.delete(API_ENDPOINTS.INTEGRATION.DISCONNECT(orgId, provider));
+  return res.data;
 }
 
 export function getConnectUrl(orgId: string, provider: string, userId: string): string {
