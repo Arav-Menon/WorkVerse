@@ -2,14 +2,16 @@
 
 import React, { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { useIntegrationStatus, useDisconnectIntegration } from "@/hooks/use-integrations";
 import { usePermission } from "@/lib/rbac/usePermission";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { getConnectUrl } from "@/lib/api/integration.api";
+import DisconnectConfirmModal from "@/components/shared/DisconnectConfirmModal";
 
 const INTEGRATION_REGISTRY: Record<string, { name: string; icon: string; desc: string; category: string }> = {
   github: { name: "GitHub", icon: "ti-brand-github", desc: "Connect repositories, pull requests, and issues", category: "dev" },
-  google: { name: "Google Calendar", icon: "ti-calendar-event", desc: "Sync events and schedules", category: "productivity" },
+  google: { name: "Google", icon: "ti-mail", desc: "Connect Gmail, Calendar, Drive, and Docs", category: "productivity" },
   slack: { name: "Slack", icon: "ti-brand-slack", desc: "Send messages and notifications", category: "communication" },
 };
 
@@ -36,6 +38,7 @@ export default function ConnectionsPage() {
   const disconnectMutation = useDisconnectIntegration(orgId);
 
   const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [disconnectModalProvider, setDisconnectModalProvider] = useState<string | null>(null);
 
   const handleConnect = useCallback((provider: string) => {
     if (!user) return;
@@ -53,9 +56,25 @@ export default function ConnectionsPage() {
   }, [orgId, user, refetch]);
 
   const handleDisconnect = useCallback((provider: string) => {
-    if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
-    disconnectMutation.mutate(provider);
-  }, [disconnectMutation]);
+    setDisconnectModalProvider(provider);
+  }, []);
+
+  const handleConfirmDisconnect = useCallback(() => {
+    if (!disconnectModalProvider) return;
+    const providerName = INTEGRATION_REGISTRY[disconnectModalProvider]?.name || disconnectModalProvider;
+    disconnectMutation.mutate(disconnectModalProvider, {
+      onSuccess: () => {
+        toast.success(`${providerName} disconnected successfully`);
+        setDisconnectModalProvider(null);
+      },
+      onError: (error: any) => {
+        const serverMessage = error?.response?.data?.message;
+        console.error(`[Disconnect] ${disconnectModalProvider} failed:`, error);
+        toast.error(serverMessage || `Failed to disconnect ${providerName}`);
+        setDisconnectModalProvider(null);
+      },
+    });
+  }, [disconnectModalProvider, disconnectMutation]);
 
   const connectedProviders = integrations
     ? Object.entries(integrations).filter(([, status]) => status.connected)
@@ -294,6 +313,16 @@ export default function ConnectionsPage() {
           </p>
         </div>
       )}
+
+      {/* Disconnect Confirmation Modal */}
+      <DisconnectConfirmModal
+        isOpen={!!disconnectModalProvider}
+        providerName={disconnectModalProvider ? INTEGRATION_REGISTRY[disconnectModalProvider]?.name || disconnectModalProvider : ""}
+        providerIcon={disconnectModalProvider ? INTEGRATION_REGISTRY[disconnectModalProvider]?.icon || "" : ""}
+        onConfirm={handleConfirmDisconnect}
+        onCancel={() => setDisconnectModalProvider(null)}
+        isPending={disconnectMutation.isPending}
+      />
     </div>
   );
 }
