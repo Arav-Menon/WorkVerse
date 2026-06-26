@@ -2,15 +2,16 @@ import { db } from "@repo/db/db";
 import { oauthService } from "../oauth_services/oauth.service";
 
 class IntegrationService {
-    async getOrgIntegrationStatus(userId: string) {
-        // Get user's OAuth connections
-        const connections = await db.oAuthConnection.findMany({
-            where: { userId },
+    async getOrgIntegrationStatus(organizationId: string) {
+        const connections = await db.organizationConnection.findMany({
+            where: { organizationId },
             select: {
                 provider: true,
                 scopes: true,
-                createdAt: true,
-                updatedAt: true,
+                status: true,
+                connectedAt: true,
+                lastSyncedAt: true,
+                metadata: true,
             },
         });
 
@@ -19,12 +20,10 @@ class IntegrationService {
         for (const connection of connections) {
             const provider = connection.provider.toLowerCase();
 
-            // For GitHub, fetch user info
             if (provider === "github") {
                 try {
-                    // We need the access token to fetch GitHub user info
-                    const fullConnection = await db.oAuthConnection.findUnique({
-                        where: { userId_provider: { userId, provider: connection.provider } },
+                    const fullConnection = await db.organizationConnection.findUnique({
+                        where: { organizationId_provider: { organizationId, provider: connection.provider } },
                         select: { accessToken: true },
                     });
 
@@ -35,23 +34,52 @@ class IntegrationService {
                             username: githubUser.username,
                             avatar: githubUser.avatar,
                             profileUrl: githubUser.profileUrl,
-                            connectedAt: connection.createdAt.toISOString(),
+                            connectedAt: connection.connectedAt.toISOString(),
                             scopes: connection.scopes,
+                            status: connection.status,
                         };
                     }
                 } catch (error) {
-                    // Token might be expired or invalid
                     result[provider] = {
                         connected: true,
                         error: "Failed to fetch user info",
-                        connectedAt: connection.createdAt.toISOString(),
+                        connectedAt: connection.connectedAt.toISOString(),
+                        status: connection.status,
+                    };
+                }
+            } else if (provider === "google") {
+                try {
+                    const fullConnection = await db.organizationConnection.findUnique({
+                        where: { organizationId_provider: { organizationId, provider: connection.provider } },
+                        select: { accessToken: true },
+                    });
+
+                    if (fullConnection) {
+                        const googleUser = await oauthService.fetchGoogleUser(fullConnection.accessToken);
+                        result[provider] = {
+                            connected: true,
+                            username: googleUser.email,
+                            avatar: googleUser.avatar,
+                            profileUrl: null,
+                            connectedAt: connection.connectedAt.toISOString(),
+                            scopes: connection.scopes,
+                            status: connection.status,
+                        };
+                    }
+                } catch (error) {
+                    result[provider] = {
+                        connected: true,
+                        error: "Failed to fetch user info",
+                        connectedAt: connection.connectedAt.toISOString(),
+                        status: connection.status,
                     };
                 }
             } else {
                 result[provider] = {
                     connected: true,
-                    connectedAt: connection.createdAt.toISOString(),
+                    connectedAt: connection.connectedAt.toISOString(),
                     scopes: connection.scopes,
+                    status: connection.status,
                 };
             }
         }
@@ -59,8 +87,8 @@ class IntegrationService {
         return result;
     }
 
-    async disconnectIntegration(userId: string, provider: string) {
-        await oauthService.disconnect(userId, provider);
+    async disconnectIntegration(organizationId: string, provider: string) {
+        await oauthService.disconnect(organizationId, provider);
     }
 }
 
