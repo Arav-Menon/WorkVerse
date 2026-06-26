@@ -66,7 +66,6 @@ model User {
   workspace           Workspace[]
   organizationInvites OrganizationInvite[]
   chatMessages        ChatMessage[]
-  oauthConnections    OAuthConnection[]
   spaces              Space[]
 }
 
@@ -82,6 +81,7 @@ model Organization {
   workspaces          Workspace[]
   organizationInvites OrganizationInvite[]
   spaces              Space[]
+  connections         OrganizationConnection[]
 }
 
 model OrganizationInvite {
@@ -322,25 +322,38 @@ model AgentEvent {
   @@index([jobId])
 }
 
-enum OAuthProvider {
+enum ConnectionProvider {
   GITHUB
   GOOGLE
   SLACK
 }
 
-model OAuthConnection {
-  id          String        @id @default(uuid())
-  userId      String
-  provider    OAuthProvider
-  accessToken String
-  scopes      String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+enum ConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  ERROR
+}
 
-  user User @relation(fields: [userId], references: [id])
+model OrganizationConnection {
+  id                String           @id @default(uuid())
+  organizationId    String
+  provider          ConnectionProvider
+  providerAccountId String?
+  accessToken       String
+  refreshToken      String?
+  scopes            String?
+  metadata          Json?
+  status            ConnectionStatus @default(ACTIVE)
+  connectedAt       DateTime         @default(now())
+  lastSyncedAt      DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  @@unique([userId, provider])
-  @@index([userId])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+  @@index([organizationId])
 }
 
 model Space {
