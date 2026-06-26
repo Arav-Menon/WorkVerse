@@ -21,7 +21,7 @@ export async function getIntegrationStatusController(request: any, reply: any) {
             return reply.status(403).send({ success: false, message: "Not a member of this organization" });
         }
 
-        const status = await integrationService.getOrgIntegrationStatus(userId);
+        const status = await integrationService.getOrgIntegrationStatus(orgId);
 
         return reply.status(200).send({
             success: true,
@@ -61,10 +61,11 @@ export async function disconnectIntegrationController(request: any, reply: any) 
             return reply.status(403).send({ success: false, message: "Only owners and admins can manage integrations" });
         }
 
-        await integrationService.disconnectIntegration(userId, provider);
+        await integrationService.disconnectIntegration(orgId, provider);
 
         return reply.status(200).send({
             success: true,
+            provider,
             message: `${provider} disconnected successfully`,
         });
     } catch (err: any) {
