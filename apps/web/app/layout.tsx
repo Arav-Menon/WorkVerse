@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
+import { Toaster } from "sonner";
 import Providers from "./providers";
 import "./globals.css";
 
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${raleway.className} antialiased`}>
         <Providers>{children}</Providers>
+        <Toaster theme="dark" position="top-right" />
       </body>
     </html>
   );
