@@ -22,15 +22,41 @@ class OAuthService {
             redirect_uri: config.redirectUri,
         });
 
+        if (config.responseType) {
+            params.set("response_type", config.responseType);
+        }
+
+        if (config.accessType) {
+            params.set("access_type", config.accessType);
+        }
+
+        if (config.prompt) {
+            params.set("prompt", config.prompt);
+        }
+
         if (state) {
             params.set("state", state);
         }
 
-        return `${config.authUrl}?${params}`;
+        const url = `${config.authUrl}?${params}`;
+
+        console.log(`[OAuth] ${provider} authorization URL generated`);
+        console.log(`[OAuth]   client_id:     ${config.clientId}`);
+        console.log(`[OAuth]   redirect_uri:  ${config.redirectUri}`);
+        console.log(`[OAuth]   scope:         ${config.scopes}`);
+        console.log(`[OAuth]   full_url:      ${url}`);
+
+        return url;
     }
 
-    async exchangeCode(provider: string, code: string, userId: string) {
+    async exchangeCode(provider: string, code: string, organizationId: string) {
         const config = this.getProvider(provider);
+
+        console.log(`[OAuth] ${provider} token exchange initiated`);
+        console.log(`[OAuth]   client_id:     ${config.clientId}`);
+        console.log(`[OAuth]   redirect_uri:  ${config.redirectUri}`);
+        console.log(`[OAuth]   code:          ${code.substring(0, 8)}...`);
+        console.log(`[OAuth]   organizationId: ${organizationId}`);
 
         const { data } = await axios.post(
             config.tokenUrl,
@@ -41,7 +67,7 @@ class OAuthService {
                 redirect_uri: config.redirectUri,
             },
             {
-                headers: {
+                headers : {
                     Accept: "application/json",
                     "Content-Type": "application/json",
                 },
@@ -56,21 +82,31 @@ class OAuthService {
             );
         }
 
-        await db.oAuthConnection.upsert({
+        const refreshToken: string | undefined = data.refresh_token;
+        const expiresIn: number | undefined = data.expires_in;
+
+        await db.organizationConnection.upsert({
             where: {
-                userId_provider: {
-                    userId,
+                organizationId_provider: {
+                    organizationId,
                     provider: provider.toUpperCase() as any,
                 },
             },
             update: {
                 accessToken,
+                refreshToken: refreshToken || undefined,
+                status: "ACTIVE",
+                connectedAt: new Date(),
+                metadata: expiresIn ? { expiresIn } : undefined,
             },
             create: {
-                userId,
+                organizationId,
                 provider: provider.toUpperCase() as any,
                 accessToken,
+                refreshToken: refreshToken || undefined,
                 scopes: config.scopes,
+                status: "ACTIVE",
+                metadata: expiresIn ? { expiresIn } : undefined,
             },
         });
 
@@ -92,10 +128,25 @@ class OAuthService {
         };
     }
 
-    async disconnect(userId: string, provider: string) {
-        await db.oAuthConnection.deleteMany({
+    async fetchGoogleUser(accessToken: string) {
+        const { data } = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                Accept: "application/json",
+            },
+        });
+
+        return {
+            email: data.email,
+            name: data.name,
+            avatar: data.picture,
+        };
+    }
+
+    async disconnect(organizationId: string, provider: string) {
+        await db.organizationConnection.deleteMany({
             where: {
-                userId,
+                organizationId,
                 provider: provider.toUpperCase() as any,
             },
         });
