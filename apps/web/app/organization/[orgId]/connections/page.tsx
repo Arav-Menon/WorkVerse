@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useIntegrationStatus, useDisconnectIntegration } from "@/hooks/use-integrations";
+import { useN8nStatus } from "@/hooks/use-n8n-connection";
 import { usePermission } from "@/lib/rbac/usePermission";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { getConnectUrl } from "@/lib/api/integration.api";
@@ -30,11 +31,13 @@ function timeAgo(dateStr: string): string {
 
 export default function ConnectionsPage() {
   const params = useParams();
+  const router = useRouter();
   const orgId = params.orgId as string;
 
   const { user } = useCurrentUser();
   const { canManageIntegrations } = usePermission(orgId);
   const { data: integrations, isLoading, isError, refetch } = useIntegrationStatus(orgId);
+  const { data: n8nStatus } = useN8nStatus(orgId);
   const disconnectMutation = useDisconnectIntegration(orgId);
 
   const [expandedService, setExpandedService] = useState<string | null>(null);
@@ -140,25 +143,71 @@ export default function ConnectionsPage() {
         <div className="flex items-center gap-3 border rounded-xl px-4 py-3.5 bg-emerald-500/10 border-emerald-500/20">
           <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
           <div>
-            <p className="text-lg font-bold leading-none mb-1 text-emerald-400">{connectedProviders.length}</p>
+            <p className="text-lg font-bold leading-none mb-1 text-emerald-400">{connectedProviders.length + (n8nStatus?.connected ? 1 : 0)}</p>
             <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Connected</p>
           </div>
         </div>
         <div className="flex items-center gap-3 border rounded-xl px-4 py-3.5 bg-zinc-900/50 border-zinc-800">
           <span className="w-2 h-2 rounded-full shrink-0 bg-zinc-600" />
           <div>
-            <p className="text-lg font-bold leading-none mb-1 text-zinc-400">{availableProviders.length}</p>
+            <p className="text-lg font-bold leading-none mb-1 text-zinc-400">{availableProviders.length + (n8nStatus?.connected ? 0 : 1)}</p>
             <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Available</p>
           </div>
         </div>
         <div className="flex items-center gap-3 border rounded-xl px-4 py-3.5 bg-zinc-900/50 border-zinc-800">
           <span className="w-2 h-2 rounded-full shrink-0 bg-zinc-600" />
           <div>
-            <p className="text-lg font-bold leading-none mb-1 text-zinc-400">{Object.keys(INTEGRATION_REGISTRY).length}</p>
+            <p className="text-lg font-bold leading-none mb-1 text-zinc-400">{Object.keys(INTEGRATION_REGISTRY).length + 1}</p>
             <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Total</p>
           </div>
         </div>
       </div>
+
+      {/* n8n Integration Card */}
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+            <i className="ti ti-device-analytics text-zinc-400"></i>
+            Workflow Automation
+          </h2>
+        </div>
+
+        <div
+          className={`rounded-2xl border overflow-hidden cursor-pointer transition-all hover:border-zinc-700 ${
+            n8nStatus?.connected
+              ? "bg-zinc-950/40 border-emerald-500/20 hover:border-emerald-500/30"
+              : "bg-zinc-950/30 border-zinc-900/80 hover:bg-zinc-950/60"
+          }`}
+          onClick={() => router.push(`/organization/${orgId}/connections/n8n`)}
+        >
+          <div className="p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+              <i className="ti ti-device-analytics text-zinc-200 text-xl"></i>
+            </div>
+
+            <div className="flex-grow min-w-0">
+              <div className="flex items-center gap-2.5 mb-1">
+                <p className="text-[14px] font-bold text-zinc-100">n8n</p>
+                <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                  n8nStatus?.connected
+                    ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                    : "bg-zinc-900 border-zinc-800 text-zinc-500"
+                }`}>
+                  {n8nStatus?.connected ? "Connected" : "Not Connected"}
+                </span>
+              </div>
+              <p className="text-[12px] text-zinc-500">Deploy workflows to your own n8n instance</p>
+              {n8nStatus?.connected && n8nStatus.baseUrl && (
+                <p className="text-[11px] text-zinc-600 font-mono mt-1 truncate">{n8nStatus.baseUrl}</p>
+              )}
+            </div>
+
+            <div className="shrink-0">
+              <i className="ti ti-chevron-right text-zinc-600 text-lg"></i>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Connected Services */}
       {connectedProviders.length > 0 && (
