@@ -113,7 +113,7 @@ export function AiLabsPanel({
           {messages.length > 0 && (
             <>
               <div className="h-px bg-white/5" />
-              <AiLabsChat messages={messages} isTyping={isTyping} />
+              <AiLabsChat messages={messages} isTyping={isTyping} orgId={organizationId} />
             </>
           )}
 
