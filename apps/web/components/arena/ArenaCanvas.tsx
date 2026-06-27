@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { initGame } from '../../lib/phaser/game';
 import { SpaceClient } from '../../lib/ws/space-client';
 import { env } from '../../lib/config/env';
@@ -52,6 +52,12 @@ export default function ArenaCanvas({
 }: ArenaCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const onAvatarClickedRef = useRef(onAvatarClicked);
+  onAvatarClickedRef.current = onAvatarClicked;
+
+  const stableOnAvatarClicked = useCallback((data: { userId: string; username: string; screenX: number; screenY: number }) => {
+    onAvatarClickedRef.current?.(data);
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -97,7 +103,7 @@ export default function ArenaCanvas({
     }
 
     if (!gameRef.current) {
-      gameRef.current = initGame(containerRef.current, spaceId, userId, spaceClient, proximityManager, onAvatarClicked, onProximityChange);
+      gameRef.current = initGame(containerRef.current, spaceId, userId, spaceClient, proximityManager, stableOnAvatarClicked, onProximityChange);
 
       const scene = gameRef.current.scene.keys.ArenaScene as Phaser.Scene | undefined;
       if (scene) {
