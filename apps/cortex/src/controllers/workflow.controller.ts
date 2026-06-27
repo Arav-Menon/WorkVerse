@@ -120,3 +120,24 @@ export async function listWorkspaceWorkflowsController(request: any, reply: any)
     return reply.status(500).send({ success: false, message: err.message ?? "Internal Server Error" });
   }
 }
+
+export async function listWorkspaceWorkflowHistoryController(request: any, reply: any) {
+  try {
+    const userId = request.user?.userId;
+    if (!userId) {
+      return reply.status(401).send({ success: false, message: "Unauthorized" });
+    }
+
+    const { workspaceId } = request.params;
+    if (!workspaceId) {
+      return reply.status(400).send({ success: false, message: "Workspace ID required" });
+    }
+
+    const history = await workflowService.getWorkspaceWorkflowHistory(workspaceId);
+
+    return reply.status(200).send({ success: true, data: history });
+  } catch (err: any) {
+    request.log.error(err);
+    return reply.status(500).send({ success: false, message: err.message ?? "Internal Server Error" });
+  }
+}
