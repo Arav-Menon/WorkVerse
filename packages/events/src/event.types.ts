@@ -16,4 +16,10 @@ export interface WorkflowEvent {
     organizationId: string;
     message: string;
     status: "mapping" | "completed" | "generating" | "failed";
+    workflowDbId?: string;
+    workflowId?: string;
+    workflowName?: string;
+    workflowUrl?: string;
+    integrations?: string[];
+    steps?: { id: string; service: string; action: string }[];
 }
