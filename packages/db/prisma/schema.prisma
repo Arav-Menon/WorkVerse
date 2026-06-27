@@ -69,6 +69,9 @@ model User {
   spaces              Space[]
   n8nConnections      OrganizationN8nConnection[]
   createdWorkflows   Workflow[]
+  dmConversations1    DirectMessageConversation[] @relation("DMUser1")
+  dmConversations2    DirectMessageConversation[] @relation("DMUser2")
+  sentDmMessages      DirectMessage[]
 }
 
 model Organization {
@@ -86,6 +89,7 @@ model Organization {
   connections         OrganizationConnection[]
   n8nConnection       OrganizationN8nConnection?
   workflows           Workflow[]
+  dmConversations     DirectMessageConversation[]
 }
 
 model OrganizationInvite {
@@ -340,19 +344,21 @@ enum ConnectionStatus {
 }
 
 model OrganizationConnection {
-  id                String           @id @default(uuid())
-  organizationId    String
-  provider          ConnectionProvider
-  providerAccountId String?
-  accessToken       String
-  refreshToken      String?
-  scopes            String?
-  metadata          Json?
-  status            ConnectionStatus @default(ACTIVE)
-  connectedAt       DateTime         @default(now())
-  lastSyncedAt      DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id                    String           @id @default(uuid())
+  organizationId        String
+  provider              ConnectionProvider
+  providerAccountId     String?
+  accessToken           String
+  refreshToken          String?
+  encryptedAccessToken  String           @default("")
+  encryptedRefreshToken String?
+  scopes                String?
+  metadata              Json?
+  status                ConnectionStatus @default(ACTIVE)
+  connectedAt           DateTime         @default(now())
+  lastSyncedAt          DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -443,4 +449,37 @@ model WorkflowExecution {
   workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
+}
+
+model DirectMessageConversation {
+  id             String   @id @default(uuid())
+  organizationId String
+  user1Id        String
+  user2Id        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user1        User             @relation("DMUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2        User             @relation("DMUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages     DirectMessage[]
+
+  @@unique([organizationId, user1Id, user2Id])
+  @@index([organizationId])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model DirectMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation DirectMessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }
