@@ -12,6 +12,19 @@ export interface AiMessage {
   content: string;
   timestamp: Date;
   type?: 'chat' | 'workflow' | 'error';
+  deploymentData?: WorkflowDeploymentData;
+}
+
+export interface WorkflowDeploymentData {
+  workflowDbId?: string;
+  workflowId: string;
+  workflowName: string;
+  workflowUrl: string;
+  integrations: string[];
+  steps: { id: string; service: string; action: string }[];
+  status: 'completed' | 'failed';
+  message: string;
+  timestamp: Date;
 }
 
 export interface WorkflowStatus {
@@ -86,6 +99,21 @@ export function useAiLabs({
           });
 
           if (msg.status === 'completed' || msg.status === 'failed') {
+            const deploymentData: WorkflowDeploymentData | undefined =
+              msg.workflowId && msg.workflowName
+                ? {
+                    workflowDbId: msg.workflowDbId,
+                    workflowId: msg.workflowId,
+                    workflowName: msg.workflowName,
+                    workflowUrl: msg.workflowUrl ?? '',
+                    integrations: msg.integrations ?? [],
+                    steps: msg.steps ?? [],
+                    status: msg.status as 'completed' | 'failed',
+                    message: msg.message ?? '',
+                    timestamp: new Date(),
+                  }
+                : undefined;
+
             setMessages((prev) => [
               ...prev,
               {
@@ -96,6 +124,7 @@ export function useAiLabs({
                   : `Workflow failed: ${msg.message || 'Unknown error'}`,
                 timestamp: new Date(),
                 type: 'workflow',
+                deploymentData,
               },
             ]);
 
