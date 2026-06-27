@@ -67,6 +67,8 @@ model User {
   organizationInvites OrganizationInvite[]
   chatMessages        ChatMessage[]
   spaces              Space[]
+  n8nConnections      OrganizationN8nConnection[]
+  createdWorkflows   Workflow[]
 }
 
 model Organization {
@@ -82,6 +84,8 @@ model Organization {
   organizationInvites OrganizationInvite[]
   spaces              Space[]
   connections         OrganizationConnection[]
+  n8nConnection       OrganizationN8nConnection?
+  workflows           Workflow[]
 }
 
 model OrganizationInvite {
@@ -356,6 +360,24 @@ model OrganizationConnection {
   @@index([organizationId])
 }
 
+model OrganizationN8nConnection {
+  id              String   @id @default(uuid())
+  organizationId  String
+  baseUrl         String
+  encryptedApiKey String
+  connectedById   String
+  connectedBy     User     @relation(fields: [connectedById], references: [id])
+  status          String   @default("CONNECTED")
+  lastValidatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId])
+  @@index([organizationId])
+}
+
 model Space {
   id          String       @id @default(uuid())
   name        String       @default("Main")
@@ -372,4 +394,53 @@ model Space {
   @@unique([workspaceId])
   @@index([workspaceId])
   @@index([orgId])
+}
+
+model Workflow {
+  id               String   @id @default(uuid())
+  organizationId   String
+  workspaceId      String
+  createdById      String
+  name             String
+  description      String?
+  prompt           String
+  workflowPlan     Json?
+  mappedWorkflow   Json?
+  executionType    String   @default("N8N")
+  status           String   @default("DRAFT")
+  deploymentStatus String   @default("PENDING")
+  integrations     String[]
+  steps            Json?
+  n8nWorkflowId    String?
+  n8nWorkflowUrl   String?
+  promptId         String   @unique
+  version          Int      @default(1)
+  lastExecutedAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User             @relation(fields: [createdById], references: [id])
+  executions   WorkflowExecution[]
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([createdById])
+  @@index([promptId])
+}
+
+model WorkflowExecution {
+  id         String    @id @default(uuid())
+  workflowId String
+  status     String    @default("RUNNING")
+  startedAt  DateTime  @default(now())
+  completedAt DateTime?
+  duration   Int?
+  logs       String?
+  error      String?
+  triggerType String  @default("MANUAL")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
 }
