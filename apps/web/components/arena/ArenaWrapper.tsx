@@ -8,12 +8,16 @@ import { useOrganization } from '../../hooks/use-organization';
 import { useWorkspace } from '../../hooks/use-workspaces';
 import { useWebRTC } from '../../hooks/use-webrtc';
 import { useCallManager, type CallState } from '../../hooks/use-call-manager';
+import { useDm } from '../../hooks/use-dm';
+import { toast } from 'sonner';
+import { env } from '../../lib/config/env';
 import { ArenaHUD } from './ArenaHUD';
 import { ArenaDock } from './ArenaDock';
 import { ChatPanel, type ChatMessage } from './ChatPanel';
 import { ParticipantsPanel } from './ParticipantsPanel';
 import { AiLabsPanel } from './AiLabsPanel';
 import { AvatarContextMenu } from './AvatarContextMenu';
+import { DirectMessagePanel } from './DirectMessagePanel';
 import { IncomingCallModal } from './IncomingCallModal';
 import { VideoCallOverlay } from './VideoCallOverlay';
 import { LocalVideoPreview } from './LocalVideoPreview';
@@ -73,6 +77,11 @@ export function ArenaWrapper({
     y: number;
   } | null>(null);
 
+  const [dmTarget, setDmTarget] = useState<{
+    userId: string;
+    username: string;
+  } | null>(null);
+
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const prevCallStateRef = useRef<CallState>('idle');
@@ -82,6 +91,7 @@ export function ArenaWrapper({
   const ignoredUsersRef = useRef<Set<string>>(new Set());
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const openDmRef = useRef<(userId: string, username: string) => void>(() => {});
 
   const { data: org } = useOrganization(orgId ?? '');
   const { data: workspace } = useWorkspace(orgId ?? '', workspaceId ?? '');
@@ -89,10 +99,41 @@ export function ArenaWrapper({
   const orgName = orgNameProp ?? org?.name;
   const workspaceName = workspaceNameProp ?? workspace?.name;
 
+  const dm = useDm({
+    organizationId: orgId || '',
+    currentUserId: user?.id || '',
+    enabled: !!user && !!orgId,
+    onNewMessage: (msg) => {
+      console.log('[DM_RECEIVED] New DM from', msg.senderName, ':', msg.content);
+      toast.custom((t) => (
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900 border border-white/10 shadow-2xl">
+          <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold shrink-0">
+            {msg.senderName?.[0]?.toUpperCase() || '?'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white">{msg.senderName}</p>
+            <p className="text-xs text-gray-400 truncate">{msg.content}</p>
+          </div>
+          <button
+            onClick={() => {
+              console.log('[OPEN_CHAT] Opening DM panel for', msg.senderName);
+              toast.dismiss(t);
+              openDmRef.current(msg.senderId, msg.senderName);
+            }}
+            className="px-3 py-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 rounded-lg transition-colors shrink-0"
+          >
+            Open Chat
+          </button>
+        </div>
+      ), { duration: 8000 });
+    },
+  });
+
   const webRTC = useWebRTC({
     roomId: spaceId,
     userId: user?.id || '',
     token,
+    relayUrl: env.RELAY_URL,
     enabled: !!user && !!token,
   });
 
@@ -231,21 +272,29 @@ export function ArenaWrapper({
     }
   }, [isCameraOn, callManager.callState, webRTC.startVideo, webRTC.stopVideo]);
 
-  const handleAvatarClicked = useCallback((data: { userId: string; username: string; screenX: number; screenY: number }) => {
-    if (callManager.callState !== 'idle') return;
-    const user = remoteUsers.find(u => u.userId === data.userId);
-    setContextMenu({
-      userId: data.userId,
-      username: data.username,
-      userColor: user?.color,
-      x: data.screenX,
-      y: data.screenY,
-    });
-  }, [callManager.callState, remoteUsers]);
-
   const handleStartCall = useCallback((targetUserId: string, targetName: string, type: 'video' | 'audio') => {
     callManager.requestCall(targetUserId, targetName, type);
   }, [callManager]);
+
+  const handleStartDm = useCallback(async (targetUserId: string, targetUsername: string) => {
+    console.log(`[DM_PANEL] handleStartDm called for ${targetUsername} (${targetUserId})`);
+    setContextMenu(null);
+    setDmTarget({ userId: targetUserId, username: targetUsername });
+    await dm.startConversation(targetUserId);
+  }, [dm]);
+
+  openDmRef.current = handleStartDm;
+
+  const handleAvatarClicked = useCallback((data: { userId: string; username: string; screenX: number; screenY: number }) => {
+    console.log(`[DM_PANEL] handleAvatarClicked called for ${data.username}, callState=${callManager.callState}`);
+    if (callManager.callState !== 'idle') return;
+    handleStartDm(data.userId, data.username);
+  }, [callManager.callState, handleStartDm]);
+
+  const handleCloseDm = useCallback(() => {
+    dm.closeConversation();
+    setDmTarget(null);
+  }, [dm]);
 
   const handleAcceptCall = useCallback(() => {
     callManager.acceptCall();
@@ -449,6 +498,7 @@ export function ArenaWrapper({
         onOpenParticipants={() => togglePanel('participants')}
         onOpenAiLabs={() => togglePanel('ai-labs')}
         onLeave={handleLeave}
+        unreadDmCount={dm.totalUnreadCount}
       />
 
       {activePanel === 'chat' && (
@@ -466,6 +516,7 @@ export function ArenaWrapper({
           onClose={() => setActivePanel(null)}
           users={remoteUsers}
           onlineCount={onlineCount}
+          onSendMessage={handleStartDm}
         />
       )}
       {activePanel === 'ai-labs' && orgId && workspaceId && (
@@ -488,6 +539,28 @@ export function ArenaWrapper({
           y={contextMenu.y}
           onClose={() => setContextMenu(null)}
           onStartCall={handleStartCall}
+          onSendMessage={handleStartDm}
+        />
+      )}
+
+      {dmTarget && dm.activeConversationId && (
+        <DirectMessagePanel
+          isOpen={true}
+          onClose={handleCloseDm}
+          otherUser={{
+            id: dmTarget.userId,
+            name: dmTarget.username,
+            email: '',
+          }}
+          messages={dm.messages}
+          typingUsers={dm.typingUsers}
+          currentUserId={user.id}
+          onSendMessage={dm.sendMessage}
+          onLoadMore={() => dm.activeConversationId && dm.loadMessages(dm.activeConversationId)}
+          hasMore={dm.messages.length >= 50}
+          onStartTyping={dm.startTyping}
+          isOnline={remoteUsers.some(u => u.userId === dmTarget.userId)}
+          userColor={remoteUsers.find(u => u.userId === dmTarget.userId)?.color || '#6366f1'}
         />
       )}
 
