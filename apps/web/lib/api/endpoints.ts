@@ -41,5 +41,14 @@ export const API_ENDPOINTS = {
         GET: (orgId: string, workflowId: string) => `/api/v1/organizations/${orgId}/workflows/${workflowId}`,
         DELETE: (orgId: string, workflowId: string) => `/api/v1/organizations/${orgId}/workflows/${workflowId}`,
         LIST_WORKSPACE: (workspaceId: string) => `/api/v1/organizations/workspaces/${workspaceId}/workflows`,
+        HISTORY: (workspaceId: string) => `/api/v1/organizations/workspaces/${workspaceId}/workflows/history`,
+    },
+    DM: {
+        CREATE_CONVERSATION: (orgId: string) => `/api/v1/organizations/${orgId}/dm/conversations`,
+        LIST_CONVERSATIONS: (orgId: string) => `/api/v1/organizations/${orgId}/dm/conversations`,
+        GET_MESSAGES: (orgId: string, conversationId: string) => `/api/v1/organizations/${orgId}/dm/conversations/${conversationId}/messages`,
+        SEND_MESSAGE: (orgId: string, conversationId: string) => `/api/v1/organizations/${orgId}/dm/conversations/${conversationId}/messages`,
+        MARK_READ: (orgId: string, conversationId: string) => `/api/v1/organizations/${orgId}/dm/conversations/${conversationId}/read`,
+        SEND_TYPING: (orgId: string, conversationId: string) => `/api/v1/organizations/${orgId}/dm/conversations/${conversationId}/typing`,
     }
 }
