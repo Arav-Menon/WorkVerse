@@ -1,6 +1,7 @@
 import axios from "axios";
 import { OAuthProviders } from "../../oauth/index";
 import { db } from "@repo/db/db";
+import { encrypt } from "../crypto/encryption.service";
 
 class OAuthService {
     getProvider(provider: string) {
@@ -93,8 +94,10 @@ class OAuthService {
                 },
             },
             update: {
-                accessToken,
+                accessToken: accessToken,
                 refreshToken: refreshToken || undefined,
+                encryptedAccessToken: encrypt(accessToken),
+                encryptedRefreshToken: refreshToken ? encrypt(refreshToken) : undefined,
                 status: "ACTIVE",
                 connectedAt: new Date(),
                 metadata: expiresIn ? { expiresIn } : undefined,
@@ -102,8 +105,10 @@ class OAuthService {
             create: {
                 organizationId,
                 provider: provider.toUpperCase() as any,
-                accessToken,
+                accessToken: accessToken,
                 refreshToken: refreshToken || undefined,
+                encryptedAccessToken: encrypt(accessToken),
+                encryptedRefreshToken: refreshToken ? encrypt(refreshToken) : undefined,
                 scopes: config.scopes,
                 status: "ACTIVE",
                 metadata: expiresIn ? { expiresIn } : undefined,
