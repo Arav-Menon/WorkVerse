@@ -42,6 +42,12 @@ export function registerWorklfowEvents() {
         workspaceId: payload.workSpaceId,
         promptId: payload.promptId,
         content: payload.content,
+        workflowDbId: payload.workflowDbId,
+        workflowId: payload.workflowId,
+        workflowName: payload.workflowName,
+        workflowUrl: payload.workflowUrl,
+        integrations: payload.integrations,
+        steps: payload.steps,
       }))
     }
 
