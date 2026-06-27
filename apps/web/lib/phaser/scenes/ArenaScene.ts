@@ -54,6 +54,7 @@ export class ArenaScene extends Phaser.Scene {
     this.proximityManager = data.proximityManager || null;
     this.onAvatarClicked = data.onAvatarClicked || null;
     this.onProximityChange = data.onProximityChange || null;
+    console.log('[AVATAR_CLICK] onAvatarClicked assigned:', !!this.onAvatarClicked);
   }
 
   preload() { /* Shapes-only MVP — no external assets needed */ }
@@ -107,11 +108,15 @@ export class ArenaScene extends Phaser.Scene {
     // Avatar click detection
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      console.log(`[AVATAR_CLICK] pointerdown at world (${Math.round(worldPoint.x)}, ${Math.round(worldPoint.y)}), remotePlayers: ${this.remotePlayers.size}`);
       for (const [userId, remotePlayer] of this.remotePlayers) {
         const container = remotePlayer.getContainer();
-        const bounds = container.getBounds();
-        if (bounds.contains(worldPoint.x, worldPoint.y)) {
-          this.events.emit('avatar-clicked', {
+        const dx = worldPoint.x - container.x;
+        const dy = worldPoint.y - container.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= 24) {
+          console.log(`[AVATAR_CLICK] Match found for ${remotePlayer.getName()} (${remotePlayer.getId()}), calling onAvatarClicked`);
+          this.onAvatarClicked?.({
             userId: remotePlayer.getId(),
             username: remotePlayer.getName(),
             screenX: pointer.x,
