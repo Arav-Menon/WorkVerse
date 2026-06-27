@@ -10,6 +10,7 @@ interface AvatarContextMenuProps {
   y: number;
   onClose: () => void;
   onStartCall: (userId: string, username: string, type: 'video' | 'audio') => void;
+  onSendMessage?: (userId: string, username: string) => void;
   onViewProfile?: (userId: string) => void;
 }
 
@@ -21,29 +22,41 @@ export function AvatarContextMenu({
   y,
   onClose,
   onStartCall,
+  onSendMessage,
   onViewProfile,
 }: AvatarContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
+    let mouseHandler: ((e: MouseEvent) => void) | null = null;
+
+    // Defer mousedown listener so the same event that opened the menu
+    // doesn't immediately trigger the close handler
+    const timer = setTimeout(() => {
+      mouseHandler = (e: MouseEvent) => {
+        if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+          onClose();
+        }
+      };
+      document.addEventListener('mousedown', mouseHandler);
+    }, 0);
+
     const escHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    document.addEventListener('mousedown', handler);
     document.addEventListener('keydown', escHandler);
+
     return () => {
-      document.removeEventListener('mousedown', handler);
+      clearTimeout(timer);
+      if (mouseHandler) {
+        document.removeEventListener('mousedown', mouseHandler);
+      }
       document.removeEventListener('keydown', escHandler);
     };
   }, [onClose]);
 
   const menuLeft = Math.min(x, window.innerWidth - 200);
-  const menuTop = Math.min(y, window.innerHeight - 220);
+  const menuTop = Math.min(y, window.innerHeight - 260);
 
   return (
     <div
@@ -69,6 +82,20 @@ export function AvatarContextMenu({
       </div>
 
       <div className="py-1">
+        {onSendMessage && (
+          <button
+            onClick={() => {
+              onSendMessage(userId, username);
+              onClose();
+            }}
+            className="w-full px-3 py-2 text-left text-[13px] text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2.5 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Send Message
+          </button>
+        )}
         <button
           onClick={() => {
             onStartCall(userId, username, 'video');
