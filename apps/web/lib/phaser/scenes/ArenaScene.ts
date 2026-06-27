@@ -14,6 +14,8 @@ import { OccupancySystem } from '../systems/OccupancySystem';
 import { MicroAnimationSystem } from '../systems/MicroAnimationSystem';
 import type { SpaceUser } from '../types/arena.types';
 import type { SpaceClient } from '../../ws/space-client';
+import type { ProximityWebRTCManager } from '../../webrtc/proximity-manager';
+import type { ProximityUser } from '../systems/ProximitySystem';
 
 const C = WorldConfig.colors;
 const { width: W, height: H } = WorldConfig.bounds;
@@ -36,16 +38,22 @@ export class ArenaScene extends Phaser.Scene {
   private spaceId: string = '';
   private localUserId: string = '';
   private spaceClient: SpaceClient | null = null;
+  private proximityManager: ProximityWebRTCManager | null = null;
+  private onAvatarClicked: ((data: { userId: string; username: string; screenX: number; screenY: number }) => void) | null = null;
+  private onProximityChange: ((users: ProximityUser[]) => void) | null = null;
   private lastSentPosition = { x: 0, y: 0 };
 
   constructor() {
     super({ key: 'ArenaScene' });
   }
 
-  init(data: { spaceId: string; localUserId: string; spaceClient?: SpaceClient }) {
+  init(data: { spaceId: string; localUserId: string; spaceClient?: SpaceClient; proximityManager?: ProximityWebRTCManager; onAvatarClicked?: (data: { userId: string; username: string; screenX: number; screenY: number }) => void; onProximityChange?: (users: ProximityUser[]) => void }) {
     this.spaceId = data.spaceId;
     this.localUserId = data.localUserId;
     this.spaceClient = data.spaceClient || null;
+    this.proximityManager = data.proximityManager || null;
+    this.onAvatarClicked = data.onAvatarClicked || null;
+    this.onProximityChange = data.onProximityChange || null;
   }
 
   preload() { /* Shapes-only MVP — no external assets needed */ }
@@ -76,6 +84,12 @@ export class ArenaScene extends Phaser.Scene {
     this.cameraSystem = new CameraSystem(this);
     this.collisionSystem = new CollisionSystem();
     this.proximitySystem = new ProximitySystem();
+    if (this.proximityManager) {
+      this.proximitySystem.setProximityManager(this.proximityManager);
+    }
+    if (this.onProximityChange) {
+      this.proximitySystem.setOnProximityChange(this.onProximityChange);
+    }
     this.interactionSystem = new InteractionSystem(this);
     this.occupancySystem = new OccupancySystem(this);
     this.microAnimationSystem = new MicroAnimationSystem(this);
@@ -89,6 +103,24 @@ export class ArenaScene extends Phaser.Scene {
 
     // Set camera bounds for animation culling
     this.microAnimationSystem.setCameraBounds(new Phaser.Geom.Rectangle(0, 0, W, H));
+
+    // Avatar click detection
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      for (const [userId, remotePlayer] of this.remotePlayers) {
+        const container = remotePlayer.getContainer();
+        const bounds = container.getBounds();
+        if (bounds.contains(worldPoint.x, worldPoint.y)) {
+          this.events.emit('avatar-clicked', {
+            userId: remotePlayer.getId(),
+            username: remotePlayer.getName(),
+            screenX: pointer.x,
+            screenY: pointer.y,
+          });
+          break;
+        }
+      }
+    });
   }
 
   update(time: number, delta: number) {
