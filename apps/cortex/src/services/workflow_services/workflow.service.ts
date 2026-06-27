@@ -1,4 +1,7 @@
 import { db } from "@repo/db/db";
+import { client } from "@repo/redis/redis-client";
+
+const WORKFLOW_HISTORY_TTL = 300; // 5 minutes
 
 interface CreateWorkflowInput {
   organizationId: string;
@@ -18,6 +21,14 @@ interface DeployWorkflowInput {
   mappedWorkflow?: unknown;
   integrations?: string[];
   steps?: { id: string; service: string; action: string }[];
+}
+
+async function invalidateWorkspaceCache(workspaceId: string) {
+  try {
+    await client.del(`workflow:history:${workspaceId}`);
+  } catch {
+    // Cache invalidation failure is non-critical
+  }
 }
 
 class WorkflowService {
@@ -45,6 +56,7 @@ class WorkflowService {
       },
     });
 
+    await invalidateWorkspaceCache(input.workspaceId);
     return workflow;
   }
 
@@ -61,7 +73,7 @@ class WorkflowService {
   }
 
   async updateToDeployed(workflowId: string, input: DeployWorkflowInput) {
-    return db.workflow.update({
+    const result = await db.workflow.update({
       where: { id: workflowId },
       data: {
         status: "ACTIVE",
@@ -80,19 +92,26 @@ class WorkflowService {
         n8nWorkflowId: true,
         n8nWorkflowUrl: true,
         integrations: true,
+        workspaceId: true,
       },
     });
+
+    await invalidateWorkspaceCache(result.workspaceId);
+    return result;
   }
 
   async updateToFailed(workflowId: string, error: string) {
-    return db.workflow.update({
+    const result = await db.workflow.update({
       where: { id: workflowId },
       data: {
         status: "FAILED",
         deploymentStatus: "FAILED",
       },
-      select: { id: true, status: true, deploymentStatus: true },
+      select: { id: true, status: true, deploymentStatus: true, workspaceId: true },
     });
+
+    await invalidateWorkspaceCache(result.workspaceId);
+    return result;
   }
 
   async getWorkflow(workflowId: string) {
@@ -170,12 +189,70 @@ class WorkflowService {
     });
   }
 
+  async getWorkspaceWorkflowHistory(workspaceId: string) {
+    const cacheKey = `workflow:history:${workspaceId}`;
+
+    try {
+      const cached = await client.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch {
+      // Cache read failure is non-critical, fall through to DB
+    }
+
+    const workflows = await db.workflow.findMany({
+      where: { workspaceId, status: { not: "DELETED" } },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        deploymentStatus: true,
+        integrations: true,
+        steps: true,
+        n8nWorkflowId: true,
+        n8nWorkflowUrl: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    const history = workflows.map((w) => ({
+      workflowDbId: w.id,
+      workflowId: w.n8nWorkflowId ?? "",
+      workflowName: w.name,
+      workflowUrl: w.n8nWorkflowUrl ?? "",
+      integrations: w.integrations,
+      steps: (w.steps as { id: string; service: string; action: string }[]) ?? [],
+      status: w.deploymentStatus === "DEPLOYED" ? "completed" : "failed",
+      message:
+        w.deploymentStatus === "DEPLOYED"
+          ? "Workflow deployed successfully"
+          : w.deploymentStatus === "FAILED"
+            ? "Workflow deployment failed"
+            : `Workflow status: ${w.deploymentStatus}`,
+      timestamp: w.createdAt.toISOString(),
+    }));
+
+    try {
+      await client.set(cacheKey, JSON.stringify(history), "EX", WORKFLOW_HISTORY_TTL);
+    } catch {
+      // Cache write failure is non-critical
+    }
+
+    return history;
+  }
+
   async deleteWorkflow(workflowId: string) {
-    return db.workflow.update({
+    const result = await db.workflow.update({
       where: { id: workflowId },
       data: { status: "DELETED" },
-      select: { id: true, status: true },
+      select: { id: true, status: true, workspaceId: true },
     });
+
+    await invalidateWorkspaceCache(result.workspaceId);
+    return result;
   }
 
   async getWorkflowByPromptId(promptId: string) {
