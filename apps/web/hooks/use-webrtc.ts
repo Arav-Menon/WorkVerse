@@ -251,7 +251,11 @@ export function useWebRTC({
       console.log(`[PRODUCER] Audio producer created: ${producer.id}`);
       return stream;
     } catch (err: any) {
-      console.error('[MIC] Failed to start audio:', err);
+      if (err?.name === 'NotAllowedError') {
+        console.warn('[MIC] Mic permission denied by user');
+      } else {
+        console.error('[MIC] Failed to start audio:', err);
+      }
       updateState({ error: `Mic access failed: ${err.message}` });
       return null;
     } finally {
@@ -346,7 +350,11 @@ export function useWebRTC({
       console.log(`[PRODUCER] Video producer created: ${producer.id}`);
       return stream;
     } catch (err: any) {
-      console.error('[CAMERA] Failed to start video:', err);
+      if (err?.name === 'NotAllowedError') {
+        console.warn('[CAMERA] Camera permission denied by user');
+      } else {
+        console.error('[CAMERA] Failed to start video:', err);
+      }
       updateState({ error: `Camera access failed: ${err.message}` });
       return null;
     } finally {
