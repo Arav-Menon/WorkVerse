@@ -4,6 +4,7 @@ import { mapWorkflowToN8n } from "../transformer/mapper";
 import { client } from "@repo/redis";
 import { EventBus, type WorkflowEvent } from "@repo/events"
 import { db } from "@repo/db/db";
+import { injectCredentials } from "./credential-injection";
 
 const REDIS_WORKFLOW_TTL_SECONDS = 3600;
 
@@ -87,6 +88,34 @@ while (true) {
     await EventBus.publish("workflow_event", workflowPayload)
 
     const workflow_json = mapWorkflowToN8n(orionWorkflow as any, parsed.name || "Generated Workflow");
+
+    // ─── Credential Resolution ──────────────────────────────────────────────
+    workflowPayload.status = "resolving";
+    workflowPayload.message = "Resolving organization credentials...";
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload), "EX", REDIS_WORKFLOW_TTL_SECONDS);
+    await EventBus.publish("workflow_event", workflowPayload);
+
+    let resolvedIntegrations: string[] = [];
+    try {
+      const injectionResult = await injectCredentials(workflow_json, organizationId);
+      resolvedIntegrations = injectionResult.resolvedServices;
+
+      if (injectionResult.missingServices.length > 0) {
+        console.warn(
+          `[Workflow Forger] Missing integrations for org ${organizationId}:`,
+          injectionResult.missingServices
+        );
+      }
+
+      console.log(
+        `[Workflow Forger] Resolved credentials for:`,
+        resolvedIntegrations
+      );
+    } catch (error: any) {
+      console.error(`[Workflow Forger] Credential injection failed: ${error.message}`);
+      // Continue with deployment - workflow will be created but may lack credentials
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     await db.workflow.update({
       where: { id: workflowRecord.id },
