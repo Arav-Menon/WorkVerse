@@ -3,6 +3,9 @@ import { createWorkflow } from "./workflow-job";
 import { mapWorkflowToN8n } from "../transformer/mapper";
 import { client } from "@repo/redis";
 import { EventBus, type WorkflowEvent } from "@repo/events"
+import { db } from "@repo/db/db";
+
+const REDIS_WORKFLOW_TTL_SECONDS = 3600;
 
 while (true) {
 
@@ -41,6 +44,34 @@ while (true) {
       }
     };
 
+    const allSteps = orionWorkflow.workflow.steps;
+    const uniqueIntegrations = [...new Set(allSteps.map((s: any) => s.service).filter(Boolean))];
+    const stepList = allSteps.map((s: any) => ({
+      id: s.id,
+      service: s.service || 'unknown',
+      action: s.action || 'execute',
+    }));
+
+    let workflowRecord = await db.workflow.findUnique({ where: { promptId } });
+    if (!workflowRecord) {
+      workflowRecord = await db.workflow.create({
+        data: {
+          organizationId,
+          workspaceId,
+          createdById: userId,
+          name: parsed.name || "Generated Workflow",
+          prompt: JSON.stringify(parsed),
+          promptId,
+          workflowPlan: parsed.execution_plan,
+          status: "DRAFT",
+          deploymentStatus: "MAPPING",
+          executionType: "N8N",
+          description: parsed.description,
+        },
+      });
+      console.log(`[Workflow Forger] Created workflow record: ${workflowRecord.id}`);
+    }
+
     const workflowPayload: WorkflowEvent = {
       promptId,
       userId,
@@ -49,32 +80,51 @@ while (true) {
       workspaceId,
       status: "mapping",
       message: "Converting workflow into executable steps...",
+      workflowId: workflowRecord.id,
     };
-    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload), "EX", REDIS_WORKFLOW_TTL_SECONDS);
 
     await EventBus.publish("workflow_event", workflowPayload)
 
     const workflow_json = mapWorkflowToN8n(orionWorkflow as any, parsed.name || "Generated Workflow");
 
+    await db.workflow.update({
+      where: { id: workflowRecord.id },
+      data: { status: "GENERATED", deploymentStatus: "GENERATING", mappedWorkflow: workflow_json as any },
+    });
+
     workflowPayload.status = "generating";
     workflowPayload.message = "Pushing workflow to n8n engine...";
-    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload), "EX", REDIS_WORKFLOW_TTL_SECONDS);
     await EventBus.publish("workflow_event", workflowPayload);
 
     delete (workflow_json as any).active;
     delete (workflow_json as any).versionId;
     delete (workflow_json as any).id;
 
-    await createWorkflow(workflow_json);
+    const n8nResult = await createWorkflow(workflow_json, organizationId);
+
+    await db.workflow.update({
+      where: { id: workflowRecord.id },
+      data: {
+        status: "ACTIVE",
+        deploymentStatus: "DEPLOYED",
+        n8nWorkflowId: n8nResult.id,
+        n8nWorkflowUrl: `${n8nResult.baseUrl}/workflow/${n8nResult.id}`,
+        integrations: uniqueIntegrations,
+        steps: stepList,
+      },
+    });
 
     workflowPayload.status = "completed";
-    workflowPayload.message = "Workflow successfully created and ready to use!";
-    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload));
+    workflowPayload.message = "Workflow deployed successfully";
+    workflowPayload.workflowId = n8nResult.id;
+    workflowPayload.workflowName = n8nResult.name;
+    workflowPayload.workflowUrl = `${n8nResult.baseUrl}/workflow/${n8nResult.id}`;
+    workflowPayload.integrations = uniqueIntegrations;
+    workflowPayload.steps = stepList;
+    await client.set(`workflow${promptId}:access`, JSON.stringify(workflowPayload), "EX", REDIS_WORKFLOW_TTL_SECONDS);
 
-    // TODO :- Add the workflow exectution to the db throw queue not directly.
-    // given an example
-    // and also setup the bullMQ too before the inserting to the db; 
-    // await db.workflowJob.update({ where : { promptId } }); 
     await EventBus.publish("workflow_event", workflowPayload);
 
   } catch (error: any) {
@@ -89,6 +139,14 @@ while (true) {
       const organizationId = record?.message?.organizationId;
 
       if (promptId) {
+        const existingWorkflow = await db.workflow.findUnique({ where: { promptId } });
+        if (existingWorkflow) {
+          await db.workflow.update({
+            where: { id: existingWorkflow.id },
+            data: { status: "FAILED", deploymentStatus: "FAILED" },
+          });
+        }
+
         await EventBus.publish("workflow_event", {
           promptId,
           userId: userId ?? "",
@@ -97,6 +155,7 @@ while (true) {
           organizationId: organizationId ?? "",
           status: "failed",
           message: error?.message ?? "Workflow execution failed",
+          workflowId: existingWorkflow?.id,
         });
       }
     } catch (pubError) {
