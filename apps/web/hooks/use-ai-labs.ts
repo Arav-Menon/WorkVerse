@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { FluxClient, type FluxMessage } from '../lib/ws/flux-client';
 import { apiClient } from '../lib/api/client';
 import { API_ENDPOINTS } from '../lib/api/endpoints';
+import { workflowApi, type WorkflowHistoryItem } from '../lib/api/workflow.api';
 import { env } from '../lib/config/env';
 
 export interface AiMessage {
@@ -254,20 +255,23 @@ export function useAiLabs({
     if (historyLoaded || !workspaceId) return;
 
     try {
-      const response = await apiClient.get(API_ENDPOINTS.AI_CHAT.HISTORY(workspaceId), {
-        params: { workspaceId, limit: 20 },
-      });
-      const data = response.data;
+      const [chatResponse, workflowHistory] = await Promise.all([
+        apiClient.get(API_ENDPOINTS.AI_CHAT.HISTORY(workspaceId), {
+          params: { workspaceId, limit: 20 },
+        }),
+        workflowApi.getHistoryByWorkspace(workspaceId).catch(() => []),
+      ]);
+
+      const data = chatResponse.data;
+      const allItems: AiMessage[] = [];
 
       if (data.messages?.length > 0) {
-        const historyMessages: AiMessage[] = [];
-
         for (const msg of data.messages) {
           const content = typeof msg.content === 'string'
             ? msg.content
             : JSON.stringify(msg.content);
 
-          historyMessages.push({
+          allItems.push({
             id: msg.id,
             role: msg.role === 'ASSISTANT' ? 'assistant' : 'user',
             content,
@@ -275,13 +279,38 @@ export function useAiLabs({
             type: 'chat',
           });
         }
-
-        setMessages(historyMessages);
       }
 
+      if (workflowHistory.length > 0) {
+        for (const wf of workflowHistory) {
+          allItems.push({
+            id: `wf-history-${wf.workflowDbId}`,
+            role: 'assistant',
+            content: wf.status === 'completed'
+              ? `Workflow ${wf.message || 'created successfully'}`
+              : `Workflow failed: ${wf.message || 'Unknown error'}`,
+            timestamp: new Date(wf.timestamp),
+            type: 'workflow',
+            deploymentData: {
+              workflowDbId: wf.workflowDbId,
+              workflowId: wf.workflowId,
+              workflowName: wf.workflowName,
+              workflowUrl: wf.workflowUrl,
+              integrations: wf.integrations,
+              steps: wf.steps,
+              status: wf.status,
+              message: wf.message,
+              timestamp: new Date(wf.timestamp),
+            },
+          });
+        }
+      }
+
+      allItems.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      setMessages(allItems);
       setHistoryLoaded(true);
     } catch (err) {
-      console.warn('[useAiLabs] Failed to load chat history:', err);
+      console.warn('[useAiLabs] Failed to load history:', err);
     }
   }, [workspaceId, historyLoaded]);
 
