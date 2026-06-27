@@ -15,6 +15,7 @@ interface ArenaDockProps {
   onOpenParticipants: () => void;
   onOpenAiLabs: () => void;
   onLeave: () => void;
+  unreadDmCount?: number;
 }
 
 interface DockButtonProps {
@@ -69,6 +70,7 @@ export function ArenaDock({
   onOpenParticipants,
   onOpenAiLabs,
   onLeave,
+  unreadDmCount = 0,
 }: ArenaDockProps) {
   return (
     <div
@@ -135,9 +137,19 @@ export function ArenaDock({
 
       {/* Chat */}
       <DockButton onClick={onOpenChat} label="Chat">
-        <svg className="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
+        <div className="relative">
+          <svg className="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          {unreadDmCount > 0 && (
+            <span
+              className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[8px] font-bold text-white px-1"
+              style={{ background: '#6366f1' }}
+            >
+              {unreadDmCount > 99 ? '99+' : unreadDmCount}
+            </span>
+          )}
+        </div>
       </DockButton>
 
       {/* Participants */}
