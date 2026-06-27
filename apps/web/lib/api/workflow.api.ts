@@ -29,6 +29,18 @@ export interface WorkflowDetail extends Workflow {
   updatedAt: string;
 }
 
+export interface WorkflowHistoryItem {
+  workflowDbId: string;
+  workflowId: string;
+  workflowName: string;
+  workflowUrl: string;
+  integrations: string[];
+  steps: { id: string; service: string; action: string }[];
+  status: "completed" | "failed";
+  message: string;
+  timestamp: string;
+}
+
 export const workflowApi = {
   listByOrg: async (orgId: string): Promise<Workflow[]> => {
     const response = await apiClient.get(API_ENDPOINTS.WORKFLOW.LIST_ORG(orgId));
@@ -46,6 +58,11 @@ export const workflowApi = {
 
   listByWorkspace: async (workspaceId: string): Promise<Workflow[]> => {
     const response = await apiClient.get(API_ENDPOINTS.WORKFLOW.LIST_WORKSPACE(workspaceId));
+    return response.data.data;
+  },
+
+  getHistoryByWorkspace: async (workspaceId: string): Promise<WorkflowHistoryItem[]> => {
+    const response = await apiClient.get(API_ENDPOINTS.WORKFLOW.HISTORY(workspaceId));
     return response.data.data;
   },
 };
