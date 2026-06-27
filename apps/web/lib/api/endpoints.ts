@@ -29,5 +29,17 @@ export const API_ENDPOINTS = {
     AI_CHAT: {
         HISTORY: (workspaceId : string) => `/api/v1/ai-chats`,
         DELETE_HISTORY: (workspaceId : string) => `/api/v1/ai-chats`,
+    },
+    N8N: {
+        CONNECT: (orgId: string) => `/api/v1/organizations/${orgId}/n8n/connect`,
+        STATUS: (orgId: string) => `/api/v1/organizations/${orgId}/n8n/status`,
+        TEST: (orgId: string) => `/api/v1/organizations/${orgId}/n8n/test`,
+        DISCONNECT: (orgId: string) => `/api/v1/organizations/${orgId}/n8n/disconnect`,
+    },
+    WORKFLOW: {
+        LIST_ORG: (orgId: string) => `/api/v1/organizations/${orgId}/workflows`,
+        GET: (orgId: string, workflowId: string) => `/api/v1/organizations/${orgId}/workflows/${workflowId}`,
+        DELETE: (orgId: string, workflowId: string) => `/api/v1/organizations/${orgId}/workflows/${workflowId}`,
+        LIST_WORKSPACE: (workspaceId: string) => `/api/v1/organizations/workspaces/${workspaceId}/workflows`,
     }
 }
