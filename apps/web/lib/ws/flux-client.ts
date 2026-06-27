@@ -5,6 +5,12 @@ export interface FluxMessage {
   status?: string;
   message?: string;
   error?: string;
+  workflowDbId?: string;
+  workflowId?: string;
+  workflowName?: string;
+  workflowUrl?: string;
+  integrations?: string[];
+  steps?: { id: string; service: string; action: string }[];
 }
 
 export interface FluxClientOptions {
