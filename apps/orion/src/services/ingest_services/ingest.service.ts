@@ -38,6 +38,8 @@ export async function registerIngestPromptService(
     try {
         const intent = await planExecution(userPrompt);
 
+        console.log(intent)
+
         const jobPayload: JobStatusPayLoad = {
             promptId,
             status: "queued",
