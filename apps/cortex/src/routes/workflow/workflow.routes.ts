@@ -4,6 +4,7 @@ import {
   getWorkflowController,
   deleteWorkflowController,
   listWorkspaceWorkflowsController,
+  listWorkspaceWorkflowHistoryController,
 } from "../../controllers/workflow.controller";
 
 export default async function workflowRoutes(fastify: FastifyInstance) {
@@ -25,5 +26,10 @@ export default async function workflowRoutes(fastify: FastifyInstance) {
   fastify.get("/workspaces/:workspaceId/workflows", {
     preHandler: [fastify.authenticate],
     handler: listWorkspaceWorkflowsController,
+  });
+
+  fastify.get("/workspaces/:workspaceId/workflows/history", {
+    preHandler: [fastify.authenticate],
+    handler: listWorkspaceWorkflowHistoryController,
   });
 }
