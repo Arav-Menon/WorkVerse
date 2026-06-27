@@ -7,6 +7,8 @@ import { env } from '../../lib/config/env';
 import type Phaser from 'phaser';
 import type { ArenaScene } from '../../lib/phaser/scenes/ArenaScene';
 import type { SpaceUser } from '../../lib/phaser/types/arena.types';
+import type { ProximityWebRTCManager } from '../../lib/webrtc/proximity-manager';
+import type { ProximityUser } from '../../lib/phaser/systems/ProximitySystem';
 
 interface InteractionData {
   type: string;
@@ -21,11 +23,14 @@ interface ArenaCanvasProps {
   token: string;
   organizationId: string;
   workspaceId: string;
+  proximityManager?: ProximityWebRTCManager | null;
   onInteraction?: (data: InteractionData) => void;
+  onAvatarClicked?: (data: { userId: string; username: string; screenX: number; screenY: number }) => void;
   onOnlineCountChange?: (count: number) => void;
   onUsersChange?: (users: SpaceUser[]) => void;
   onChatMessage?: (data: { userId: string; chatMessage: string; timestamp: number; username: string; color: string }) => void;
   onChatHistory?: (history: any[]) => void;
+  onProximityChange?: (users: ProximityUser[]) => void;
   spaceClientRef?: React.MutableRefObject<SpaceClient | null>;
 }
 
@@ -35,11 +40,14 @@ export default function ArenaCanvas({
   token,
   organizationId,
   workspaceId,
+  proximityManager,
   onInteraction,
+  onAvatarClicked,
   onOnlineCountChange,
   onUsersChange,
   onChatMessage,
   onChatHistory,
+  onProximityChange,
   spaceClientRef,
 }: ArenaCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -84,13 +92,12 @@ export default function ArenaCanvas({
       },
     });
 
-    // Expose spaceClient to parent via ref
     if (spaceClientRef) {
       spaceClientRef.current = spaceClient;
     }
 
     if (!gameRef.current) {
-      gameRef.current = initGame(containerRef.current, spaceId, userId, spaceClient);
+      gameRef.current = initGame(containerRef.current, spaceId, userId, spaceClient, proximityManager, onAvatarClicked, onProximityChange);
 
       const scene = gameRef.current.scene.keys.ArenaScene as Phaser.Scene | undefined;
       if (scene) {
