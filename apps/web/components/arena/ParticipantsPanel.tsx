@@ -6,6 +6,7 @@ interface ParticipantUser {
   userId: string;
   username: string;
   color: string;
+  isSpeaking?: boolean;
 }
 
 interface ParticipantsPanelProps {
@@ -95,6 +96,13 @@ function ParticipantRow({
           {isYou && <span className="text-gray-600 font-normal ml-1.5">(you)</span>}
         </p>
       </div>
+      {user.isSpeaking && (
+        <div className="flex items-center gap-1">
+          <div className="w-1 h-3 bg-emerald-400 rounded-full animate-pulse" />
+          <div className="w-1 h-4 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.15s' }} />
+          <div className="w-1 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+        </div>
+      )}
       <button
         onClick={onMenuClick}
         className="w-6 h-6 rounded-md flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all"
@@ -155,7 +163,7 @@ export function ParticipantsPanel({ isOpen, onClose, users, onlineCount }: Parti
         <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
           {/* You */}
           <ParticipantRow
-            user={{ userId: 'you', username: 'You', color: '#8b5cf6' }}
+            user={{ userId: 'you', username: 'You', color: '#8b5cf6', isSpeaking: false }}
             isYou={true}
             onMenuClick={handleMenuClick}
           />
