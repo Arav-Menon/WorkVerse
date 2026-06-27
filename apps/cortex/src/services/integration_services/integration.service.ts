@@ -1,5 +1,6 @@
 import { db } from "@repo/db/db";
 import { oauthService } from "../oauth_services/oauth.service";
+import { decrypt } from "../crypto/encryption.service";
 
 class IntegrationService {
     async getOrgIntegrationStatus(organizationId: string) {
@@ -24,11 +25,14 @@ class IntegrationService {
                 try {
                     const fullConnection = await db.organizationConnection.findUnique({
                         where: { organizationId_provider: { organizationId, provider: connection.provider } },
-                        select: { accessToken: true },
+                        select: { accessToken: true, encryptedAccessToken: true },
                     });
 
                     if (fullConnection) {
-                        const githubUser = await oauthService.fetchGitHubUser(fullConnection.accessToken);
+                        const token = fullConnection.encryptedAccessToken
+                            ? decrypt(fullConnection.encryptedAccessToken)
+                            : fullConnection.accessToken;
+                        const githubUser = await oauthService.fetchGitHubUser(token);
                         result[provider] = {
                             connected: true,
                             username: githubUser.username,
@@ -51,11 +55,14 @@ class IntegrationService {
                 try {
                     const fullConnection = await db.organizationConnection.findUnique({
                         where: { organizationId_provider: { organizationId, provider: connection.provider } },
-                        select: { accessToken: true },
+                        select: { accessToken: true, encryptedAccessToken: true },
                     });
 
                     if (fullConnection) {
-                        const googleUser = await oauthService.fetchGoogleUser(fullConnection.accessToken);
+                        const token = fullConnection.encryptedAccessToken
+                            ? decrypt(fullConnection.encryptedAccessToken)
+                            : fullConnection.accessToken;
+                        const googleUser = await oauthService.fetchGoogleUser(token);
                         result[provider] = {
                             connected: true,
                             username: googleUser.email,
