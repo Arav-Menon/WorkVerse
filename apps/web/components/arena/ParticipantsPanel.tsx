@@ -14,9 +14,10 @@ interface ParticipantsPanelProps {
   onClose: () => void;
   users: ParticipantUser[];
   onlineCount: number;
+  onSendMessage?: (userId: string, username: string) => void;
 }
 
-function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: () => void }) {
+function ContextMenu({ x, y, onClose, onSendMessage, targetUser }: { x: number; y: number; onClose: () => void; onSendMessage?: (userId: string, username: string) => void; targetUser?: { userId: string; username: string } }) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,9 +31,14 @@ function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: () => v
   }, [onClose]);
 
   const items = [
-    { label: 'Message', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
-    { label: 'Follow', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
-    { label: 'View Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+    { label: 'Message', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', onClick: () => {
+      if (onSendMessage && targetUser) {
+        onSendMessage(targetUser.userId, targetUser.username);
+      }
+      onClose();
+    }},
+    { label: 'Follow', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', onClick: onClose },
+    { label: 'View Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', onClick: onClose },
   ];
 
   return (
@@ -51,7 +57,7 @@ function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: () => v
       {items.map(item => (
         <button
           key={item.label}
-          onClick={onClose}
+          onClick={item.onClick}
           className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
         >
           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,12 +121,16 @@ function ParticipantRow({
   );
 }
 
-export function ParticipantsPanel({ isOpen, onClose, users, onlineCount }: ParticipantsPanelProps) {
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+export function ParticipantsPanel({ isOpen, onClose, users, onlineCount, onSendMessage }: ParticipantsPanelProps) {
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; targetUser?: { userId: string; username: string } } | null>(null);
 
-  const handleMenuClick = (e: React.MouseEvent) => {
+  const handleMenuClick = (e: React.MouseEvent, user?: ParticipantUser) => {
     e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY });
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      targetUser: user ? { userId: user.userId, username: user.username } : undefined,
+    });
   };
 
   return (
@@ -174,7 +184,7 @@ export function ParticipantsPanel({ isOpen, onClose, users, onlineCount }: Parti
               key={u.userId}
               user={u}
               isYou={false}
-              onMenuClick={handleMenuClick}
+              onMenuClick={(e) => handleMenuClick(e, u)}
             />
           ))}
 
@@ -193,6 +203,8 @@ export function ParticipantsPanel({ isOpen, onClose, users, onlineCount }: Parti
           x={contextMenu.x}
           y={contextMenu.y}
           onClose={() => setContextMenu(null)}
+          onSendMessage={onSendMessage}
+          targetUser={contextMenu.targetUser}
         />
       )}
     </>
