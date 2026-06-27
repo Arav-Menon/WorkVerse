@@ -1,10 +1,12 @@
 import { publisherRedis, subscriberRedis } from "@repo/redis";
-import type {ChatCompletedEvent, WorkflowEvent} from "./event.types";
+import type {ChatCompletedEvent, WorkflowEvent, DirectMessageEvent, TypingEvent} from "./event.types";
 import { EventEmitter } from "events";
 
 export interface EventMap {
     "chat_completed": ChatCompletedEvent;
     "workflow_event" : WorkflowEvent;
+    "dm_completed": DirectMessageEvent;
+    "dm_typing": TypingEvent;
 }
 
 class EventBusService {
