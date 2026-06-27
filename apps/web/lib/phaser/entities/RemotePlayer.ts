@@ -55,11 +55,21 @@ export class RemotePlayer {
     this.container = scene.add.container(x, y, [glow, body, text, tagBg, nameText]);
     this.container.setSize(radius * 2, radius * 2);
     this.container.setDepth(10);
+    this.container.setInteractive({ useHandCursor: true });
+
+    this.container.on('pointerover', () => {
+      this.container.setScale(1.08);
+    });
+
+    this.container.on('pointerout', () => {
+      this.container.setScale(1.0);
+    });
   }
 
   getContainer() { return this.container; }
   getId() { return this.id; }
   getName() { return this.name; }
+  getColor() { return this.avatarColor.bg; }
 
   updatePosition(x: number, y: number) {
     this.container.setPosition(x, y);
