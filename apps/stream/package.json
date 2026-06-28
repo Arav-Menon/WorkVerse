@@ -11,6 +11,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@repo/rate-limit": "*",
     "@repo/schemas": "*",
     "@repo/redis": "*",
     "mediasoup": "^3.20.0"
