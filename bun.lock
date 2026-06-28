@@ -223,6 +223,7 @@
     "apps/stream": {
       "name": "@repo/stream",
       "dependencies": {
+        "@repo/rate-limit": "*",
         "@repo/redis": "*",
         "@repo/schemas": "*",
         "mediasoup": "^3.20.0",
