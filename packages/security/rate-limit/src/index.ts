@@ -5,7 +5,10 @@ import { client } from "@repo/redis";
 export const rateLimitPlugin = fp(async (fastify) => {
   await fastify.register(fastifyRateLimit, {
     redis: client,
-    global: false,
+    global: true,
+    max: 1000,
+    timeWindow: 60000,
+    keyGenerator: (request) => `ratelimit:global:${request.ip}`,
     errorResponseBuilder: (request, context) => ({
       statusCode: 429,
       error: "Too Many Requests",
