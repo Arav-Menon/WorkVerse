@@ -1,1 +1,1 @@
-export const N8N_URL = "http://localhost:5678/api/v1/workflows";
+export const N8N_URL = process.env.N8N_ENGINE_URL || "http://localhost:5678/api/v1/workflows";
