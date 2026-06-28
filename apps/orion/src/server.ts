@@ -28,22 +28,30 @@ fastify.register(async (fastify) => {
   // await setupMcpSseRoutes(fastify);
 });
 
-fastify.post("/api/v1/orion/admin/register-tool", async (request, reply) => {
-  const tool = request.body as any;
-  const toolId = tool.id || `${tool.category}-${tool.name}`;
-  const toolMetadata = {
-    id: toolId,
-    name: tool.name,
-    category: tool.category,
-    description: tool.description,
-    workerId: tool.workerId,
-    inputSchema: tool.inputSchema || {},
-  };
+fastify.post("/api/v1/orion/admin/register-tool", {
+  config: {
+    rateLimit: {
+      max: 5,
+      timeWindow: 60000,
+      keyGenerator: (request) => `ratelimit:orion:admin:register:${request.ip}`,
+    },
+  },
+  async (request, reply) => {
+    const tool = request.body as any;
+    const toolId = tool.id || `${tool.category}-${tool.name}`;
+    const toolMetadata = {
+      id: toolId,
+      name: tool.name,
+      category: tool.category,
+      description: tool.description,
+      workerId: tool.workerId,
+      inputSchema: tool.inputSchema || {},
+    };
 
-  toolRegistry.registerTool(toolMetadata);
-  // registerToolToBridge(toolMetadata);
+    toolRegistry.registerTool(toolMetadata);
 
-  return { ok: true, toolId };
+    return { ok: true, toolId };
+  },
 });
 
 fastify.listen(
