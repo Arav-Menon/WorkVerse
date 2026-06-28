@@ -10,4 +10,3 @@ console.log(`[Flux] WebSocket server listening on port ${PORT}`);
 registerChatEvents();
 registerWorklfowEvents();
 wss.on("connection", handleConnection);
-
