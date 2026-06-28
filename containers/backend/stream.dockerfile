@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 FROM base AS install
 RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
+COPY package.json /temp/prod/
 COPY apps/stream/package.json /temp/prod/apps/stream/
 COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
 COPY packages/db/package.json /temp/prod/packages/db/
@@ -29,14 +29,16 @@ COPY --from=install /temp/prod/node_modules node_modules
 COPY . .
 
 FROM oven/bun:1.3.1-slim AS release
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
 
 COPY --from=prerelease /usr/src/app/node_modules ./node_modules
 COPY --from=prerelease /usr/src/app/apps/stream ./apps/stream
-COPY --from=prerelease /usr/src/app/packages ./packages
+COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
+COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
+COPY --from=prerelease /usr/src/app/packages/security ./packages/security
 COPY --from=prerelease /usr/src/app/package.json ./
 
 USER bun
