@@ -1,0 +1,385 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: workverse_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: workVerse_code
+      POSTGRES_DB: postgres
+    volumes:
+      - workverse_postgres_data:/var/lib/postgresql/data
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: workverse_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - workverse_redis_data:/data
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  n8n-engine:
+    image: n8nio/n8n:latest
+    container_name: workverse_n8n_engine
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - workverse_n8n_data:/home/node/.n8n
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  cortex:
+    build:
+      context: .
+      dockerfile: ./containers/backend/cortex.dockerfile
+    container_name: workverse_cortex
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/cortex/.env
+    environment:
+      ORION_API_URL: http://orion:3002/api/v1/orion/execute
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  orion:
+    build:
+      context: .
+      dockerfile: ./containers/backend/orion.dockerfile
+    container_name: workverse_orion
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/orion/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3002/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  flux:
+    build:
+      context: .
+      dockerfile: ./containers/backend/flux.dockerfile
+    container_name: workverse_flux
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      cortex:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      CORTEX_API_URL: http://cortex:3000/api/v1/ingest-prompt
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  synapse:
+    build:
+      context: .
+      dockerfile: ./containers/backend/synapse.dockerfile
+    container_name: workverse_synapse
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/synapse/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  space:
+    build:
+      context: .
+      dockerfile: ./containers/backend/space.dockerfile
+    container_name: workverse_space
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/space/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8002/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  relay:
+    build:
+      context: .
+      dockerfile: ./containers/backend/relay.dockerfile
+    container_name: workverse_relay
+    restart: unless-stopped
+    ports:
+      - "8089:8089"
+    depends_on:
+      redis:
+        condition: service_healthy
+      stream:
+        condition: service_healthy
+    env_file:
+      - ./apps/relay/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8089/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  stream:
+    build:
+      context: .
+      dockerfile: ./containers/backend/stream.dockerfile
+    container_name: workverse_stream
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/stream/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3010/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  executor:
+    build:
+      context: .
+      dockerfile: ./containers/workers/executor.dockerfile
+    container_name: workverse_executor
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/executor/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+    networks:
+      - workverse
+
+  forger:
+    build:
+      context: .
+      dockerfile: ./containers/workers/forger.dockerfile
+    container_name: workverse_forger
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/forger/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+    networks:
+      - workverse
+
+  scribe:
+    build:
+      context: .
+      dockerfile: ./containers/workers/scribe.dockerfile
+    container_name: workverse_scribe
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/scribe/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+    networks:
+      - workverse
+
+  mail-forger:
+    build:
+      context: .
+      dockerfile: ./containers/workers/mail-forger.dockerfile
+    container_name: workverse_mail_forger
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/mail-forger/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+
+  n8n-worker:
+    build:
+      context: .
+      dockerfile: ./containers/automation/n8n.dockerfile
+    container_name: workverse_n8n_worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      n8n-engine:
+        condition: service_healthy
+    env_file:
+      - ./apps/n8n/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DATABASE_URL: postgresql://postgres:workVerse_code@postgres:5432/postgres
+      N8N_ENGINE_URL: http://n8n-engine:5678/api/v1/workflows
+    networks:
+      - workverse
+
+  web:
+    build:
+      context: .
+      dockerfile: ./containers/frontend/web.dockerfile
+    container_name: workverse_web
+    restart: unless-stopped
+    ports:
+      - "3009:3009"
+    depends_on:
+      cortex:
+        condition: service_healthy
+    env_file:
+      - ./apps/web/.env
+    environment:
+      API_URL: http://cortex:3000
+      WS_URL: ws://flux:8080
+      RELAY_URL: ws://relay:8089
+      SPACE_WS_URL: ws://space:8002
+      SYNAPSE_WS_URL: ws://synapse:8001
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3009/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  workverse_postgres_data:
+    external: true
+  workverse_redis_data:
+    external: true
+  workverse_n8n_data:
+    external: true
+
+networks:
+  workverse:
+    driver: bridge
