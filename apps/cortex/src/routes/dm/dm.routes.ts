@@ -25,6 +25,16 @@ export default async function dmRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post("/:orgId/dm/conversations/:conversationId/messages", {
+    config: {
+      rateLimit: {
+        max: 30,
+        timeWindow: 60000,
+        keyGenerator: (request) => {
+          const userId = (request.user as any)?.userId || request.ip;
+          return `ratelimit:dm:send:${userId}`;
+        },
+      },
+    },
     preHandler: [fastify.authenticate],
     handler: sendMessageController,
   });
