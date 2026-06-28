@@ -8,6 +8,16 @@ import {
 
 export default async function n8nConnectionRoutes(fastify: FastifyInstance) {
   fastify.post("/:orgId/n8n/connect", {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: 60000,
+        keyGenerator: (request) => {
+          const userId = (request.user as any)?.userId || request.ip;
+          return `ratelimit:n8n:connect:${userId}`;
+        },
+      },
+    },
     preHandler: [fastify.authenticate],
     handler: connectN8nController,
   });
@@ -18,6 +28,16 @@ export default async function n8nConnectionRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post("/:orgId/n8n/test", {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: 60000,
+        keyGenerator: (request) => {
+          const userId = (request.user as any)?.userId || request.ip;
+          return `ratelimit:n8n:test:${userId}`;
+        },
+      },
+    },
     preHandler: [fastify.authenticate],
     handler: testN8nConnectionController,
   });
