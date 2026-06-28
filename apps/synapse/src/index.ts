@@ -2,14 +2,10 @@ import { publisherRedis as pubClient } from "@repo/redis/redis-client";
 import { ChatServer } from "./chat-server";
 import { EventBus } from "@repo/events";
 
-const PORT = Number(process.env.PORT || 8080);
+const PORT = Number(process.env.PORT || 8081);
 const server = new ChatServer(PORT, pubClient);
 
 server.start().then(() => {
-  // Bridge EventBus DM events to Synapse room channels
-  // This enables real-time DM delivery: Cortex publishes to EventBus,
-  // Synapse subscribes and republishes to the room channel for WebSocket delivery.
-
   EventBus.subscribe("dm_completed", (event) => {
     const channel = `dm:${event.conversationId}`;
     const message = JSON.stringify({
