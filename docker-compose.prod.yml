@@ -1,0 +1,347 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: workverse_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - workverse_postgres_data:/var/lib/postgresql/data
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: workverse_redis
+    restart: unless-stopped
+    volumes:
+      - workverse_redis_data:/data
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  n8n-engine:
+    image: n8nio/n8n:latest
+    container_name: workverse_n8n_engine
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - workverse_n8n_data:/home/node/.n8n
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  cortex:
+    image: aravmenon12/workverse-cortex:latest
+    container_name: workverse_cortex
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      ORION_API_URL: http://orion:3002/api/v1/orion/execute
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  orion:
+    image: aravmenon12/workverse-orion:latest
+    container_name: workverse_orion
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3002/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  flux:
+    image: aravmenon12/workverse-flux:latest
+    container_name: workverse_flux
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      cortex:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      CORTEX_API_URL: http://cortex:3000/api/v1/ingest-prompt
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  synapse:
+    image: aravmenon12/workverse-synapse:latest
+    container_name: workverse_synapse
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  space:
+    image: aravmenon12/workverse-space:latest
+    container_name: workverse_space
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8002/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  relay:
+    image: aravmenon12/workverse-relay:latest
+    container_name: workverse_relay
+    restart: unless-stopped
+    ports:
+      - "8089:8089"
+    depends_on:
+      redis:
+        condition: service_healthy
+      stream:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      API_URL: http://stream:3010/api/v1
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8089/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  stream:
+    image: aravmenon12/workverse-stream:latest
+    container_name: workverse_stream
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3010/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  executor:
+    image: aravmenon12/workverse-executor:latest
+    container_name: workverse_executor
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+
+  forger:
+    image: aravmenon12/workverse-forger:latest
+    container_name: workverse_forger
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+
+  scribe:
+    image: aravmenon12/workverse-scribe:latest
+    container_name: workverse_scribe
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+
+  mail-forger:
+    image: aravmenon12/workverse-mail-forger:latest
+    container_name: workverse_mail_forger
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    networks:
+      - workverse
+
+  n8n-worker:
+    image: aravmenon12/workverse-n8n-worker:latest
+    container_name: workverse_n8n_worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      n8n-engine:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      N8N_ENGINE_URL: http://n8n-engine:5678/api/v1/workflows
+    networks:
+      - workverse
+
+  web:
+    image: aravmenon12/workverse-web:latest
+    container_name: workverse_web
+    restart: unless-stopped
+    ports:
+      - "3009:3009"
+    depends_on:
+      cortex:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      API_URL: http://cortex:3000
+      WS_URL: ws://flux:8080
+      RELAY_URL: ws://relay:8089
+      SPACE_WS_URL: ws://space:8002
+      SYNAPSE_WS_URL: ws://synapse:8001
+    networks:
+      - workverse
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3009/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  workverse_postgres_data:
+    external: true
+  workverse_redis_data:
+    external: true
+  workverse_n8n_data:
+    external: true
+
+networks:
+  workverse:
+    driver: bridge
