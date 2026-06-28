@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 FROM base AS install
 RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
+COPY package.json /temp/prod/
 COPY apps/flux/package.json /temp/prod/apps/flux/
 COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
 COPY packages/db/package.json /temp/prod/packages/db/
@@ -29,14 +29,16 @@ COPY --from=install /temp/prod/node_modules node_modules
 COPY . .
 
 FROM oven/bun:1.3.1-slim AS release
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
 
 COPY --from=prerelease /usr/src/app/node_modules ./node_modules
 COPY --from=prerelease /usr/src/app/apps/flux ./apps/flux
-COPY --from=prerelease /usr/src/app/packages ./packages
+COPY --from=prerelease /usr/src/app/packages/events ./packages/events
+COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
+COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/package.json ./
 
 USER bun
@@ -47,6 +49,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD bun --version || exit 1
 
 ENTRYPOINT [ "bun", "run", "--cwd", "apps/flux", "start:flux" ]
-
-
-
