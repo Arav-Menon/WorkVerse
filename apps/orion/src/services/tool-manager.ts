@@ -56,53 +56,92 @@ export const toolRegistry = new ToolRegistry();
  * Cortex uses this to understand what tools are available
  */
 export async function setupToolRoutes(fastify: FastifyInstance) {
-  // Get all available tools
-  fastify.get("/api/v1/orion/tools", async (request, reply) => {
-    return toolRegistry.getAllTools();
+  fastify.get("/api/v1/orion/tools", {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 60000,
+        keyGenerator: (request) => `ratelimit:orion:tools:${request.ip}`,
+      },
+    },
+    async (request, reply) => {
+      return toolRegistry.getAllTools();
+    },
   });
 
-  // Get tools by category
-  fastify.get("/api/v1/orion/tools/category/:category", async (request, reply) => {
-    const { category } = request.params as { category: string };
-    return toolRegistry.getToolsByCategory(category);
+  fastify.get("/api/v1/orion/tools/category/:category", {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 60000,
+        keyGenerator: (request) => `ratelimit:orion:tools:category:${request.ip}`,
+      },
+    },
+    async (request, reply) => {
+      const { category } = request.params as { category: string };
+      return toolRegistry.getToolsByCategory(category);
+    },
   });
 
-  // Get tool details
-  fastify.get("/api/v1/orion/tools/:toolId", async (request, reply) => {
-    const { toolId } = request.params as { toolId: string };
-    const tool = toolRegistry.getTool(toolId);
-    if (!tool) {
-      return reply.status(404).send({ error: "Tool not found" });
-    }
-    return tool;
+  fastify.get("/api/v1/orion/tools/:toolId", {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 60000,
+        keyGenerator: (request) => `ratelimit:orion:tools:detail:${request.ip}`,
+      },
+    },
+    async (request, reply) => {
+      const { toolId } = request.params as { toolId: string };
+      const tool = toolRegistry.getTool(toolId);
+      if (!tool) {
+        return reply.status(404).send({ error: "Tool not found" });
+      }
+      return tool;
+    },
   });
 
-  // Route tool execution request to appropriate worker
-  fastify.post("/api/v1/orion/tools/:toolId/execute", async (request, reply) => {
-    const { toolId } = request.params as { toolId: string };
-    const { input } = request.body as { input: Record<string, any> };
+  fastify.post("/api/v1/orion/tools/:toolId/execute", {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 60000,
+        keyGenerator: (request) => `ratelimit:orion:tools:execute:${request.ip}`,
+      },
+    },
+    async (request, reply) => {
+      const { toolId } = request.params as { toolId: string };
+      const { input } = request.body as { input: Record<string, any> };
 
-    const tool = toolRegistry.getTool(toolId);
-    if (!tool) {
-      return reply.status(404).send({ error: "Tool not found" });
-    }
+      const tool = toolRegistry.getTool(toolId);
+      if (!tool) {
+        return reply.status(404).send({ error: "Tool not found" });
+      }
 
-    // Push job to queue for the appropriate worker
-    const correlationId = `corr:${Date.now()}:${os.hostname()}`;
-    const jobId = await queueToolExecution(tool.id, tool.category, input, correlationId);
+      const correlationId = `corr:${Date.now()}:${os.hostname()}`;
+      const jobId = await queueToolExecution(tool.id, tool.category, input, correlationId);
 
-    return { status: "queued", jobId, correlationId, toolId, workerId: tool.workerId };
+      return { status: "queued", jobId, correlationId, toolId, workerId: tool.workerId };
+    },
   });
 
-  // Polling route for results
-  fastify.get("/api/v1/orion/results/:correlationId", async (request, reply) => {
-    const { correlationId } = request.params as { correlationId: string };
-    const result = await getToolResult(correlationId);
+  fastify.get("/api/v1/orion/results/:correlationId", {
+    config: {
+      rateLimit: {
+        max: 30,
+        timeWindow: 60000,
+        keyGenerator: (request) => `ratelimit:orion:results:${request.ip}`,
+      },
+    },
+    async (request, reply) => {
+      const { correlationId } = request.params as { correlationId: string };
+      const result = await getToolResult(correlationId);
 
-    if (!result) {
-      return reply.status(202).send({ status: "pending" });
-    }
+      if (!result) {
+        return reply.status(202).send({ status: "pending" });
+      }
 
-    return result;
+      return result;
+    },
   });
 }
