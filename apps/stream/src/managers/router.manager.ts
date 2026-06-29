@@ -58,8 +58,14 @@ export class RoomManager {
         const room = this.rooms.get(roomId);
         if (!room) return;
 
-        this.rooms.delete(roomId)
+        try {
+            room.router.close();
+        } catch (e) {
+            // Already closed
+        }
 
+        this.rooms.delete(roomId);
+        console.log(`[RoomManager] Removed room ${roomId}`);
     }
 }
 

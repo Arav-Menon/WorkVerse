@@ -1,6 +1,8 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { RedisManager } from "./services/redis-manager";
 import { RoomManager } from "./services/room-manager";
+import { verifyToken, type AuthUser } from "./services/auth.service";
+import { db } from "@repo/db/db";
 
 export class ChatServer {
   private wss: WebSocketServer;
@@ -40,14 +42,55 @@ export class ChatServer {
     }, 30000);
   }
 
-  private handleConnection(socket: any, req: any) {
+  private async handleConnection(socket: any, req: any) {
     const url = new URL(req.url!, "http://localhost");
     const roomId = url.searchParams.get("roomId");
+    const token = url.searchParams.get("token");
 
     if (!roomId) {
       console.warn("Connection attempt without roomId rejected");
       socket.close(1008, "Room ID required");
       return;
+    }
+
+    // Authenticate DM rooms
+    if (roomId.startsWith("dm:")) {
+      if (!token) {
+        console.warn("DM connection attempt without token rejected");
+        socket.close(1008, "Authentication required for DM rooms");
+        return;
+      }
+
+      const user = verifyToken(token);
+      if (!user) {
+        console.warn("DM connection attempt with invalid token rejected");
+        socket.close(1008, "Invalid token");
+        return;
+      }
+
+      const conversationId = roomId.slice(3); // Remove "dm:" prefix
+
+      // Verify user is a participant in this conversation
+      const conversation = await db.directMessageConversation.findUnique({
+        where: { id: conversationId },
+      });
+
+      if (!conversation) {
+        console.warn(`DM conversation ${conversationId} not found`);
+        socket.close(1008, "Conversation not found");
+        return;
+      }
+
+      if (conversation.user1Id !== user.userId && conversation.user2Id !== user.userId) {
+        console.warn(`User ${user.userId} is not a participant in conversation ${conversationId}`);
+        socket.close(1008, "Not a participant in this conversation");
+        return;
+      }
+
+      // Attach user info to socket
+      socket.userId = user.userId;
+      socket.userEmail = user.email;
+      socket.roomId = roomId;
     }
 
     socket.isAlive = true;
@@ -65,9 +108,8 @@ export class ChatServer {
     socket.on("message", (data: any) => {
       try {
         const message = data.toString();
+        if (!message || message.length === 0) return;
         this.redisManager.publish(roomId, message);
-
-
       } catch (error) {
         console.error("Error processing message:", error);
       }

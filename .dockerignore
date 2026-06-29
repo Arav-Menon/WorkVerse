@@ -1,1 +1,11 @@
-.gitignore
+node_modules
+.next
+build
+dist
+.turbo
+.git
+.env
+.env.*
+*.md
+coverage
+test-distributed-mcp

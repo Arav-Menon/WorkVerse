@@ -2,32 +2,42 @@
 
 import React from 'react';
 
-interface Suggestion {
+interface Chip {
   icon: string;
   text: string;
 }
 
-interface AiLabsSuggestionsProps {
-  suggestions: Suggestion[];
+interface AiLabsChipsProps {
+  chips: Chip[];
   onSelect: (text: string) => void;
 }
 
-export function AiLabsSuggestions({ suggestions, onSelect }: AiLabsSuggestionsProps) {
+export function AiLabsChips({ chips, onSelect }: AiLabsChipsProps) {
   return (
-    <section>
-      <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">Suggestions</h3>
-      <div className="space-y-1.5">
-        {suggestions.map((suggestion, i) => (
-          <button
-            key={i}
-            onClick={() => onSelect(suggestion.text)}
-            className="w-full text-left flex items-center gap-2.5 text-[11px] font-medium text-zinc-400 hover:text-white bg-zinc-900/50 hover:bg-zinc-800 border border-white/5 hover:border-white/20 rounded-lg px-3 py-2 transition-all duration-150"
-          >
-            <i className={`ti ${suggestion.icon} text-zinc-500`} />
-            <span>{suggestion.text}</span>
-          </button>
-        ))}
-      </div>
-    </section>
+    <div className="flex flex-wrap gap-1.5 mt-3" role="group" aria-label="Suggested follow-ups">
+      {chips.map((chip, i) => (
+        <button
+          key={i}
+          onClick={() => onSelect(chip.text)}
+          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[5px] text-[11px] cursor-pointer transition-all duration-150"
+          style={{
+            background: '#141414',
+            border: '0.5px solid rgba(255,255,255,0.1)',
+            color: '#E0E0E0',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#1A1A1A';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#141414';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+          }}
+        >
+          <i className={`ti ${chip.icon} text-[12px]`} />
+          {chip.text}
+        </button>
+      ))}
+    </div>
   );
 }

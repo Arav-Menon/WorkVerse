@@ -1,20 +1,19 @@
 {
   "name": "@repo/stream",
-  "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "start:stream" : "./src/bin.ts"
+    "start:stream": "node --import tsx ./src/bin.ts",
+    "dev:stream": "node --watch --import tsx ./src/bin.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@repo/schemas" : "*",
-    "mediasoup": "^3.20.0",
-    "@repo/redis" : "*"
+    "@repo/rate-limit": "*",
+    "@repo/schemas": "*",
+    "@repo/redis": "*",
+    "mediasoup": "^3.20.0"
   }
 }

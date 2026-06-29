@@ -12,6 +12,15 @@ export interface OrionWorkflow {
     workflow: { steps: OrionStep[] }
 }
 
+export interface CredentialRequirement {
+    /** WorkVerse service name (e.g., "github", "slack") */
+    service: string
+    /** n8n credential type (e.g., "githubApi", "slackApi") */
+    n8nCredentialType: string
+    /** The step ID that requires this credential */
+    stepId: string
+}
+
 export interface N8nNode {
     id: string
     name: string
@@ -20,6 +29,8 @@ export interface N8nNode {
     position: [number, number]
     parameters: Record<string, unknown>
     credentials?: Record<string, { id: string; name: string }>
+    /** Populated during credential resolution - marks which service this node needs */
+    credentialRequirement?: CredentialRequirement
 }
 
 export type N8nConnections = Record<

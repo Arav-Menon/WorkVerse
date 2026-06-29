@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage } from "http";
 import { spaceManager } from "./services/space-manager";
 import { authenticate } from "./middleware/verify";
-import { CHAT, JOIN_SPACE, MOVE } from "../config/config";
+import { CHAT, JOIN_SPACE, MOVE, PING, PONG, SPACE_JOIN, SPACE_LEAVE, PLAYER_MOVE } from "../config/config";
 import { RedisManager } from "./services/redis-manager";
 
 export class workspaceServer {
@@ -24,13 +24,9 @@ export class workspaceServer {
 
       this.wss.on("connection", (socket, req) => {
         this.handleConnection(socket, req);
-
-        const acitveUsers = this.wss.clients.size;
-        socket.send(`Total active user :- ${acitveUsers}`);
       });
       this.setupHeartbeat();
       const port = this.wss.options.port;
-      console.log(`Workspace is running on port ${port}`);
     } catch (error) {
       console.error(`Failed to start workspace server:`, error);
       process.exit(1);
@@ -55,8 +51,8 @@ export class workspaceServer {
 
     const verify = authenticate(token as string) as any;
     if (!verify) {
-      console.warn("Connection rejected: Invalid token");
-      socket.send("Error: Unauthorized");
+      console.warn("[Arena] Connection rejected: Invalid token");
+      socket.send(JSON.stringify({ type: "ERROR", message: "Unauthorized" }));
       socket.close(1008);
       return;
     }
@@ -69,14 +65,20 @@ export class workspaceServer {
     socket.on("pong", () => {
       (socket as any).isAlive = true;
     });
+
     socket.on("message", async (data: any) => {
       try {
         const message = JSON.parse(data.toString());
-        if (message.type == JOIN_SPACE) {
-          console.log(`[Arena] User ${userId} attempting to join workspace: ${workspaceId}`);
 
+        // Handle both new and legacy event type names
+        const msgType = message.type;
+        const isJoin = msgType === SPACE_JOIN || msgType === JOIN_SPACE;
+        const isMove = msgType === PLAYER_MOVE || msgType === MOVE;
+        const isPing = msgType === PING;
+        const isLeave = msgType === SPACE_LEAVE;
+
+        if (isJoin) {
           if (!this.subscribedChannels.has(workspaceId)) {
-            console.log(`[Arena] Subscribing to Redis channel: space:${workspaceId}`);
             this.redisManager.subscribe(`space:${workspaceId}`, (redisMsg) => {
               this.spaceManager.broadcastLocal(workspaceId, redisMsg);
             });
@@ -89,38 +91,36 @@ export class workspaceServer {
             userId,
             organizationId,
           );
-
-          const roomCount = this.spaceManager.activeUsers(workspaceId);
-          console.log(`[Arena] Active users in ${workspaceId}: ${roomCount}`);
-
-          socket.send(
-            JSON.stringify({
-              type: "INFO",
-              message: `User ${userId} joined ${workspaceId}.`,
-              activeUsers: roomCount,
-            }),
-          );
         }
 
-        if (message.type == MOVE) {
+        if (isMove) {
           const { x, y } = message.payload || {};
-          console.log(`user ,moves X: ${x} Y : ${y}`)
           if (typeof x === "number" && typeof y === "number") {
             this.spaceManager.moveClient(workspaceId, userId, { x, y });
           }
         }
 
-        if (message.type == CHAT) {
+        if (isLeave) {
+          console.log(`[WS] SPACE_LEAVE received userId=${userId} space=${workspaceId}`);
+          await this.spaceManager.removeClient(workspaceId, socket);
+          socket.send(JSON.stringify({ type: "INFO", message: "Left space" }));
+          socket.close(1000);
+          return;
+        }
+
+        if (isPing) {
+          socket.send(JSON.stringify({ type: PONG }));
+        }
+
+        if (msgType === CHAT) {
           const { chatMessage } = message.payload || {}
-          console.log(`Message recieved : ${chatMessage} `);
           if (typeof chatMessage == "string") {
             this.spaceManager.chatMessage(workspaceId, userId, chatMessage)
           }
         }
 
-
       } catch (error: any) {
-        console.error("Failed to parse message", error);
+        console.error("[Arena] Failed to parse message", error);
         socket.send(
           JSON.stringify({ type: "ERROR", message: "Internal Server Error" }),
         );
@@ -130,8 +130,9 @@ export class workspaceServer {
     socket.on("close", async () => {
       const spaceToCleanup = (socket as any).workspaceId || workspaceId;
       await this.spaceManager.removeClient(spaceToCleanup, socket);
-      console.log(`Client ${userId} left space: ${spaceToCleanup}`);
     });
-    socket.send("Connected to space");
+
+    // Send initial connection acknowledgement
+    socket.send(JSON.stringify({ type: "INFO", message: "Connected to space" }));
   }
 }

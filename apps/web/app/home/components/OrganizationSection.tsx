@@ -117,7 +117,7 @@ export default function OrganizationSection({
                       </div>
                     </div>
                     <span className="rounded-full border border-zinc-800 bg-zinc-950/80 px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-zinc-400">
-                      {organization.updated}
+                      {organization.role}
                     </span>
                   </div>
 
@@ -133,8 +133,8 @@ export default function OrganizationSection({
                       <p className="mt-2 text-lg font-semibold text-white">{organization.workspaces}</p>
                     </div>
                     <div className="rounded-2xl border border-zinc-900 bg-black/20 p-3">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Online</p>
-                      <p className="mt-2 text-lg font-semibold text-white">{organization.online}</p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Role</p>
+                      <p className="mt-2 text-lg font-semibold text-white">{organization.role}</p>
                     </div>
                   </div>
 

@@ -9,6 +9,11 @@ export default async function clerkWebhookRoutes(fastify: FastifyInstance) {
             config: {
                 // @ts-expect-error - overriding fastify built-in types to pass raw body config for Svix verification
                 rawBody: true,
+                rateLimit: {
+                    max: 100,
+                    timeWindow: 60000,
+                    keyGenerator: (request) => `ratelimit:webhook:clerk:${request.ip}`,
+                },
             },
         },
         async (request: FastifyRequest, reply: FastifyReply) => {

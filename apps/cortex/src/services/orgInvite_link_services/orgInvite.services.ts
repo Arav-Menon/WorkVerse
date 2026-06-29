@@ -14,7 +14,7 @@ export async function registerOrganizationInviteLink(
   const { name, email } = input;
 
   const token = crypto.randomUUID();
-  const inviteLink = `http://localhost:3000/invite/${token}`;
+  const inviteLink = `http://localhost:3009/invite/${token}`;
 
   const existMail = await fastify.db.organizationInvite.findFirst({
     where: { organizationId: orgId, email },

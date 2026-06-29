@@ -9,7 +9,7 @@ const systemPrompt = plannerSystemPrompt();
 export async function planExecution(prompt: string): Promise<any> {
   const stream = await openrouter.chat.send({
     chatRequest: {
-      model: "openai/gpt-oss-120b:free",
+      model: "cohere/north-mini-code:free",
       messages: [
         { role: "user", content: prompt },
         { role: "system", content: systemPrompt },

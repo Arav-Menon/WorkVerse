@@ -4,70 +4,22 @@ import React from "react";
 
 interface QuickActionsSectionProps {
   onCreateOrgClick: () => void;
-  onJoinWorkspaceClick: () => void;
-  onLaunchAiLabClick: () => void;
-  onScheduleMeetingClick: () => void;
-  onCreateAutomationClick: () => void;
-  onOpenRecentRoomClick: () => void;
-  onSendInviteClick: () => void;
   onOpenCommandPaletteClick: () => void;
 }
 
 export default function QuickActionsSection({
   onCreateOrgClick,
-  onJoinWorkspaceClick,
-  onLaunchAiLabClick,
-  onScheduleMeetingClick,
-  onCreateAutomationClick,
-  onOpenRecentRoomClick,
-  onSendInviteClick,
   onOpenCommandPaletteClick,
 }: QuickActionsSectionProps) {
   const actions = [
     {
-      label: "Create org",
+      label: "Create organization",
       sub: "New team workspace",
       icon: "ti-building",
       action: onCreateOrgClick,
     },
     {
-      label: "Join workspace",
-      sub: "Via invite link",
-      icon: "ti-door-enter",
-      action: onJoinWorkspaceClick,
-    },
-    {
-      label: "Launch AI lab",
-      sub: "Run AI agents",
-      icon: "ti-robot",
-      action: onLaunchAiLabClick,
-    },
-    {
-      label: "Schedule meeting",
-      sub: "Sync with team",
-      icon: "ti-calendar-plus",
-      action: onScheduleMeetingClick,
-    },
-    {
-      label: "Create automation",
-      sub: "Prompt to n8n flow",
-      icon: "ti-arrows-split",
-      action: onCreateAutomationClick,
-    },
-    {
-      label: "Open recent room",
-      sub: "Jump back in",
-      icon: "ti-layout-2",
-      action: onOpenRecentRoomClick,
-    },
-    {
-      label: "Send invite",
-      sub: "Add team members",
-      icon: "ti-mail-forward",
-      action: onSendInviteClick,
-    },
-    {
-      label: "Open command",
+      label: "Open command palette",
       sub: "Keyboard ⌘K",
       icon: "ti-terminal",
       action: onOpenCommandPaletteClick,
@@ -75,13 +27,16 @@ export default function QuickActionsSection({
   ];
 
   return (
-    <section className="mb-8 select-none" aria-labelledby="actions-heading">
-      <h2 className="sr-only" id="actions-heading">Quick actions</h2>
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(135px,1fr))] gap-2" role="list">
+    <section className="select-none" aria-labelledby="actions-heading">
+      <div className="flex items-center gap-2.5 mb-4" role="separator">
+        <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase whitespace-nowrap select-none" id="actions-heading">Quick actions</span>
+        <div className="flex-grow h-px bg-zinc-900" aria-hidden="true"></div>
+      </div>
+      <ul className="flex gap-2" role="list">
         {actions.map((act) => (
           <li key={act.label}>
-            <button 
-              className="bg-zinc-950/40 border border-zinc-900 rounded-xl p-4 flex flex-col items-start gap-2.5 hover:border-zinc-800 hover:bg-zinc-900/30 transition-all cursor-pointer text-left w-full group"
+            <button
+              className="bg-zinc-950/40 border border-zinc-900 rounded-xl p-4 flex items-center gap-3 hover:border-zinc-800 hover:bg-zinc-900/30 transition-all cursor-pointer text-left group"
               onClick={act.action}
               aria-label={act.label}
             >

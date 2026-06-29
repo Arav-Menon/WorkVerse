@@ -85,24 +85,35 @@ export class InteractionSystem {
     const playerX = playerContainer.x;
     const playerY = playerContainer.y;
 
-    // Recompute nearby zones
+    // Single pass: find nearby zones + nearest zone simultaneously
     this.state.currentNearbyZones.clear();
+    const result: { nearest: Phaser.GameObjects.Zone | null; minDist: number } = { nearest: null, minDist: Infinity };
+
     this.interactionZones.getChildren().forEach(zone => {
       const phaserZone = zone as Phaser.GameObjects.Zone;
       const bounds = phaserZone.getBounds();
-      if (bounds.contains(playerX, playerY)) {
+      const centerX = bounds.x + bounds.width / 2;
+      const centerY = bounds.y + bounds.height / 2;
+
+      if (playerX >= bounds.x && playerX <= bounds.x + bounds.width &&
+          playerY >= bounds.y && playerY <= bounds.y + bounds.height) {
         this.state.currentNearbyZones.add(phaserZone.getData('zoneId'));
+
+        const dist = Phaser.Math.Distance.Between(playerX, playerY, centerX, centerY);
+        if (dist < result.minDist) {
+          result.minDist = dist;
+          result.nearest = phaserZone;
+        }
       }
     });
 
-    // Find nearest zone
-    const nearestZone = this.findNearestZone(playerX, playerY);
-    this.state.activeZoneId = nearestZone ? nearestZone.getData('zoneId') : null;
+    const activeZone = result.nearest;
+    this.state.activeZoneId = activeZone ? activeZone.getData('zoneId') : null;
 
     // Update prompt if zone changed
     if (this.state.activeZoneId !== this.previousActiveZoneId) {
       this.previousActiveZoneId = this.state.activeZoneId;
-      this.updatePromptUI(nearestZone, playerX, playerY);
+      this.updatePromptUI(activeZone, playerX, playerY);
     }
 
     // Update prompt position to follow player
@@ -114,31 +125,9 @@ export class InteractionSystem {
     // Handle SPACE press — skip when input is focused
     const active = document.activeElement;
     const inputFocused = active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA';
-    if (!inputFocused && this.interactKey && Phaser.Input.Keyboard.JustDown(this.interactKey) && this.state.activeZoneId) {
-      this.triggerInteraction(nearestZone!);
+    if (!inputFocused && this.interactKey && Phaser.Input.Keyboard.JustDown(this.interactKey) && this.state.activeZoneId && activeZone) {
+      this.triggerInteraction(activeZone);
     }
-  }
-
-  private findNearestZone(playerX: number, playerY: number): Phaser.GameObjects.Zone | null {
-    let nearest: Phaser.GameObjects.Zone | null = null;
-    let minDistance = Infinity;
-
-    this.interactionZones.getChildren().forEach(zone => {
-      const phaserZone = zone as Phaser.GameObjects.Zone;
-      const zoneId = phaserZone.getData('zoneId');
-      if (this.state.currentNearbyZones.has(zoneId)) {
-        const bounds = phaserZone.getBounds();
-        const centerX = bounds.x + bounds.width / 2;
-        const centerY = bounds.y + bounds.height / 2;
-        const dist = Phaser.Math.Distance.Between(playerX, playerY, centerX, centerY);
-        if (dist < minDistance) {
-          minDistance = dist;
-          nearest = phaserZone;
-        }
-      }
-    });
-
-    return nearest;
   }
 
   private updatePromptUI(zone: Phaser.GameObjects.Zone | null, _playerX: number, _playerY: number) {

@@ -66,8 +66,12 @@ model User {
   workspace           Workspace[]
   organizationInvites OrganizationInvite[]
   chatMessages        ChatMessage[]
-  oauthConnections    OAuthConnection[]
   spaces              Space[]
+  n8nConnections      OrganizationN8nConnection[]
+  createdWorkflows   Workflow[]
+  dmConversations1    DirectMessageConversation[] @relation("DMUser1")
+  dmConversations2    DirectMessageConversation[] @relation("DMUser2")
+  sentDmMessages      DirectMessage[]
 }
 
 model Organization {
@@ -82,6 +86,10 @@ model Organization {
   workspaces          Workspace[]
   organizationInvites OrganizationInvite[]
   spaces              Space[]
+  connections         OrganizationConnection[]
+  n8nConnection       OrganizationN8nConnection?
+  workflows           Workflow[]
+  dmConversations     DirectMessageConversation[]
 }
 
 model OrganizationInvite {
@@ -122,13 +130,15 @@ model OrganizationMember {
 }
 
 model Workspace {
-  id             String       @id @default(uuid())
-  name           String       @unique
+  id             String        @id @default(uuid())
+  name           String        @unique
+  slug           String        @unique
+  description    String?
   organizationId String
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime      @default(now())
   createdById    String
-  createdBy      User         @relation(fields: [createdById], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id])
 
   agents       Agent[]
   channels     Channel[]
@@ -320,29 +330,63 @@ model AgentEvent {
   @@index([jobId])
 }
 
-enum OAuthProvider {
+enum ConnectionProvider {
   GITHUB
   GOOGLE
   SLACK
 }
 
-model OAuthConnection {
-  id          String        @id @default(uuid())
-  userId      String
-  provider    OAuthProvider
-  accessToken String
-  scopes      String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+enum ConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  ERROR
+}
 
-  user User @relation(fields: [userId], references: [id])
+model OrganizationConnection {
+  id                    String           @id @default(uuid())
+  organizationId        String
+  provider              ConnectionProvider
+  providerAccountId     String?
+  accessToken           String
+  refreshToken          String?
+  encryptedAccessToken  String           @default("")
+  encryptedRefreshToken String?
+  scopes                String?
+  metadata              Json?
+  status                ConnectionStatus @default(ACTIVE)
+  connectedAt           DateTime         @default(now())
+  lastSyncedAt          DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  @@unique([userId, provider])
-  @@index([userId])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+  @@index([organizationId])
+}
+
+model OrganizationN8nConnection {
+  id              String   @id @default(uuid())
+  organizationId  String
+  baseUrl         String
+  encryptedApiKey String
+  connectedById   String
+  connectedBy     User     @relation(fields: [connectedById], references: [id])
+  status          String   @default("CONNECTED")
+  lastValidatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId])
+  @@index([organizationId])
 }
 
 model Space {
   id          String       @id @default(uuid())
+  name        String       @default("Main")
   orgId       String
   workspaceId String
   createdById String
@@ -356,4 +400,86 @@ model Space {
   @@unique([workspaceId])
   @@index([workspaceId])
   @@index([orgId])
+}
+
+model Workflow {
+  id               String   @id @default(uuid())
+  organizationId   String
+  workspaceId      String
+  createdById      String
+  name             String
+  description      String?
+  prompt           String
+  workflowPlan     Json?
+  mappedWorkflow   Json?
+  executionType    String   @default("N8N")
+  status           String   @default("DRAFT")
+  deploymentStatus String   @default("PENDING")
+  integrations     String[]
+  steps            Json?
+  n8nWorkflowId    String?
+  n8nWorkflowUrl   String?
+  promptId         String   @unique
+  version          Int      @default(1)
+  lastExecutedAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User             @relation(fields: [createdById], references: [id])
+  executions   WorkflowExecution[]
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([createdById])
+  @@index([promptId])
+}
+
+model WorkflowExecution {
+  id         String    @id @default(uuid())
+  workflowId String
+  status     String    @default("RUNNING")
+  startedAt  DateTime  @default(now())
+  completedAt DateTime?
+  duration   Int?
+  logs       String?
+  error      String?
+  triggerType String  @default("MANUAL")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+}
+
+model DirectMessageConversation {
+  id             String   @id @default(uuid())
+  organizationId String
+  user1Id        String
+  user2Id        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user1        User             @relation("DMUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2        User             @relation("DMUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages     DirectMessage[]
+
+  @@unique([organizationId, user1Id, user2Id])
+  @@index([organizationId])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model DirectMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation DirectMessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }

@@ -6,6 +6,7 @@ import clerkPlugin from "./plugins/auth_plugins/clerk";
 import authGuardPlugin from "./plugins/auth_plugins/authGuard";
 import corsPlugin from "./plugins/auth_plugins/cors";
 import { rateLimitPlugin } from "@repo/rate-limit";
+import authorizePlugin from "./plugins/authorize";
 
 import authRoutes from "./routes/auth/auth.routes";
 import clerkWebhookRoutes from "./routes/auth/webhooks/clerk.routes";
@@ -32,6 +33,12 @@ import oauthRoutes from "./routes/oauth/oauth.route";
 import profileRoutes from "./routes/profile/profile.route";
 import organizationGetRoutes from "./routes/organization/organization.get.routes";
 import workspaceGetRoutes from "./routes/organization/workspace.get.routes";
+import workspaceStandaloneRoutes from "./routes/workspace/workspace.get.routes";
+import integrationRoutes from "./routes/integration/integration.routes";
+import { aiChatRoutes } from "./routes/aiChat/aiChat.routes";
+import n8nConnectionRoutes from "./routes/n8n-connection/n8n-connection.routes";
+import workflowRoutes from "./routes/workflow/workflow.routes";
+import dmRoutes from "./routes/dm/dm.routes";
 for (const schema of authJsonSchemas) {
   fastify.addSchema(schema);
 }
@@ -42,6 +49,7 @@ fastify.register(cachePlugin);
 fastify.register(jwtPlugin);
 fastify.register(clerkPlugin);
 fastify.register(authGuardPlugin);
+fastify.register(authorizePlugin);
 fastify.register(redisPlugin);
 fastify.register(rateLimitPlugin);
 
@@ -66,6 +74,12 @@ fastify.register(createRoomRoutes, { prefix: "/api/v1/open-room" });
 fastify.register(ingestPromptRoutes, { prefix: "/api/v1/ingest-prompt" });
 fastify.register(oauthRoutes, { prefix: "/api/v1/oauth" });
 fastify.register(profileRoutes, { prefix: "/api/v1/profile" });
+fastify.register(integrationRoutes, { prefix: "/api/v1/organizations" });
 fastify.register(organizationGetRoutes, { prefix: "/api/v1/organizations" });
 fastify.register(workspaceGetRoutes, { prefix: "/api/v1/organizations" });
+fastify.register(workspaceStandaloneRoutes, { prefix: "/api/v1/workspaces" });
+fastify.register(aiChatRoutes, { prefix: "/api/v1/ai-chats" });
+fastify.register(n8nConnectionRoutes, { prefix: "/api/v1/organizations" });
+fastify.register(workflowRoutes, { prefix: "/api/v1/organizations" });
+fastify.register(dmRoutes, { prefix: "/api/v1/organizations" });
 fastify.get("/health", async () => ({ status: "ok" }));

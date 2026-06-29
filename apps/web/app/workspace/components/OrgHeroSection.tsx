@@ -5,14 +5,18 @@ import React from "react";
 interface OrgHeroSectionProps {
   orgName: string;
   onLaunchClick: () => void;
+  onInviteMember?: () => void;
+  workspaceCount?: number;
 }
 
 export default function OrgHeroSection({
   orgName,
   onLaunchClick,
+  onInviteMember,
+  workspaceCount,
 }: OrgHeroSectionProps) {
   const stats = [
-    { value: "12", label: "Workspaces", style: "text-zinc-200" },
+    { value: String(workspaceCount || 0), label: "Workspaces", style: "text-zinc-200" },
     { value: "43", label: "Active Members", style: "text-emerald-400" },
     { value: "5", label: "AI Agents", style: "text-purple-400" },
     { value: "28%", label: "CPU Telemetry", style: "text-amber-400" },
@@ -66,6 +70,15 @@ export default function OrgHeroSection({
               <i className="ti ti-settings"></i>
               Configure Integration
             </button>
+            {onInviteMember && (
+              <button
+                className="flex items-center gap-2 p-2 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-400 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+                onClick={onInviteMember}
+              >
+                <i className="ti ti-user-plus"></i>
+                Invite Member
+              </button>
+            )}
           </div>
         </div>
 

@@ -1,1 +1,1 @@
-export const API_URL = "http://localhost:3002/api/v1/orion/execute"
+export const API_URL = process.env.ORION_API_URL || "http://localhost:3002/api/v1/orion/execute"

@@ -1,11 +1,13 @@
 import axios from "axios";
 import { API_URL } from "../../utils/api";
 
+const SFU_BASE = API_URL;
+
 class TransportManager {
     async getRouterCapabilities(roomId: string) {
         try {
             if (!roomId) throw new Error("roomId is required");
-            const response = await axios.get(`${API_URL}/router-capabilities/${roomId}`);
+            const response = await axios.get(`${SFU_BASE}/router-capabilities/${roomId}`);
             return response.data;
         } catch (err) {
             console.error("Error getting router capabilities:", err);
@@ -19,7 +21,7 @@ class TransportManager {
                 throw new Error("roomId and userId are required to create a transport");
             }
 
-            const response = await axios.post(`${API_URL}/create-transport`, {
+            const response = await axios.post(`${SFU_BASE}/create-transport`, {
                 roomId,
                 userId
             });
@@ -34,7 +36,7 @@ class TransportManager {
 
     async connectTransport(transportId: string, dtlsParameters: any) {
         try {
-            const response = await axios.post(`${API_URL}/connect-transport`, {
+            const response = await axios.post(`${SFU_BASE}/connect-transport`, {
                 transportId,
                 dtlsParameters
             });
@@ -47,7 +49,7 @@ class TransportManager {
 
     async produce(transportId: string, kind: string, rtpParameters: any, roomId: string, userId: string) {
         try {
-            const response = await axios.post(`${API_URL}/produce`, {
+            const response = await axios.post(`${SFU_BASE}/produce`, {
                 transportId,
                 kind,
                 rtpParameters,
@@ -63,7 +65,7 @@ class TransportManager {
 
     async consume(transportId: string, producerId: string, rtpCapabilities: any, roomId: string, userId: string) {
         try {
-            const response = await axios.post(`${API_URL}/consume`, {
+            const response = await axios.post(`${SFU_BASE}/consume`, {
                 transportId,
                 producerId,
                 rtpCapabilities,
@@ -73,6 +75,65 @@ class TransportManager {
             return response.data;
         } catch (err) {
             console.error("Error consuming:", err);
+            throw err;
+        }
+    }
+
+    async resumeConsumer(consumerId: string) {
+        try {
+            const response = await axios.post(`${SFU_BASE}/resume-consumer`, {
+                consumerId
+            });
+            return response.data;
+        } catch (err) {
+            console.error("Error resuming consumer:", err);
+            throw err;
+        }
+    }
+
+    async getProducers(roomId: string, userId: string) {
+        try {
+            const response = await axios.get(`${SFU_BASE}/producers/${roomId}/${userId}`);
+            return response.data;
+        } catch (err) {
+            console.error("Error getting producers:", err);
+            throw err;
+        }
+    }
+
+    async pauseProducer(producerId: string) {
+        try {
+            const response = await axios.post(`${SFU_BASE}/pause-producer`, {
+                producerId
+            });
+            return response.data;
+        } catch (err) {
+            console.error("Error pausing producer:", err);
+            throw err;
+        }
+    }
+
+    async resumeProducer(producerId: string) {
+        try {
+            const response = await axios.post(`${SFU_BASE}/resume-producer`, {
+                producerId
+            });
+            return response.data;
+        } catch (err) {
+            console.error("Error resuming producer:", err);
+            throw err;
+        }
+    }
+
+    async removePeer(roomId: string, userId: string) {
+        try {
+            const response = await axios.post(`${SFU_BASE}/remove-peer`, {
+                roomId,
+                userId
+            });
+            return response.data;
+        } catch (err) {
+            console.error("Error removing peer:", err);
             throw err;
         }
     }

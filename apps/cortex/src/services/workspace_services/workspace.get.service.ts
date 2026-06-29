@@ -35,8 +35,12 @@ export async function getOrgWorkspaces(
     select: {
       id: true,
       name: true,
+      slug: true,
+      description: true,
+      organizationId: true,
       createdAt: true,
       _count: { select: { spaces: true } },
+      spaces: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -44,6 +48,7 @@ export async function getOrgWorkspaces(
   const result = workspaces.map((ws) => ({
     ...ws,
     spaceCount: ws._count.spaces,
+    spaces: ws.spaces,
     _count: undefined,
   }));
 
@@ -72,8 +77,12 @@ export async function getWorkspaceById(
     select: {
       id: true,
       name: true,
+      slug: true,
+      description: true,
+      organizationId: true,
       createdAt: true,
       _count: { select: { spaces: true } },
+      spaces: { select: { id: true, name: true } },
     },
   });
 
@@ -84,6 +93,48 @@ export async function getWorkspaceById(
   const result = {
     ...workspace,
     spaceCount: workspace._count.spaces,
+    spaces: workspace.spaces,
+    _count: undefined,
+  };
+
+  await fastify.cache.set(cacheKey, JSON.stringify(result), "EX", WS_TTL);
+
+  return result;
+}
+
+export async function getWorkspace(
+  fastify: FastifyInstance,
+  workspaceId: string
+) {
+  const cacheKey = `workspace:${workspaceId}`;
+
+  const cached = await fastify.cache.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
+  const workspace = await fastify.db.workspace.findUnique({
+    where: { id: workspaceId },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      organizationId: true,
+      createdAt: true,
+      _count: { select: { spaces: true } },
+      spaces: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!workspace) {
+    throw { statusCode: 404, message: "Workspace not found" };
+  }
+
+  const result = {
+    ...workspace,
+    spaceCount: workspace._count.spaces,
+    spaces: workspace.spaces,
     _count: undefined,
   };
 

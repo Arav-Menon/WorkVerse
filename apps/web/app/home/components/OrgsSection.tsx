@@ -8,10 +8,9 @@ interface Org {
   desc: string;
   members: number;
   workspaces: number;
-  online: number;
   avatar: string;
   color: "purple" | "teal" | "coral" | "blue";
-  updated: string;
+  createdAt: string;
 }
 
 interface OrgsSectionProps {
@@ -79,13 +78,8 @@ export default function OrgsSection({
                 </span>
               </div>
               
-              <p className="flex items-center gap-1.5 text-[11px] text-emerald-500 mb-3 select-none" aria-live="polite">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse" aria-hidden="true"></span>
-                {org.online} online now
-              </p>
-              
               <footer className="mt-auto flex items-center justify-between pt-2.5 border-t border-zinc-900 select-none">
-                <time className="text-[10px] text-zinc-500">Updated {org.updated}</time>
+                <time className="text-[10px] text-zinc-500">Created {org.createdAt}</time>
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 group-hover:text-white group-hover:gap-1.5 transition-all animate-fade-in" aria-hidden="true">
                   Enter
                   <i className="ti ti-arrow-right text-[11px]" aria-hidden="true"></i>

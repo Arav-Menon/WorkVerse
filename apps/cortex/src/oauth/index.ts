@@ -1,1 +1,1 @@
-export * from "./providers/github.provider"
+export * from "./providers/provider";

@@ -1,5 +1,6 @@
 import Fastify from "fastify"
 import transportRoute from "./routes/transport.route.ts";
+import { rateLimitPlugin } from "@repo/rate-limit";
 
 export const fastify = Fastify({
     logger: {
@@ -9,6 +10,8 @@ export const fastify = Fastify({
         },
     },
 });
+
+fastify.register(rateLimitPlugin);
 
 fastify.register(transportRoute, {
   prefix : "/api/v1/"

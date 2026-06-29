@@ -19,7 +19,7 @@ export default async function organizationInviteLinkRoutes(
         },
       },
     },
-    preHandler: [fastify.authenticate],
+    preHandler: [fastify.authenticate, fastify.authorize("INVITE_MEMBER")],
     handler: createOrganizationInviteController,
   });
 }

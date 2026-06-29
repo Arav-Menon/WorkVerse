@@ -15,14 +15,17 @@ type PageState =
   | "expired"
   | "invalid"
   | "joining"
-  | "success";
+  | "success"
+  | "already-accepted";
 
 const ORG_COLORS = ["#7F77DD", "#1D9E75", "#D85A30", "#378ADD"];
 
-function Spinner() {
+function Spinner({ size = 16 }: { size?: number }) {
   return (
     <svg
-      className="animate-spin h-3.5 w-3.5"
+      className="animate-spin"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
     >
@@ -43,6 +46,15 @@ function Spinner() {
   );
 }
 
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function InvitePage() {
   const router = useRouter();
   const params = useParams();
@@ -56,8 +68,13 @@ export default function InvitePage() {
     try {
       setState("loading");
       const data = await validateInvite(token);
-      setInvite(data);
-      setState("valid");
+      if (data) {
+        setInvite(data);
+        setState("valid");
+      } else {
+        setState("invalid");
+        setErrorMsg("Invalid invitation data received.");
+      }
     } catch (err: any) {
       const status = err?.response?.status;
       const message =
@@ -69,6 +86,8 @@ export default function InvitePage() {
       } else if (status === 410) {
         setState("expired");
         setErrorMsg(message);
+      } else if (status === 400 && message.toLowerCase().includes("already")) {
+        setState("already-accepted");
       } else {
         setState("invalid");
         setErrorMsg(message);
@@ -86,12 +105,32 @@ export default function InvitePage() {
     const storedToken = localStorage.getItem("token");
     if (!storedToken) {
       sessionStorage.setItem("inviteRedirect", `/invite/${token}`);
-      router.push("/(home)/auth");
+      router.push("/auth");
       return;
     }
 
     loadInvite();
   }, [token, loadInvite, router]);
+
+  useEffect(() => {
+    if (state !== "loading") return;
+    const timeout = setTimeout(() => {
+      if (state === "loading") {
+        setState("invalid");
+        setErrorMsg("Request timed out. Please check your connection and try again.");
+      }
+    }, 12000);
+    return () => clearTimeout(timeout);
+  }, [state]);
+
+  useEffect(() => {
+    if (state === "already-accepted" && invite) {
+      const timer = setTimeout(() => {
+        router.push(`/organization`);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [state, invite, router]);
 
   const handleAccept = async () => {
     if (!invite) return;
@@ -103,10 +142,16 @@ export default function InvitePage() {
         router.push(`/organization/${result.organizationId}`);
       }, 2500);
     } catch (err: any) {
+      const status = err?.response?.status;
       const message =
         err?.response?.data?.message || "Failed to accept invitation";
-      setErrorMsg(message);
-      setState("expired");
+
+      if (status === 400 && message.toLowerCase().includes("already")) {
+        setState("already-accepted");
+      } else {
+        setErrorMsg(message);
+        setState("expired");
+      }
     }
   };
 
@@ -131,8 +176,7 @@ export default function InvitePage() {
     ];
 
   return (
-    <div className="flex min-h-dvh flex-col bg-black font-sans text-zinc-400 antialiased [color-scheme:dark]">
-      {/* Ambient background */}
+    <div className="flex min-h-dvh flex-col bg-[#050505] text-zinc-400 antialiased [color-scheme:dark]">
       <div
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         aria-hidden="true"
@@ -141,166 +185,154 @@ export default function InvitePage() {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "26px 26px",
+              "radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
             maskImage:
-              "radial-gradient(ellipse 80% 55% at 50% 0%, black 0%, transparent 100%)",
+              "radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 100%)",
           }}
         />
         <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-full"
+          className="absolute left-1/2 top-[-160px] -translate-x-1/2"
           style={{
-            top: "-140px",
-            width: "640px",
-            height: "400px",
+            width: "700px",
+            height: "420px",
+            borderRadius: "50%",
             background:
-              "radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 68%)",
+              "radial-gradient(ellipse, rgba(255,255,255,0.07) 0%, transparent 70%)",
           }}
         />
       </div>
 
-      {/* Header */}
       <header
         role="banner"
         className="relative z-10 flex h-[52px] items-center border-b border-white/[0.08] px-6"
       >
         <Link
           href="/"
-          className="text-base font-medium tracking-[-0.3px] text-[#fafafa] no-underline"
+          className="text-base font-medium tracking-tight text-[#fafafa] no-underline"
           aria-label="WorkVerse home"
         >
-          Work<span className="text-[#71717a]">Verse</span>
+          Work<span className="text-zinc-500">Verse</span>
         </Link>
       </header>
 
-      {/* Main */}
       <main
         className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-6"
         id="main-content"
       >
-        <div className="w-full max-w-[480px] rounded-[24px] border border-zinc-900/90 bg-[linear-gradient(180deg,rgba(24,24,27,0.78),rgba(9,9,11,0.94))] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-300 sm:p-10">
+        <div className="w-full max-w-[480px] rounded-[20px] border border-zinc-800 bg-[#111113]/90 p-8 shadow-[0_32px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-10">
 
-          {/* ── LOADING STATE ── */}
           {state === "loading" && (
-            <div className="animate-pulse">
-              <div className="mx-auto mb-6 h-3 w-40 rounded-full bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mx-auto mb-5 h-14 w-14 rounded-2xl bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mx-auto mb-2 h-6 w-56 rounded-lg bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mx-auto mb-5 h-3.5 w-28 rounded-lg bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mb-2 h-3.5 w-full rounded-lg bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mb-6 h-3.5 w-3/4 rounded-lg bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mb-6 h-[72px] w-full rounded-xl bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mb-6 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
-              <div className="h-12 w-full rounded-xl bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
-              <div className="mx-auto mt-4 h-3 w-16 rounded-lg bg-[linear-gradient(90deg,rgba(39,39,42,0.9),rgba(63,63,70,0.7),rgba(39,39,42,0.9))] bg-[length:200%_100%]" />
+            <div className="flex flex-col items-center gap-4 py-8">
+              <Spinner size={32} />
+              <p className="text-sm text-zinc-500">Loading invitation...</p>
             </div>
           )}
 
-          {/* ── VALID STATE ── */}
           {(state === "valid" || state === "joining" || state === "success") &&
             invite && (
               <div className="text-center">
-                {/* Eyebrow */}
-                <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">
+                <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
                   You&apos;ve been invited to join
                 </p>
 
-                {/* Workspace avatar */}
                 <div
-                  className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950/80 text-lg font-bold"
+                  className="mx-auto mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800 text-xl font-bold"
                   style={{ color: accentColor }}
                 >
                   {initials}
                 </div>
 
-                {/* Workspace name */}
                 <h1 className="mb-1 text-xl font-bold tracking-tight text-white">
                   {invite.organizationName}
                 </h1>
 
-                {/* Org slug */}
-                <p className="mb-4 text-xs text-zinc-500">
+                <p className="mb-4 text-[13px] text-zinc-500">
                   @{invite.organizationSlug}
                 </p>
 
-                {/* Description */}
-                {invite.description && (
-                  <p className="mb-6 text-sm leading-relaxed text-zinc-400 max-w-[380px] mx-auto">
-                    {invite.description}
-                  </p>
-                )}
+                <p className="mb-6 text-sm leading-relaxed text-zinc-400 max-w-[380px] mx-auto">
+                  {invite.description ||
+                    "Accept this invitation to access workspaces, projects, AI Labs, automations, and team resources."}
+                </p>
 
-                {/* Info row */}
-                <div className="mb-6 flex items-center justify-center gap-4 rounded-xl border border-zinc-900 bg-zinc-950/40 p-4 text-[13px]">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                      style={{
-                        borderColor: `${accentColor}40`,
-                        backgroundColor: `${accentColor}15`,
-                        color: accentColor,
-                      }}
-                    >
-                      {invite.role}
-                    </span>
-                  </div>
-                  <div className="h-4 w-px bg-zinc-800" />
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <i className="ti ti-users text-[13px] text-zinc-500" />
-                    <span>
-                      {invite.memberCount}{" "}
-                      {invite.memberCount === 1 ? "member" : "members"}
-                    </span>
-                  </div>
-                  <div className="h-4 w-px bg-zinc-800" />
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <i className="ti ti-user text-[13px] text-zinc-500" />
-                    <span>{invite.invitedByName}</span>
-                  </div>
+                <div className="mb-6 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-zinc-700/50 bg-zinc-800/40 p-4 text-[13px]">
+                  <span
+                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
+                    style={{
+                      borderColor: `${accentColor}50`,
+                      backgroundColor: `${accentColor}18`,
+                      color: accentColor,
+                    }}
+                  >
+                    {invite.role}
+                  </span>
+                  <div className="h-4 w-px bg-zinc-700" />
+                  <span className="text-zinc-300">
+                    <i className="ti ti-users mr-1 text-zinc-400" />
+                    {invite.memberCount}{" "}
+                    {invite.memberCount === 1 ? "member" : "members"}
+                  </span>
+                  <div className="h-4 w-px bg-zinc-700" />
+                  <span className="text-zinc-300">
+                    <i className="ti ti-user mr-1 text-zinc-400" />
+                    {invite.invitedByName}
+                  </span>
+                  {invite.email && (
+                    <>
+                      <div className="h-4 w-px bg-zinc-700" />
+                      <span className="text-zinc-300">
+                        <i className="ti ti-mail mr-1 text-zinc-400" />
+                        {invite.email}
+                      </span>
+                    </>
+                  )}
+                  {invite.expiresAt && (
+                    <>
+                      <div className="h-4 w-px bg-zinc-700" />
+                      <span className="text-zinc-300">
+                        <i className="ti ti-clock mr-1 text-zinc-400" />
+                        Expires {formatDate(invite.expiresAt)}
+                      </span>
+                    </>
+                  )}
                 </div>
 
-                {/* Divider */}
-                <div className="mb-6 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
+                <div className="mb-6 h-px bg-zinc-800" />
 
-                {/* Success state */}
                 {state === "success" ? (
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/30">
                       <i className="ti ti-check text-xl text-emerald-400" />
                     </div>
                     <p className="text-sm font-semibold text-white">
-                      Workspace Joined Successfully
+                      Welcome to {invite.organizationName}
                     </p>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Redirecting...
-                    </p>
+                    <p className="text-xs text-zinc-500">Redirecting...</p>
                   </div>
                 ) : (
                   <>
-                    {/* Accept button */}
                     <button
                       onClick={handleAccept}
                       disabled={state === "joining"}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-zinc-200 shadow-[0_12px_40px_rgba(255,255,255,0.08)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-zinc-200 shadow-[0_8px_32px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {state === "joining" ? (
                         <>
                           <Spinner />
-                          Joining workspace...
+                          Joining {invite.organizationName}...
                         </>
                       ) : (
                         <>
                           <i className="ti ti-plus text-[15px]" />
-                          Accept Invitation
+                          Join {invite.organizationName}
                         </>
                       )}
                     </button>
-
-                    {/* Decline */}
                     <button
                       onClick={handleDecline}
                       disabled={state === "joining"}
-                      className="mt-4 text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
+                      className="mt-3 text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
                     >
                       Decline
                     </button>
@@ -309,22 +341,41 @@ export default function InvitePage() {
               </div>
             )}
 
-          {/* ── EXPIRED STATE ── */}
-          {state === "expired" && (
-            <div className="text-center">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10">
-                <i className="ti ti-clock-off text-2xl text-amber-500/70" />
+          {state === "already-accepted" && (
+            <div className="flex flex-col items-center gap-4 py-4 text-center">
+              <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30">
+                <i className="ti ti-check text-2xl text-emerald-400" />
               </div>
-              <h1 className="mb-2 text-lg font-bold tracking-tight text-white">
+              <h1 className="text-lg font-bold tracking-tight text-white">
+                Already a member
+              </h1>
+              <p className="text-sm leading-relaxed text-zinc-400 max-w-[340px]">
+                {invite
+                  ? `You've already joined ${invite.organizationName}. Redirecting...`
+                  : "You've already joined this organization. Redirecting..."}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-zinc-500">
+                <Spinner size={14} />
+                <span>Redirecting to organization...</span>
+              </div>
+            </div>
+          )}
+
+          {state === "expired" && (
+            <div className="flex flex-col items-center gap-4 py-4 text-center">
+              <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/15">
+                <i className="ti ti-clock-off text-2xl text-amber-400" />
+              </div>
+              <h1 className="text-lg font-bold tracking-tight text-white">
                 Invitation Expired
               </h1>
-              <p className="mb-8 text-sm leading-relaxed text-zinc-400 max-w-[340px] mx-auto">
+              <p className="text-sm leading-relaxed text-zinc-400 max-w-[340px]">
                 {errorMsg ||
                   "This invitation link is no longer valid. Please ask your team to send a new one."}
               </p>
               <Link
                 href="/home"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-6 py-3 text-sm font-medium text-zinc-100 transition-all hover:border-zinc-700 hover:bg-zinc-900 no-underline"
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 px-6 py-3 text-sm font-medium text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-700 no-underline"
               >
                 <i className="ti ti-arrow-left text-[14px]" />
                 Return Home
@@ -332,22 +383,21 @@ export default function InvitePage() {
             </div>
           )}
 
-          {/* ── INVALID STATE ── */}
           {state === "invalid" && (
-            <div className="text-center">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950/80">
-                <i className="ti ti-link-x text-2xl text-zinc-600" />
+            <div className="flex flex-col items-center gap-4 py-4 text-center">
+              <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800">
+                <i className="ti ti-link-x text-2xl text-zinc-400" />
               </div>
-              <h1 className="mb-2 text-lg font-bold tracking-tight text-white">
-                Invalid Invitation
+              <h1 className="text-lg font-bold tracking-tight text-white">
+                Invitation Not Found
               </h1>
-              <p className="mb-8 text-sm leading-relaxed text-zinc-400 max-w-[340px] mx-auto">
+              <p className="text-sm leading-relaxed text-zinc-400 max-w-[340px]">
                 {errorMsg ||
                   "This invite link does not exist or has been revoked."}
               </p>
               <Link
                 href="/home"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-6 py-3 text-sm font-medium text-zinc-100 transition-all hover:border-zinc-700 hover:bg-zinc-900 no-underline"
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 px-6 py-3 text-sm font-medium text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-700 no-underline"
               >
                 <i className="ti ti-arrow-left text-[14px]" />
                 Return Home
@@ -357,9 +407,8 @@ export default function InvitePage() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.06] px-6 py-4 text-center">
-        <p className="text-[11px] text-[#71717a]">
+        <p className="text-[11px] text-zinc-600">
           &copy; {new Date().getFullYear()} WorkVerse. All rights reserved.
         </p>
       </footer>

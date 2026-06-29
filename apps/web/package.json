@@ -12,13 +12,16 @@
   },
   "dependencies": {
     "@repo/ui": "*",
+    "@tanstack/react-query": "^5.64.1",
     "autoprefixer": "^10.4.14",
     "axios": "^1.18.0",
+    "mediasoup-client": "^3.8.0",
     "next": "15.1.12",
     "phaser": "^3.87.0",
     "postcss": "^8.4.31",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sonner": "^2.0.3",
     "tailwindcss": "^3.4.1"
   },
   "devDependencies": {

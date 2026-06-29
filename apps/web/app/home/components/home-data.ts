@@ -7,10 +7,9 @@ export interface HomeOrganization {
   description: string;
   members: number;
   workspaces: number;
-  online: number;
   avatar: string;
   color: OrgColor;
-  updated: string;
+  createdAt: string;
   role: string;
   tags: string[];
 }
@@ -59,10 +58,9 @@ const organizations: HomeOrganization[] = [
     description: "Product design, strategy, and delivery for fast-moving teams.",
     members: 12,
     workspaces: 4,
-    online: 8,
     avatar: "CS",
     color: "purple",
-    updated: "5m ago",
+    createdAt: "5m ago",
     role: "Owner",
     tags: ["Design", "Product"],
   },
@@ -73,10 +71,9 @@ const organizations: HomeOrganization[] = [
     description: "AI research, orchestration, and production model operations.",
     members: 31,
     workspaces: 7,
-    online: 14,
     avatar: "NX",
     color: "teal",
-    updated: "1m ago",
+    createdAt: "1m ago",
     role: "Core member",
     tags: ["AI", "Infra"],
   },
@@ -87,10 +84,9 @@ const organizations: HomeOrganization[] = [
     description: "Cloud infrastructure, deployment systems, and founder ops.",
     members: 9,
     workspaces: 3,
-    online: 2,
     avatar: "SK",
     color: "coral",
-    updated: "18m ago",
+    createdAt: "18m ago",
     role: "Admin",
     tags: ["Cloud", "Ops"],
   },
@@ -101,10 +97,9 @@ const organizations: HomeOrganization[] = [
     description: "Growth experimentation and lifecycle performance for SaaS teams.",
     members: 18,
     workspaces: 5,
-    online: 6,
     avatar: "BO",
     color: "blue",
-    updated: "42m ago",
+    createdAt: "42m ago",
     role: "Collaborator",
     tags: ["Growth", "Analytics"],
   },

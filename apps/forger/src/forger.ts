@@ -4,48 +4,83 @@ import { chat } from "@repo/evaluator";
 import type { ChatCompletedEvent } from "@repo/events";
 import { EventBus } from "@repo/events";
 import { client } from "@repo/redis";
-import { insertBulk } from "../utils/bulkInsert";
+import { insertBulk, insertBulkUserMessage } from "../utils/bulkInsert";
 
-export const worker = new Worker('chat_response-queue', async (job) => {
-    console.log("worker is started.....")
-    const { workspaceId, spaceId, userPrompt, organizationId, promptId, userId } = job.data;
+export const worker = new Worker(
+  "chat_response-queue",
+  async (job) => {
+    console.log("worker is started.....");
+    const {
+      workspaceId,
+      spaceId,
+      userPrompt,
+      organizationId,
+      promptId,
+      userId,
+    } = job.data;
 
     try {
-        const response = await chat(userPrompt);
+      await insertBulkUserMessage({
+        promptId,
+        userId,
+        organizationId,
+        workspaceId,
+        content: userPrompt,
+      });
 
-        const chatCompletePayload: ChatCompletedEvent = {
-            promptId,
-            userId,
-            spaceId,
-            organizationId,
-            workspaceId,
-            content: response,
-            status: "completed"
-        }
+      const response = await chat(userPrompt);
 
-        await client.set(`chat${promptId}:access`, JSON.stringify(chatCompletePayload), "EX", 86400);
+      const chatCompletePayload: ChatCompletedEvent = {
+        promptId,
+        userId,
+        spaceId,
+        organizationId,
+        workspaceId,
+        content: response,
+        status: "completed",
+      };
 
-        await insertBulk(chatCompletePayload);
+      await client.set(
+        `chat${promptId}:access`,
+        JSON.stringify(chatCompletePayload),
+        "EX",
+        86400,
+      );
 
-        await EventBus.publish("chat_completed", chatCompletePayload);
+      await insertBulk(chatCompletePayload);
 
-        return {
-            success: true,
-            statusCode: 200,
-            info: {
-                promptId,
-                userId,
-                organizationId,
-                workspaceId,
-                content: response,
-            }
-        };
+      await EventBus.publish("chat_completed", chatCompletePayload);
+
+      return {
+        success: true,
+        statusCode: 200,
+        info: {
+          promptId,
+          userId,
+          organizationId,
+          workspaceId,
+          content: response,
+        },
+      };
     } catch (error: any) {
-        return {
-            success: false,
-            statusCode: error.statusCode ?? 500,
-            error
-        }
-    }
+      const failPayload: ChatCompletedEvent = {
+        promptId,
+        userId,
+        spaceId,
+        organizationId,
+        workspaceId,
+        content: null,
+        status: "failed",
+      };
 
-}, { connection, concurrency: 100 })
+      await EventBus.publish("chat_completed", failPayload);
+
+      return {
+        success: false,
+        statusCode: error.statusCode ?? 500,
+        error,
+      };
+    }
+  },
+  { connection, concurrency: 100 },
+);

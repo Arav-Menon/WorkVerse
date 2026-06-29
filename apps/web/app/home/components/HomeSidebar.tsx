@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 export interface Org {
@@ -11,10 +10,9 @@ export interface Org {
   desc: string;
   members: number;
   workspaces: number;
-  online: number;
   avatar: string;
   color: "purple" | "teal" | "coral" | "blue";
-  updated: string;
+  createdAt: string;
 }
 
 interface AppSidebarProps {
@@ -189,7 +187,7 @@ export default function AppSidebar({
                       <button
                         className="flex items-center gap-2.5 p-2 px-3 rounded-xl text-left w-full hover:bg-zinc-900/40 group transition-colors cursor-pointer"
                         onClick={() => handleOrgClick(org.id)}
-                        aria-label={`${org.name} — ${org.online} members online`}
+                        aria-label={`${org.name} — ${org.members} members`}
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -204,8 +202,8 @@ export default function AppSidebar({
                         <span className="text-[12px] text-zinc-400 group-hover:text-white transition-colors truncate flex-1">
                           {org.name}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono" aria-label={`${org.online} online`}>
-                          {org.online}
+                        <span className="text-[10px] text-zinc-500 font-mono" aria-label={`${org.members} members`}>
+                          {org.members}
                         </span>
                       </button>
                     </li>
@@ -228,13 +226,17 @@ export default function AppSidebar({
                 </div>
               </div>
             </div>
-            <Link
-              href="/auth"
-              className="flex items-center gap-2.5 p-2.5 px-3 rounded-xl text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left"
+            <button
+              className="flex items-center gap-2.5 p-2.5 px-3 rounded-xl text-[13px] text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors w-full text-left cursor-pointer"
+              onClick={() => {
+                localStorage.removeItem("token");
+                sessionStorage.clear();
+                router.push("/auth");
+              }}
             >
               <i className="ti ti-logout text-base" aria-hidden="true" />
               <span>Sign out</span>
-            </Link>
+            </button>
           </div>
         </nav>
       </aside>

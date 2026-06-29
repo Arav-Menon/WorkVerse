@@ -9,9 +9,8 @@
   "devDependencies": {
     "@types/bun": "latest"
   },
-  "dependencies": {
+    "dependencies": {
     "@repo/redis": "*",
-    "@repo/stream": "*",
     "axios": "^1.17.0"
   },
   "peerDependencies": {
