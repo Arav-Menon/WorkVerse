@@ -3,7 +3,7 @@ import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
 import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
-import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
+// import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
 // import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
 import { rateLimitPlugin } from "@repo/rate-limit";
 
@@ -23,17 +23,16 @@ fastify.register(rateLimitPlugin);
 
 fastify.register(ingestRoutes, { prefix: "/api/v1/orion" });
 
-fastify.register(async (fastify) => {
-  await setupToolRoutes(fastify);
-  // await setupMcpSseRoutes(fastify);
-});
-
-fastify.post("/api/v1/orion/admin/register-tool", {
-  config: {
-    rateLimit: {
-      max: 5,
-      timeWindow: 60000,
-      keyGenerator: (request) => `ratelimit:orion:admin:register:${request.ip}`,
+fastify.post(
+  "/api/v1/orion/admin/register-tool",
+  {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 60000,
+        keyGenerator: (request) =>
+          `ratelimit:orion:admin:register:${request.ip}`,
+      },
     },
   },
   async (request, reply) => {
@@ -48,11 +47,11 @@ fastify.post("/api/v1/orion/admin/register-tool", {
       inputSchema: tool.inputSchema || {},
     };
 
-    toolRegistry.registerTool(toolMetadata);
+    // toolRegistry.registerTool(toolMetadata);
 
     return { ok: true, toolId };
   },
-});
+);
 
 fastify.listen(
   { port: Number(process.env.PORT ?? 3002), host: "0.0.0.0" },
