@@ -154,6 +154,14 @@ or add it to NON_CONSUMABLE_PACKAGES if it's dev-only. Affected file: $file"
   fi
 done
 
+if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
+  log_header "Detection Results"
+  echo "No services affected."
+  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  exit 0
+fi
+
 MATRIX="["
 FIRST=true
 
@@ -171,8 +179,12 @@ done
 
 MATRIX+="]"
 
+# ---------------------------------------------------------------------------
+# Validate matrix
+# ---------------------------------------------------------------------------
 log_header "Matrix Validation"
 
+# Check for duplicates
 UNIQUE_COUNT=$(printf '%s\n' "${SORTED_SERVICES[@]}" | sort -u | wc -l)
 if [ "${#SORTED_SERVICES[@]}" -ne "$UNIQUE_COUNT" ]; then
   log_error "Duplicate services in matrix" \
@@ -180,6 +192,7 @@ if [ "${#SORTED_SERVICES[@]}" -ne "$UNIQUE_COUNT" ]; then
     "Check SERVICE_DOCKERFILES mapping for duplicates."
 fi
 
+# Check for empty service names
 for svc in "${SORTED_SERVICES[@]}"; do
   if [ -z "$svc" ]; then
     log_error "Empty service name in matrix" \
@@ -188,8 +201,10 @@ for svc in "${SORTED_SERVICES[@]}"; do
   fi
 done
 
+# Validate JSON is parseable
 validate_json "$MATRIX"
 
+# Validate Dockerfiles exist
 for svc in "${SORTED_SERVICES[@]}"; do
   df="${SERVICE_DOCKERFILES[$svc]}"
   validate_file "$df" \
@@ -201,17 +216,14 @@ log_action "JSON valid ✓"
 log_action "No duplicates ✓"
 log_action "All Dockerfiles exist ✓"
 
+# ---------------------------------------------------------------------------
+# Output results
+# ---------------------------------------------------------------------------
 log_header "Detection Results"
 
-if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
-  echo "No services affected."
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-  echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-else
-  echo "Affected packages (${#AFFECTED_PACKAGES[@]}): $(echo "${!AFFECTED_PACKAGES[@]}" | tr ' ' '\n' | sort | tr '\n' ', ' | sed 's/,$//')"
-  echo "Affected services (${#AFFECTED_SERVICES[@]}): ${SORTED_SERVICES[*]}"
-  echo ""
-  echo "Matrix: $MATRIX"
-  echo "matrix=$MATRIX" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-  echo "has_changes=true" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-fi
+echo "Affected packages (${#AFFECTED_PACKAGES[@]}): $(echo "${!AFFECTED_PACKAGES[@]}" | tr ' ' '\n' | sort | tr '\n' ', ' | sed 's/,$//')"
+echo "Affected services (${#AFFECTED_SERVICES[@]}): ${SORTED_SERVICES[*]}"
+echo ""
+echo "Matrix: $MATRIX"
+echo "matrix=$MATRIX" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+echo "has_changes=true" >> "${GITHUB_OUTPUT:-/dev/stdout}"
