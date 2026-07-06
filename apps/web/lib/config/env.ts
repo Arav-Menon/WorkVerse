@@ -4,8 +4,11 @@
  * Centralized configuration for all backend service endpoints.
  * Uses NEXT_PUBLIC_* variables so values are embedded at Next.js build time.
  *
- * Local development: defaults to localhost (see apps/web/.env)
- * Production: inject NEXT_PUBLIC_* env vars via Docker / Kubernetes
+ * Local development: see apps/web/.env (loaded automatically by Next.js)
+ * Production: see apps/web/.env.production (loaded automatically by Next.js)
+ *
+ * Vercel: set these in Project Settings > Environment Variables.
+ *         .env.production provides correct defaults for Vercel builds.
  *
  * To add a new service:
  *   1. Add entry here with NEXT_PUBLIC_* variable and localhost fallback
@@ -20,11 +23,19 @@ export const services = {
   synapse: process.env.NEXT_PUBLIC_SYNAPSE_URL || "ws://localhost:8001",
 } as const;
 
-/** @deprecated Use `services.cortex` instead */
-export const env = {
-  API_URL:       services.cortex,
-  WS_URL:        services.flux,
-  RELAY_URL:     services.relay,
-  SPACE_WS_URL:  services.space,
-  SYNAPSE_WS_URL: services.synapse,
-};
+if (process.env.NODE_ENV === "production") {
+  const mismatches: string[] = [];
+  if (services.cortex.includes("localhost"))  mismatches.push("NEXT_PUBLIC_CORTEX_URL");
+  if (services.flux.includes("localhost"))    mismatches.push("NEXT_PUBLIC_FLUX_URL");
+  if (services.relay.includes("localhost"))   mismatches.push("NEXT_PUBLIC_RELAY_URL");
+  if (services.space.includes("localhost"))   mismatches.push("NEXT_PUBLIC_SPACE_URL");
+  if (services.synapse.includes("localhost")) mismatches.push("NEXT_PUBLIC_SYNAPSE_URL");
+
+  if (mismatches.length > 0) {
+    throw new Error(
+      `[WorkVerse] Production env vars missing or falling back to localhost.\n` +
+      `Expected NEXT_PUBLIC_* variables: ${mismatches.join(", ")}\n` +
+      `Set them in Vercel Dashboard > Project Settings > Environment Variables.`
+    );
+  }
+}
