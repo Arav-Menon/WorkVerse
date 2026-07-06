@@ -320,11 +320,11 @@ services:
     env_file:
       - .env.production
     environment:
-      API_URL: http://cortex:3000
-      WS_URL: ws://flux:8080
-      RELAY_URL: ws://relay:8089
-      SPACE_WS_URL: ws://space:8002
-      SYNAPSE_WS_URL: ws://synapse:8001
+      NEXT_PUBLIC_CORTEX_URL: https://cortex-workverse.arav.space
+      NEXT_PUBLIC_FLUX_URL: wss://flux-workverse.arav.space
+      NEXT_PUBLIC_RELAY_URL: wss://relay-workverse.arav.space
+      NEXT_PUBLIC_SPACE_URL: wss://space-workverse.arav.space
+      NEXT_PUBLIC_SYNAPSE_URL: wss://synapse-workverse.arav.space
     networks:
       - workverse
     healthcheck:
