@@ -40,6 +40,7 @@ FROM base AS prerelease
 COPY --from=install /temp/prod/node_modules node_modules
 COPY . .
 
+ENV PATH="/usr/src/app/node_modules/.bin:$PATH"
 RUN bun run --cwd apps/web build
 
 FROM oven/bun:1.3.1-slim AS release
