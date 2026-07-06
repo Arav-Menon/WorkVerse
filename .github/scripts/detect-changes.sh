@@ -170,22 +170,15 @@ if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
   exit 0
 fi
 
-MATRIX="["
-FIRST=true
-
 SORTED_SERVICES=($(echo "${!AFFECTED_SERVICES[@]}" | tr ' ' '\n' | sort))
 
+MATRIX_ITEMS=()
 for svc in "${SORTED_SERVICES[@]}"; do
   dockerfile="${SERVICE_DOCKERFILES[$svc]}"
-  if [ "$FIRST" = true ]; then
-    FIRST=false
-  else
-    MATRIX+=","
-  fi
-  MATRIX+="{\"service\":\"${svc}\",\"dockerfile\":\"${dockerfile}\"}"
+  MATRIX_ITEMS+=("{\"service\":\"${svc}\",\"dockerfile\":\"${dockerfile}\"}")
 done
 
-MATRIX+="]"
+MATRIX=$(printf '%s\n' "${MATRIX_ITEMS[@]}" | jq -sc '.')
 
 # ---------------------------------------------------------------------------
 # Validate matrix
