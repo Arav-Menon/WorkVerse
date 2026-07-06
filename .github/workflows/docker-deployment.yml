@@ -1,78 +1,78 @@
-#name: Continuous Deployment (Docker)
-#
-#on:
+# name: Continuous Deployment (Docker)
+
+# on:
 #  push:
 #    branches:
 #      -
-#
-#env:
+
+# env:
 #  REGISTRY: docker.io
 #  DOCKERHUB_USERNAME: aravmenon12
-#
-#jobs:
+
+# jobs:
 #  build-and-push:
 #    name: Build & Push Images
 #    runs-on: ubuntu-latest
-#
+
 #    strategy:
 #      fail-fast: false
 #      matrix:
 #        include:
 #          - service: cortex
 #            dockerfile: ./containers/backend/cortex.dockerfile
-#
+
 #          - service: flux
 #            dockerfile: ./containers/backend/flux.dockerfile
-#
+
 #          - service: orion
 #            dockerfile: ./containers/backend/orion.dockerfile
-#
+
 #          - service: relay
 #            dockerfile: ./containers/backend/relay.dockerfile
-#
+
 #          - service: space
 #            dockerfile: ./containers/backend/space.dockerfile
-#
+
 #          - service: stream
 #            dockerfile: ./containers/backend/stream.dockerfile
-#
+
 #          - service: synapse
 #            dockerfile: ./containers/backend/synapse.dockerfile
-#
+
 #          - service: executor
 #            dockerfile: ./containers/workers/executor.dockerfile
-#
+
 #          - service: forger
 #            dockerfile: ./containers/workers/forger.dockerfile
-#
+
 #          - service: mail-forger
 #            dockerfile: ./containers/workers/mail-forger.dockerfile
-#
+
 #          - service: scribe
 #            dockerfile: ./containers/workers/scribe.dockerfile
-#
+
 #          - service: web
 #            dockerfile: ./containers/frontend/web.dockerfile
-#
+
 #          - service: n8n
 #            dockerfile: ./containers/frontend/n8n.dockerfile
-#
+
 #    steps:
 #      - name: Checkout Repository
 #        uses: actions/checkout@v4
-#
+
 #      - name: Setup QEMU
 #        uses: docker/setup-qemu-action@v3
-#
+
 #      - name: Setup Docker Buildx
 #        uses: docker/setup-buildx-action@v3
-#
+
 #      - name: Login to DockerHub
 #        uses: docker/login-action@v3
 #        with:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-#
+
 #      - name: Build & Push ${{ matrix.service }}
 #        uses: docker/build-push-action@v6
 #        with:
@@ -80,24 +80,24 @@
 #          file: ${{ matrix.dockerfile }}
 #          push: true
 #          platforms: linux/amd64
-#
+
 #          tags: |
 #            ${{ env.DOCKERHUB_USERNAME }}/workverse-${{ matrix.service }}:latest
 #            ${{ env.DOCKERHUB_USERNAME }}/workverse-${{ matrix.service }}:${{ github.sha }}
-#
+
 #          cache-from: type=gha
 #          cache-to: type=gha,mode=max
-#
+
 #          labels: |
 #            org.opencontainers.image.title=workverse-${{ matrix.service }}
 #            org.opencontainers.image.source=https://github.com/${{ github.repository }}
 #            org.opencontainers.image.revision=${{ github.sha }}
-#
+
 #  deploy:
 #      name: Deploy to Docker VM
 #      needs: build-and-push
 #      runs-on: ubuntu-latest
-#
+
 #      steps:
 #       - name: SSH into VM
 #         uses: appleboy/ssh-action@v1.2.0
@@ -105,18 +105,18 @@
 #           host: ${{ secrets.VM_HOST }}
 #           username: ${{ secrets.VM_USERNAME }}
 #           key: ${{ secrets.VM_SSH_KEY }}
-#
+
 #           script: |
 #             set -e
 #             cd ~/workverse
 #             git fetch origin
 #             git reset --hard origin/deployment
-#
+
 #             docker compose -f docker-compose.prod.yml pull
-#
+
 #             docker compose -f docker-compose.prod.yml up -d --remove-orphans
-#
+
 #             docker compose -f docker-compose.prod.yml ps
-#
+
 #             docker image prune -af
 #             docker builder prune -af

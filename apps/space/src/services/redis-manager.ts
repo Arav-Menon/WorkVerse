@@ -20,12 +20,9 @@ export class RedisManager {
 
         // Handle messages via the 'message' event (ioredis standard API)
         this.subClient.on("message", (channel: string, message: string) => {
-            console.log(`[REDIS SUB] channel=${channel}`);
             const handler = this.messageHandlers.get(channel);
             if (handler) {
                 handler(message);
-            } else {
-                console.log(`[REDIS SUB] No handler for channel: ${channel}`);
             }
         });
 
@@ -36,7 +33,6 @@ export class RedisManager {
 
         this.subConnected = true;
         this.pubConnected = true;
-        console.log("Redis Pub and Sub clients are connected");
     }
 
     async subscribe(channel: string, callback: (message: string) => void) {

@@ -51,15 +51,15 @@ declare -A SERVICE_DOCKERFILES=(
 )
 
 declare -A PACKAGE_CONSUMERS=(
-  [db]="cortex orion space synapse executor scribe n8n"
-  [events]="cortex flux synapse executor forger n8n"
-  [mcp]="orion executor"
-  [queue]="cortex orion forger scribe mail-forger"
-  [redis]="cortex flux orion relay space stream synapse executor forger scribe n8n"
-  [schemas]="cortex flux orion relay space stream synapse executor forger scribe n8n"
+  [db]="cortex orion space synapse executor forger scribe n8n"
+  [events]="flux synapse executor forger"
+  [mcp]="cortex orion executor"
+  [queue]="cortex orion forger mail-forger"
+  [redis]="cortex orion relay space stream synapse executor forger scribe n8n"
+  [schemas]="cortex orion stream"
   [rbac]="cortex"
-  [security]="cortex orion stream"
-  [evaluator]="orion forger"
+  [rate-limit]="cortex orion stream"
+  [evaluator]="cortex orion forger"
   [email]="mail-forger"
   [ui]="web"
 )
@@ -69,6 +69,7 @@ declare -A NON_CONSUMABLE_PACKAGES=(
   [eslint-config]=1
   [testing]=1
   [typescript-config]=1
+  [security]=1
 )
 
 ROOT_REBUILD_FILES="package.json bun.lock turbo.json"
@@ -80,14 +81,14 @@ BEFORE="${BEFORE_SHA:-HEAD~1}"
 if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
   log_header "Initial Push Detected"
   echo "  No previous commit. Marking all services for rebuild."
-  mapfile -t CHANGED_FILES < <(find apps/ packages/ containers/ -type f 2>/dev/null || echo "")
+  mapfile -t CHANGED_FILES < <(find apps/ packages/ containers/ -type f 2>/dev/null)
 else
-  mapfile -t CHANGED_FILES < <(git diff --name-only --diff-filter=ACMR "$BEFORE" HEAD 2>/dev/null || echo "")
+  mapfile -t CHANGED_FILES < <(git diff --name-only --diff-filter=ACMR "$BEFORE" HEAD 2>/dev/null)
 fi
 
 if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
   log_header "No Changes Detected"
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo "matrix={\"include\":[]}" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   exit 0
 fi
@@ -119,11 +120,18 @@ for file in "${CHANGED_FILES[@]}"; do
     if [ -n "${SERVICE_DOCKERFILES[$svc]+_}" ]; then
       log_action "App change: $file → $svc"
       AFFECTED_SERVICES[$svc]=1
+    else
+      log_action "WARNING: App change detected but '${svc}' is not in SERVICE_DOCKERFILES (skipped)"
+      log_action "  -> If this service should be deployed, add it to SERVICE_DOCKERFILES."
     fi
   fi
 
-  if [[ "$file" =~ ^packages/([^/]+)/ ]]; then
-    pkg="${BASH_REMATCH[1]}"
+  if [[ "$file" =~ ^packages/([^/]+)(?:/([^/]+))?/ ]]; then
+    if [ -n "${BASH_REMATCH[2]}" ]; then
+      pkg="${BASH_REMATCH[2]}"
+    else
+      pkg="${BASH_REMATCH[1]}"
+    fi
 
     if [ -n "${NON_CONSUMABLE_PACKAGES[$pkg]+_}" ]; then
       log_action "Non-consumable package (skipped): $file"
@@ -157,27 +165,20 @@ done
 if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
   log_header "Detection Results"
   echo "No services affected."
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo "matrix={\"include\":[]}" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   exit 0
 fi
 
-MATRIX="["
-FIRST=true
-
 SORTED_SERVICES=($(echo "${!AFFECTED_SERVICES[@]}" | tr ' ' '\n' | sort))
 
+MATRIX_ITEMS=()
 for svc in "${SORTED_SERVICES[@]}"; do
   dockerfile="${SERVICE_DOCKERFILES[$svc]}"
-  if [ "$FIRST" = true ]; then
-    FIRST=false
-  else
-    MATRIX+=","
-  fi
-  MATRIX+="{\"service\":\"${svc}\",\"dockerfile\":\"${dockerfile}\"}"
+  MATRIX_ITEMS+=("{\"service\":\"${svc}\",\"dockerfile\":\"${dockerfile}\"}")
 done
 
-MATRIX+="]"
+MATRIX=$(printf '%s\n' "${MATRIX_ITEMS[@]}" | jq -sc '{"include":.}')
 
 # ---------------------------------------------------------------------------
 # Validate matrix
