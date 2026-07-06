@@ -163,6 +163,7 @@ export class spaceManager {
         const raw = await client.hget(`space:${workSpaceId}:users`, userId);
         if (!raw) return;
 
+        
         let spaceUser: SpaceUser;
         try {
             spaceUser = JSON.parse(raw);
