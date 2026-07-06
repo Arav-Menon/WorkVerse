@@ -46,8 +46,12 @@ declare -A SERVICE_DOCKERFILES=(
   [forger]="containers/workers/forger.dockerfile"
   [mail-forger]="containers/workers/mail-forger.dockerfile"
   [scribe]="containers/workers/scribe.dockerfile"
-  [web]="containers/frontend/web.dockerfile"
   [n8n]="containers/automation/n8n.dockerfile"
+)
+
+# Services deployed via Vercel (not Docker) — detected but not built in CI
+declare -A VERCEL_SERVICES=(
+  [web]="https://vercel.com"
 )
 
 declare -A PACKAGE_CONSUMERS=(
@@ -120,9 +124,12 @@ for file in "${CHANGED_FILES[@]}"; do
     if [ -n "${SERVICE_DOCKERFILES[$svc]+_}" ]; then
       log_action "App change: $file → $svc"
       AFFECTED_SERVICES[$svc]=1
+    elif [ -n "${VERCEL_SERVICES[$svc]+_}" ]; then
+      log_action "Vercel service: $file → $svc (deployed via Vercel, skipping Docker build)"
     else
       log_action "WARNING: App change detected but '${svc}' is not in SERVICE_DOCKERFILES (skipped)"
-      log_action "  -> If this service should be deployed, add it to SERVICE_DOCKERFILES."
+      log_action "  -> If this service should be deployed via Docker, add it to SERVICE_DOCKERFILES."
+      log_action "  -> If deployed via Vercel, add it to VERCEL_SERVICES."
     fi
   fi
 
@@ -170,7 +177,33 @@ if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
   exit 0
 fi
 
-SORTED_SERVICES=($(echo "${!AFFECTED_SERVICES[@]}" | tr ' ' '\n' | sort))
+# Separate Docker services from Vercel services
+DOCKER_SERVICES=()
+VERCEL_AFFECTED=()
+for svc in "${!AFFECTED_SERVICES[@]}"; do
+  if [ -n "${VERCEL_SERVICES[$svc]+_}" ]; then
+    VERCEL_AFFECTED+=("$svc")
+  else
+    DOCKER_SERVICES+=("$svc")
+  fi
+done
+
+if [ ${#VERCEL_AFFECTED[@]} -gt 0 ]; then
+  log_header "Vercel Services Detected"
+  for svc in "${VERCEL_AFFECTED[@]}"; do
+    log_action "$svc → deployed via Vercel (auto-deploys on push, no Docker build needed)"
+  done
+fi
+
+if [ ${#DOCKER_SERVICES[@]} -eq 0 ]; then
+  log_header "Detection Results"
+  echo "Only Vercel services affected — no Docker builds needed."
+  echo "matrix={\"include\":[]}" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  exit 0
+fi
+
+SORTED_SERVICES=($(printf '%s\n' "${DOCKER_SERVICES[@]}" | sort))
 
 MATRIX_ITEMS=()
 for svc in "${SORTED_SERVICES[@]}"; do
@@ -223,7 +256,10 @@ log_action "All Dockerfiles exist ✓"
 log_header "Detection Results"
 
 echo "Affected packages (${#AFFECTED_PACKAGES[@]}): $(echo "${!AFFECTED_PACKAGES[@]}" | tr ' ' '\n' | sort | tr '\n' ', ' | sed 's/,$//')"
-echo "Affected services (${#AFFECTED_SERVICES[@]}): ${SORTED_SERVICES[*]}"
+echo "Docker services (${#SORTED_SERVICES[@]}): ${SORTED_SERVICES[*]}"
+if [ ${#VERCEL_AFFECTED[@]} -gt 0 ]; then
+  echo "Vercel services (${#VERCEL_AFFECTED[@]}): ${VERCEL_AFFECTED[*]}"
+fi
 echo ""
 echo "Matrix: $MATRIX"
 echo "matrix=$MATRIX" >> "${GITHUB_OUTPUT:-/dev/stdout}"
