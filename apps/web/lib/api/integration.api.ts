@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
+import { services } from "@/lib/config/env";
 
 export interface IntegrationStatus {
   connected: boolean;
@@ -23,5 +24,5 @@ export async function disconnectIntegration(orgId: string, provider: string) {
 
 export function getConnectUrl(orgId: string, provider: string, userId: string): string {
   const state = `${userId}:${orgId}`;
-  return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}${API_ENDPOINTS.INTEGRATION.CONNECT(provider)}?state=${encodeURIComponent(state)}`;
+  return `${services.cortex}${API_ENDPOINTS.INTEGRATION.CONNECT(provider)}?state=${encodeURIComponent(state)}`;
 }
