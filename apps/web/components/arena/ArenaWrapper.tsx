@@ -10,7 +10,7 @@ import { useWebRTC } from '../../hooks/use-webrtc';
 import { useCallManager, type CallState } from '../../hooks/use-call-manager';
 import { useDm } from '../../hooks/use-dm';
 import { toast } from 'sonner';
-import { env } from '../../lib/config/env';
+import { services } from '../../lib/config/env';
 import { ArenaHUD } from './ArenaHUD';
 import { ArenaDock } from './ArenaDock';
 import { ChatPanel, type ChatMessage } from './ChatPanel';
@@ -133,7 +133,7 @@ export function ArenaWrapper({
     roomId: spaceId,
     userId: user?.id || '',
     token,
-    relayUrl: env.RELAY_URL,
+    relayUrl: services.relay,
     enabled: !!user && !!token,
   });
 
