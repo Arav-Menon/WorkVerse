@@ -87,8 +87,8 @@ fi
 
 if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
   log_header "No Changes Detected"
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-  echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo -n "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo -n "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   exit 0
 fi
 
@@ -157,8 +157,8 @@ done
 if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
   log_header "Detection Results"
   echo "No services affected."
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-  echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo -n "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo -n "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   exit 0
 fi
 
@@ -225,5 +225,5 @@ echo "Affected packages (${#AFFECTED_PACKAGES[@]}): $(echo "${!AFFECTED_PACKAGES
 echo "Affected services (${#AFFECTED_SERVICES[@]}): ${SORTED_SERVICES[*]}"
 echo ""
 echo "Matrix: $MATRIX"
-echo "matrix=$MATRIX" >> "${GITHUB_OUTPUT:-/dev/stdout}"
-echo "has_changes=true" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+echo -n "matrix=$MATRIX" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+echo -n "has_changes=true" >> "${GITHUB_OUTPUT:-/dev/stdout}"
