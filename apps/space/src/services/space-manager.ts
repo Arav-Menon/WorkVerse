@@ -25,6 +25,8 @@ export interface SpaceUser {
 
 export class spaceManager {
     private workspace: Map<string, Set<WebSocket>> = new Map();
+    private workspaceUsers: Map<string, Set<string>> = new Map();
+    private userSocketCount: Map<string, Map<string, number>> = new Map();
     private redisManager: RedisManager;
 
     constructor(redisManager: RedisManager) {
@@ -72,6 +74,18 @@ export class spaceManager {
             }
             this.workspace.get(workSpaceId)!.add(socket);
 
+            if (!this.workspaceUsers.has(workSpaceId)) {
+                this.workspaceUsers.set(workSpaceId, new Set());
+            }
+            const isFirstSocket = !this.workspaceUsers.get(workSpaceId)!.has(userId);
+            this.workspaceUsers.get(workSpaceId)!.add(userId);
+
+            if (!this.userSocketCount.has(workSpaceId)) {
+                this.userSocketCount.set(workSpaceId, new Map());
+            }
+            const wsSocketCounts = this.userSocketCount.get(workSpaceId)!;
+            wsSocketCounts.set(userId, (wsSocketCounts.get(userId) || 0) + 1);
+
             const user = await db.user.findUnique({ where: { id: userId }, select: { name: true } });
             const username = user?.name || "Anonymous";
             const color = pickColor(userId);
@@ -80,12 +94,15 @@ export class spaceManager {
             const spaceUser: SpaceUser = { userId, username, position: initialPosition, color };
             await client.hset(`space:${workSpaceId}:users`, userId, JSON.stringify(spaceUser));
 
-            await this.redisManager.publish(`space:${workSpaceId}`, {
-                type: "USER_JOINED",
-                user: spaceUser,
-                onlineCount: this.activeUsers(workSpaceId)
-            });
-            console.log(`[SPACE_JOIN] userId=${userId} username=${username} space=${workSpaceId} onlineCount=${this.activeUsers(workSpaceId)}`);
+            const onlineCount = this.activeUsers(workSpaceId);
+
+            if (isFirstSocket) {
+                await this.redisManager.publish(`space:${workSpaceId}`, {
+                    type: "USER_JOINED",
+                    user: spaceUser,
+                    onlineCount
+                });
+            }
 
             const [allUsersRaw, historyRaw] = await Promise.all([
                 client.hgetall(`space:${workSpaceId}:users`),
@@ -97,7 +114,6 @@ export class spaceManager {
                 try {
                     users.push(JSON.parse(data));
                 } catch {
-                    // Fallback for old format (just position)
                     const pos = JSON.parse(data);
                     users.push({ userId: id, username: "User", position: pos, color: pickColor(id) });
                 }
@@ -108,7 +124,6 @@ export class spaceManager {
             if (historyRaw.length > 0) {
                 chatHistory = historyRaw.map(m => JSON.parse(m));
             } else {
-                console.log(`[SpaceManager] Cache miss for ${workSpaceId}. Fetching from DB...`);
                 const dbMessages = await db.chatMessage.findMany({
                     where: { workspaceId: workSpaceId },
                     take: 50,
@@ -137,10 +152,8 @@ export class spaceManager {
                 chatHistory
             }));
 
-            console.log(`[Arena] User ${username} (${userId}) joined space ${workSpaceId}. Online: ${this.activeUsers(workSpaceId)}`);
-
         } catch (error: any) {
-            console.log(`${error}`)
+            console.error(`[SpaceManager] Error in addClient:`, error);
             socket.send(JSON.stringify({ type: "Error", message: "Internal server error" }))
         }
     }
@@ -214,11 +227,9 @@ export class spaceManager {
         const historyKey = `space:${workSpaceId}:chat`;
         await client.rpush(historyKey, JSON.stringify(data));
         await client.ltrim(historyKey, -50, -1);
-        console.log(`[CHAT_HISTORY] Saved to Redis: ${historyKey}`);
 
         await client.lpush("chat_persistence_queue", JSON.stringify(data));
 
-        console.log(`[CHAT_BROADCAST] space=${workSpaceId} userId=${userId} username=${username}`);
         await this.redisManager.publish(`space:${workSpaceId}`, {
             type: "CHAT",
             ...data
@@ -230,8 +241,6 @@ export class spaceManager {
         if (!clients) return;
 
         const payload = typeof message === "string" ? message : JSON.stringify(message);
-        const parsed = typeof message === "string" ? JSON.parse(message) : message;
-        console.log(`[BROADCAST] space=${workSpaceId} type=${parsed.type} recipients=${clients.size}`);
 
         clients.forEach((ws) => {
             if (ws.readyState === WebSocket.OPEN) {
@@ -251,7 +260,27 @@ export class spaceManager {
         }
 
         if (userId) {
-            await client.hdel(`space:${workSpaceId}:users`, userId);
+            const wsSocketCounts = this.userSocketCount.get(workSpaceId);
+            if (wsSocketCounts) {
+                const currentCount = wsSocketCounts.get(userId) || 0;
+                if (currentCount <= 1) {
+                    wsSocketCounts.delete(userId);
+                } else {
+                    wsSocketCounts.set(userId, currentCount - 1);
+                }
+            }
+
+            const userSet = this.workspaceUsers.get(workSpaceId);
+            const stillHasSocket = wsSocketCounts?.has(userId) && (wsSocketCounts.get(userId) || 0) > 0;
+
+            if (userSet && !stillHasSocket) {
+                userSet.delete(userId);
+                if (userSet.size === 0) {
+                    this.workspaceUsers.delete(workSpaceId);
+                }
+
+                await client.hdel(`space:${workSpaceId}:users`, userId);
+            }
 
             const remainingCount = this.activeUsers(workSpaceId);
 
@@ -261,18 +290,15 @@ export class spaceManager {
                 onlineCount: remainingCount
             });
 
-            // Broadcast presence update to all remaining clients
             await this.redisManager.publish(`space:${workSpaceId}`, {
                 type: "SPACE_PRESENCE_UPDATED",
                 onlineCount: remainingCount
             });
-
-            console.log(`[SPACE_LEAVE] userId=${userId} space=${workSpaceId} onlineCount=${remainingCount}`);
         }
     }
 
     activeUsers(workSpaceId: string) {
-        return this.workspace.get(workSpaceId)?.size || 0;
+        return this.workspaceUsers.get(workSpaceId)?.size || 0;
     }
 
 
