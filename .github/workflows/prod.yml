@@ -22,6 +22,7 @@ jobs:
   detect-changes:
     name: Detect Affected Services
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has_changes: ${{ steps.detect.outputs.has_changes }}
@@ -43,6 +44,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
@@ -89,6 +91,9 @@ jobs:
     needs: [detect-changes, build-and-push]
     if: always() && needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
 
     permissions:
       contents: write
@@ -100,7 +105,10 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Install yq
-        uses: dcarbone/install-yq-action@v1.0.1
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
 
       - name: Clone staging-ops
         run: |
@@ -120,7 +128,7 @@ jobs:
 
           FAILED=0
 
-          echo "${MATRIX_JSON}" | jq -c '.[]' | while read -r item; do
+          while read -r item; do
             SVC=$(echo "$item" | jq -r '.service')
             FILE="prod/workverse/${SVC}/values.yaml"
 
@@ -141,7 +149,7 @@ jobs:
               continue
             fi
 
-            yq eval ".image.tag = \"${NEW_TAG}\"" -i "$FILE"
+            NEW_TAG="$NEW_TAG" yq eval '.image.tag = env(NEW_TAG)' -i "$FILE"
 
             ACTUAL_TAG=$(yq eval '.image.tag' "$FILE")
             if [ "$ACTUAL_TAG" != "$NEW_TAG" ]; then
@@ -153,7 +161,7 @@ jobs:
             fi
 
             echo "UPDATE: $FILE → tag: $ACTUAL_TAG"
-          done
+          done < <(echo "${MATRIX_JSON}" | jq -c '.[]')
 
           if [ "$FAILED" -eq 1 ]; then
             echo ""
@@ -169,7 +177,7 @@ jobs:
           cd staging-ops
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add prod/workverse/*/*/values.yaml
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -194,6 +202,7 @@ jobs:
     needs: [detect-changes, build-and-push, update-staging-ops]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Build Summary
