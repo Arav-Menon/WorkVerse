@@ -1,6 +1,9 @@
 import Redis from "ioredis";
 import { redisConfig } from "./config";
 
-const createRedisSubscriber = () => new Redis(redisConfig);
+const createRedisPublisher = () =>
+  typeof redisConfig === "string"
+    ? new Redis(redisConfig)
+    : new Redis(redisConfig);
 
-export const publisherRedis = createRedisSubscriber();
+export const publisherRedis = createRedisPublisher();
