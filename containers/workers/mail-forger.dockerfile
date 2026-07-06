@@ -40,7 +40,7 @@ COPY --from=prerelease /usr/src/app/packages/email ./packages/email
 COPY --from=prerelease /usr/src/app/packages/queue ./packages/queue
 COPY --from=prerelease /usr/src/app/package.json ./
 
-USER bun
+USER 1001:1001
 
 EXPOSE 7001/tcp
 
