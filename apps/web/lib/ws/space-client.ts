@@ -53,7 +53,6 @@ export class SpaceClient {
     const ws = new WebSocket(`${this.options.wsUrl}?${params.toString()}`);
 
     ws.onopen = () => {
-      console.log("[SpaceClient] Connected");
       this.reconnectAttempts = 0;
       this.ws = ws;
       this.options.onConnect?.();
@@ -71,7 +70,6 @@ export class SpaceClient {
         }
 
         if (data.type === "SPACE_STATE") {
-          console.log(`[SpaceClient] Space synced: ${data.users.length} users`);
           this.onlineCount = data.users.length;
           this.options.onSpaceState?.(data.users, data.chatHistory);
           this.options.onOnlineCount?.(this.onlineCount);
@@ -79,7 +77,6 @@ export class SpaceClient {
         }
 
         if (data.type === "USER_JOINED") {
-          console.log(`[PRESENCE_UPDATE] USER_JOINED userId=${data.user.userId} username=${data.user.username} onlineCount=${data.onlineCount}`);
           this.onlineCount = data.onlineCount;
           this.options.onUserJoined?.(data.user);
           this.options.onOnlineCount?.(this.onlineCount);
@@ -87,7 +84,6 @@ export class SpaceClient {
         }
 
         if (data.type === "USER_LEFT") {
-          console.log(`[PRESENCE_UPDATE] USER_LEFT userId=${data.userId} onlineCount=${data.onlineCount}`);
           this.onlineCount = data.onlineCount;
           this.options.onUserLeft?.(data.userId);
           this.options.onOnlineCount?.(this.onlineCount);
@@ -95,7 +91,6 @@ export class SpaceClient {
         }
 
         if (data.type === "SPACE_PRESENCE_UPDATED") {
-          console.log(`[PRESENCE_UPDATE] SPACE_PRESENCE_UPDATED onlineCount=${data.onlineCount}`);
           this.onlineCount = data.onlineCount;
           this.options.onOnlineCount?.(this.onlineCount);
           return;
@@ -107,7 +102,6 @@ export class SpaceClient {
         }
 
         if (data.type === "CHAT") {
-          console.log(`[CHAT_RECEIVED] userId=${data.userId} username=${data.username} message=${data.chatMessage}`);
           this.options.onChatMessage?.({
             userId: data.userId,
             chatMessage: data.chatMessage,
@@ -119,7 +113,6 @@ export class SpaceClient {
         }
 
         if (data.type === "INFO") {
-          console.log(`[SpaceClient] ${data.message}`);
           if (data.activeUsers !== undefined) {
             this.onlineCount = data.activeUsers;
             this.options.onOnlineCount?.(this.onlineCount);
@@ -134,12 +127,10 @@ export class SpaceClient {
 
       } catch {
         // Non-JSON message (legacy string messages)
-        console.log(`[SpaceClient] ${event.data}`);
       }
     };
 
     ws.onclose = () => {
-      console.log("[SpaceClient] Disconnected");
       this.ws = null;
       this.stopPing();
       this.options.onDisconnect?.();
@@ -166,7 +157,6 @@ export class SpaceClient {
   }
 
   leave() {
-    console.log(`[CLIENT] Sending SPACE_LEAVE`);
     this.send({ type: "SPACE_LEAVE" });
     this.isManualClose = true;
     this.stopPing();
@@ -203,7 +193,6 @@ export class SpaceClient {
   }
 
   sendChat(chatMessage: string) {
-    console.log(`[CHAT_SENT] message=${chatMessage}`);
     this.send({ type: "CHAT", payload: { chatMessage } });
   }
 
@@ -259,7 +248,6 @@ export class SpaceClient {
     }
 
     const delay = Math.min(BASE_DELAY * Math.pow(2, this.reconnectAttempts), MAX_DELAY);
-    console.log(`[SpaceClient] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectAttempts++;
