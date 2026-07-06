@@ -38,7 +38,7 @@ export class RelayClient {
   constructor(options: RelayClientOptions) {
     this.options = {
       ...options,
-      wsUrl: options.wsUrl || env.WS_URL || 'ws://localhost:8080',
+      wsUrl: options.wsUrl || env.RELAY_URL,
     };
     if (options.onMessage) {
       this.messageListeners.add(options.onMessage);
