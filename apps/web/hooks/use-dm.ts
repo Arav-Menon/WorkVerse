@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { dmApi, type DmConversation, type DmMessage } from '../lib/api/dm.api';
-import { env } from '../lib/config/env';
+import { services } from '../lib/config/env';
 
 interface UseDmNewMessage {
   conversationId: string;
@@ -53,7 +53,7 @@ export function useDm({ organizationId, currentUserId, enabled = true, onNewMess
     if (!token) return;
 
     const roomId = `dm:${conversationId}`;
-    const wsUrl = `${env.SYNAPSE_WS_URL}?roomId=${roomId}&token=${token}`;
+    const wsUrl = `${services.synapse}?roomId=${roomId}&token=${token}`;
 
     const ws = new WebSocket(wsUrl);
 
