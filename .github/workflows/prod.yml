@@ -48,7 +48,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.detect-changes.outputs.matrix || '[]') }}
+      matrix: ${{ fromJSON(needs.detect-changes.outputs.matrix || '{"include":[]}') }}
 
     steps:
       - name: Checkout Repository
@@ -161,7 +161,7 @@ jobs:
             fi
 
             echo "UPDATE: $FILE → tag: $ACTUAL_TAG"
-          done < <(echo "${MATRIX_JSON}" | jq -c '.[]')
+          done < <(echo "${MATRIX_JSON}" | jq -c '.include[]')
 
           if [ "$FAILED" -eq 1 ]; then
             echo ""
@@ -185,8 +185,13 @@ jobs:
           fi
 
           TAG="${{ github.sha }}"
-          SERVICES=$(echo "${MATRIX_JSON}" | jq -r '.[].service' | paste -sd,)
-          IMAGES=$(echo "${MATRIX_JSON}" | jq -r '.[].service' | sed 's/^/  - workverse-/' | sed "s/$/:${TAG}/")
+          SERVICE_COUNT=$(echo "${MATRIX_JSON}" | jq '.include | length')
+          if [ "${SERVICE_COUNT}" -eq 0 ]; then
+            echo "No services in matrix. Skipping commit."
+            exit 0
+          fi
+          SERVICES=$(echo "${MATRIX_JSON}" | jq -r '.include[].service' | paste -sd,)
+          IMAGES=$(echo "${MATRIX_JSON}" | jq -r '.include[].service' | sed 's/^/  - workverse-/' | sed "s/$/:${TAG}/")
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           git commit -m "chore(deploy): update images for ${TAG}" \
@@ -257,7 +262,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
 
             echo "### Docker Images" >> $GITHUB_STEP_SUMMARY
-            echo "${MATRIX_JSON}" | jq -r '.[].service' | while read -r svc; do
+            echo "${MATRIX_JSON}" | jq -r '.include[].service' | while read -r svc; do
               echo "- \`${DOCKER_USER}/workverse-${svc}:${COMMIT_SHA}\`" >> $GITHUB_STEP_SUMMARY
             done
           else
