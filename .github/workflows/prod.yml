@@ -110,6 +110,8 @@ jobs:
           echo "Branch: $(git branch --show-current)"
 
       - name: Validate & Update Helm Values
+        env:
+          MATRIX_JSON: ${{ needs.detect-changes.outputs.matrix }}
         run: |
           cd staging-ops
           NEW_TAG="${{ github.sha }}"
@@ -118,11 +120,10 @@ jobs:
 
           FAILED=0
 
-          echo '${{ needs.detect-changes.outputs.matrix }}' | jq -c '.[]' | while read -r item; do
+          echo "${MATRIX_JSON}" | jq -c '.[]' | while read -r item; do
             SVC=$(echo "$item" | jq -r '.service')
             FILE="prod/workverse/${SVC}/values.yaml"
 
-            # Validate values.yaml exists
             if [ ! -f "$FILE" ]; then
               echo "ERROR: Helm values.yaml not found: $FILE"
               echo "  -> Service '${SVC}' has no Helm chart in staging-ops."
@@ -131,7 +132,6 @@ jobs:
               continue
             fi
 
-            # Validate image.tag field exists
             CURRENT_TAG=$(yq eval '.image.tag // ""' "$FILE" 2>/dev/null)
             if [ -z "$CURRENT_TAG" ] || [ "$CURRENT_TAG" = "null" ]; then
               echo "ERROR: No image.tag field in $FILE"
@@ -141,10 +141,8 @@ jobs:
               continue
             fi
 
-            # Update image.tag using yq (preserves YAML formatting and comments)
             yq eval ".image.tag = \"${NEW_TAG}\"" -i "$FILE"
 
-            # Verify the update
             ACTUAL_TAG=$(yq eval '.image.tag' "$FILE")
             if [ "$ACTUAL_TAG" != "$NEW_TAG" ]; then
               echo "ERROR: Failed to update image.tag in $FILE"
@@ -165,6 +163,8 @@ jobs:
           fi
 
       - name: Commit & Push
+        env:
+          MATRIX_JSON: ${{ needs.detect-changes.outputs.matrix }}
         run: |
           cd staging-ops
           git config user.name "github-actions[bot]"
@@ -177,8 +177,8 @@ jobs:
           fi
 
           TAG="${{ github.sha }}"
-          SERVICES=$(echo '${{ needs.detect-changes.outputs.matrix }}' | jq -r '.[].service' | paste -sd,)
-          IMAGES=$(echo '${{ needs.detect-changes.outputs.matrix }}' | jq -r '.[].service' | sed 's/^/  - workverse-/' | sed "s/$/:${TAG}/")
+          SERVICES=$(echo "${MATRIX_JSON}" | jq -r '.[].service' | paste -sd,)
+          IMAGES=$(echo "${MATRIX_JSON}" | jq -r '.[].service' | sed 's/^/  - workverse-/' | sed "s/$/:${TAG}/")
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           git commit -m "chore(deploy): update images for ${TAG}" \
@@ -197,22 +197,33 @@ jobs:
 
     steps:
       - name: Build Summary
+        env:
+          MATRIX_JSON: ${{ needs.detect-changes.outputs.matrix }}
+          HAS_CHANGES: ${{ needs.detect-changes.outputs.has_changes }}
+          BUILD_RESULT: ${{ needs.build-and-push.result }}
+          DEPLOY_RESULT: ${{ needs.update-staging-ops.result }}
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DOCKER_USER: ${{ env.DOCKERHUB_USERNAME }}
         run: |
           echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Actor** | \`${{ github.actor }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Workflow** | [Run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${COMMIT_SHA}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${BRANCH}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Actor** | \`${ACTOR}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Workflow** | [Run ${RUN_ID}](${RUN_URL}) |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ needs.detect-changes.outputs.has_changes }}" == "true" ]; then
+          if [ "${HAS_CHANGES}" == "true" ]; then
             echo "### Affected Services" >> $GITHUB_STEP_SUMMARY
             echo '```json' >> $GITHUB_STEP_SUMMARY
-            echo "${{ needs.detect-changes.outputs.matrix }}" | jq '.' >> $GITHUB_STEP_SUMMARY
+            echo "${MATRIX_JSON}" | jq '.' >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -220,13 +231,25 @@ jobs:
             echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
             echo "|---|---|" >> $GITHUB_STEP_SUMMARY
             echo "| Detect Changes | ✅ Success |" >> $GITHUB_STEP_SUMMARY
-            echo "| Build & Push | ${{ needs.build-and-push.result == 'success' && '✅ Success' || needs.build-and-push.result == 'failure' && '❌ Failed' || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Update staging-ops | ${{ needs.update-staging-ops.result == 'success' && '✅ Success' || needs.update-staging-ops.result == 'failure' && '❌ Failed' || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+            if [ "${BUILD_RESULT}" == "success" ]; then
+              echo "| Build & Push | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+            elif [ "${BUILD_RESULT}" == "failure" ]; then
+              echo "| Build & Push | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Build & Push | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${DEPLOY_RESULT}" == "success" ]; then
+              echo "| Update staging-ops | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+            elif [ "${DEPLOY_RESULT}" == "failure" ]; then
+              echo "| Update staging-ops | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Update staging-ops | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
 
             echo "### Docker Images" >> $GITHUB_STEP_SUMMARY
-            echo '${{ needs.detect-changes.outputs.matrix }}' | jq -r '.[].service' | while read -r svc; do
-              echo "- \`${{ env.DOCKERHUB_USERNAME }}/workverse-${svc}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "${MATRIX_JSON}" | jq -r '.[].service' | while read -r svc; do
+              echo "- \`${DOCKER_USER}/workverse-${svc}:${COMMIT_SHA}\`" >> $GITHUB_STEP_SUMMARY
             done
           else
             echo "No services were affected by this push." >> $GITHUB_STEP_SUMMARY
