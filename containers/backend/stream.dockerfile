@@ -41,7 +41,7 @@ COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/packages/security ./packages/security
 COPY --from=prerelease /usr/src/app/package.json ./
 
-USER bun
+USER 1001:1001
 
 EXPOSE 3010/tcp
 
