@@ -177,8 +177,14 @@ jobs:
           cd staging-ops
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add prod/workverse/*/*/values.yaml
 
+          FILES=$(find prod/workverse -name "values.yaml" 2>/dev/null | head -50)
+          if [ -z "$FILES" ]; then
+            echo "No Helm values.yaml files found to stage."
+            exit 0
+          fi
+
+          echo "$FILES" | xargs git add
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
