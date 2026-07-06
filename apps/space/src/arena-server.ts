@@ -101,7 +101,6 @@ export class workspaceServer {
         }
 
         if (isLeave) {
-          console.log(`[WS] SPACE_LEAVE received userId=${userId} space=${workspaceId}`);
           await this.spaceManager.removeClient(workspaceId, socket);
           socket.send(JSON.stringify({ type: "INFO", message: "Left space" }));
           socket.close(1000);
