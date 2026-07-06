@@ -48,7 +48,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.detect-changes.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.detect-changes.outputs.matrix || '[]') }}
 
     steps:
       - name: Checkout Repository
