@@ -159,6 +159,7 @@ export class spaceManager {
     }
 
     async moveClient(workSpaceId: string, userId: string, position: { x: number, y: number }) {
+        console.log("some")
         const raw = await client.hget(`space:${workSpaceId}:users`, userId);
         if (!raw) return;
 
