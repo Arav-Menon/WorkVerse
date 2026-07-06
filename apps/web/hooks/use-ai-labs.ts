@@ -5,7 +5,7 @@ import { FluxClient, type FluxMessage } from '../lib/ws/flux-client';
 import { apiClient } from '../lib/api/client';
 import { API_ENDPOINTS } from '../lib/api/endpoints';
 import { workflowApi, type WorkflowHistoryItem } from '../lib/api/workflow.api';
-import { env } from '../lib/config/env';
+import { services } from '../lib/config/env';
 
 export interface AiMessage {
   id: string;
@@ -198,7 +198,7 @@ export function useAiLabs({
     }
 
     const client = new FluxClient({
-      wsUrl: env.WS_URL,
+      wsUrl: services.flux,
       token,
       workspaceId,
       spaceId,
