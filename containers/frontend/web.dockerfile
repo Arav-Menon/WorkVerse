@@ -2,6 +2,18 @@ FROM oven/bun:1.3.1 AS base
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
 
+ARG NEXT_PUBLIC_CORTEX_URL=http://localhost:3000
+ARG NEXT_PUBLIC_FLUX_URL=ws://localhost:8080
+ARG NEXT_PUBLIC_RELAY_URL=ws://localhost:8089
+ARG NEXT_PUBLIC_SPACE_URL=ws://localhost:8002
+ARG NEXT_PUBLIC_SYNAPSE_URL=ws://localhost:8001
+
+ENV NEXT_PUBLIC_CORTEX_URL=$NEXT_PUBLIC_CORTEX_URL
+ENV NEXT_PUBLIC_FLUX_URL=$NEXT_PUBLIC_FLUX_URL
+ENV NEXT_PUBLIC_RELAY_URL=$NEXT_PUBLIC_RELAY_URL
+ENV NEXT_PUBLIC_SPACE_URL=$NEXT_PUBLIC_SPACE_URL
+ENV NEXT_PUBLIC_SYNAPSE_URL=$NEXT_PUBLIC_SYNAPSE_URL
+
 FROM base AS install
 RUN mkdir -p /temp/prod
 COPY package.json /temp/prod/
