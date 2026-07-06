@@ -88,7 +88,7 @@ fi
 
 if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
   log_header "No Changes Detected"
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo "matrix={\"include\":[]}" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   exit 0
 fi
@@ -165,7 +165,7 @@ done
 if [ ${#AFFECTED_SERVICES[@]} -eq 0 ]; then
   log_header "Detection Results"
   echo "No services affected."
-  echo "matrix=[]" >> "${GITHUB_OUTPUT:-/dev/stdout}"
+  echo "matrix={\"include\":[]}" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   echo "has_changes=false" >> "${GITHUB_OUTPUT:-/dev/stdout}"
   exit 0
 fi
@@ -178,7 +178,7 @@ for svc in "${SORTED_SERVICES[@]}"; do
   MATRIX_ITEMS+=("{\"service\":\"${svc}\",\"dockerfile\":\"${dockerfile}\"}")
 done
 
-MATRIX=$(printf '%s\n' "${MATRIX_ITEMS[@]}" | jq -sc '.')
+MATRIX=$(printf '%s\n' "${MATRIX_ITEMS[@]}" | jq -sc '{"include":.}')
 
 # ---------------------------------------------------------------------------
 # Validate matrix
