@@ -4,9 +4,23 @@ WORKDIR /usr/src/app
 
 FROM base AS install
 RUN mkdir -p /temp/prod
-COPY package.json /temp/prod/
-COPY bun.lock /temp/prod/
+COPY package.json bun.lock /temp/prod/
+
+COPY apps/cortex/package.json /temp/prod/apps/cortex/
+COPY apps/docs/package.json /temp/prod/apps/docs/
+COPY apps/executor/package.json /temp/prod/apps/executor/
+COPY apps/flux/package.json /temp/prod/apps/flux/
+COPY apps/forger/package.json /temp/prod/apps/forger/
 COPY apps/mail-forger/package.json /temp/prod/apps/mail-forger/
+COPY apps/n8n/package.json /temp/prod/apps/n8n/
+COPY apps/orion/package.json /temp/prod/apps/orion/
+COPY apps/relay/package.json /temp/prod/apps/relay/
+COPY apps/scribe/package.json /temp/prod/apps/scribe/
+COPY apps/space/package.json /temp/prod/apps/space/
+COPY apps/stream/package.json /temp/prod/apps/stream/
+COPY apps/synapse/package.json /temp/prod/apps/synapse/
+COPY apps/web/package.json /temp/prod/apps/web/
+
 COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
 COPY packages/db/package.json /temp/prod/packages/db/
 COPY packages/email/package.json /temp/prod/packages/email/
