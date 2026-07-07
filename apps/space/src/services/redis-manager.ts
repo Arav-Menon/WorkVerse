@@ -14,17 +14,20 @@ export class RedisManager {
         this.subClient.on("error", () => {});
         this.pubClient.on("error", () => {});
 
-        // Handle messages via the 'message' event (ioredis standard API)
         this.subClient.on("message", (channel: string, message: string) => {
             const handler = this.messageHandlers.get(channel);
-            if (handler) {
-                handler(message);
-            }
+            if (handler) handler(message);
         });
 
+        const connectIfNeeded = async (redis: any) => {
+            if (redis.status === "wait") {
+                await redis.connect();
+            }
+        };
+
         await Promise.all([
-            this.subClient.connect(),
-            this.pubClient.connect()
+            connectIfNeeded(this.subClient),
+            connectIfNeeded(this.pubClient),
         ]);
 
         this.subConnected = true;
