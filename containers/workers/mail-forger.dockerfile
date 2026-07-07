@@ -38,9 +38,15 @@ COPY --from=prerelease /usr/src/app/node_modules ./node_modules
 COPY --from=prerelease /usr/src/app/apps/mail-forger ./apps/mail-forger
 COPY --from=prerelease /usr/src/app/packages/email ./packages/email
 COPY --from=prerelease /usr/src/app/packages/queue ./packages/queue
+COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
+COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/package.json ./
 
-RUN bun install
+RUN mkdir -p node_modules/@repo && \
+    ln -s ../../packages/email node_modules/@repo/email && \
+    ln -s ../../packages/queue node_modules/@repo/queue && \
+    ln -s ../../packages/redis node_modules/@repo/redis && \
+    ln -s ../../packages/schemas node_modules/@repo/schemas
 
 USER 1001:1001
 
