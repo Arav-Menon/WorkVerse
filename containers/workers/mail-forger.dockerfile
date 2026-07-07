@@ -23,7 +23,7 @@ COPY packages/testing/package.json /temp/prod/packages/testing/
 COPY packages/typescript-config/package.json /temp/prod/packages/typescript-config/
 COPY packages/ui/package.json /temp/prod/packages/ui/
 
-RUN cd /temp/prod && bun install --frozen-lockfile
+RUN cd /temp/prod && bun install
 
 FROM base AS prerelease
 COPY --from=install /temp/prod/node_modules node_modules
