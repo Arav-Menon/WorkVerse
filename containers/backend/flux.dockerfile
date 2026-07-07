@@ -41,6 +41,12 @@ COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
 COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/package.json ./
 
+RUN rm -rf node_modules/@repo/events node_modules/@repo/redis node_modules/@repo/schemas && \
+    mkdir -p node_modules/@repo && \
+    ln -s ../../packages/events node_modules/@repo/events && \
+    ln -s ../../packages/redis node_modules/@repo/redis && \
+    ln -s ../../packages/schemas node_modules/@repo/schemas
+
 USER 1001:1001
 
 EXPOSE 8080/tcp
