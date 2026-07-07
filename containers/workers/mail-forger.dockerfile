@@ -46,4 +46,4 @@ EXPOSE 7001/tcp
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD bun --version || exit 1
-ENTRYPOINT ["bun", "run", "--cwd", "apps/mail-forger", "mail-forger:start"]
+ENTRYPOINT ["bun", "run", "--cwd", "apps/mail-forger", "start:mail-forger"]
