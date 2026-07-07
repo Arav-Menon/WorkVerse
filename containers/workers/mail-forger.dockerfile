@@ -55,6 +55,7 @@ COPY --from=prerelease /usr/src/app/packages/email ./packages/email
 COPY --from=prerelease /usr/src/app/packages/queue ./packages/queue
 COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
 COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
+COPY --from=prerelease /usr/src/app/packages/email/node_modules ./packages/email/node_modules
 COPY --from=prerelease /usr/src/app/package.json ./
 
 RUN rm -rf node_modules/@repo/email node_modules/@repo/queue node_modules/@repo/redis node_modules/@repo/schemas && \
