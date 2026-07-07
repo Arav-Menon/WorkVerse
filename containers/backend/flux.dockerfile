@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 FROM base AS install
 RUN mkdir -p /temp/prod
 COPY package.json /temp/prod/
+COPY bun.lock /temp/prod/
 COPY apps/flux/package.json /temp/prod/apps/flux/
 COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
 COPY packages/db/package.json /temp/prod/packages/db/
