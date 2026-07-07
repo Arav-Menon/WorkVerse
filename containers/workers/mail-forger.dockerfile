@@ -5,7 +5,8 @@ WORKDIR /usr/src/app
 FROM base AS install
 RUN mkdir -p /temp/prod
 COPY package.json /temp/prod/
-COPY apps/mail-forger/package.json /temp/prod/apps/mail-forger
+COPY bun.lock /temp/prod/
+COPY apps/mail-forger/package.json /temp/prod/apps/mail-forger/
 COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
 COPY packages/db/package.json /temp/prod/packages/db/
 COPY packages/email/package.json /temp/prod/packages/email/
@@ -22,7 +23,7 @@ COPY packages/testing/package.json /temp/prod/packages/testing/
 COPY packages/typescript-config/package.json /temp/prod/packages/typescript-config/
 COPY packages/ui/package.json /temp/prod/packages/ui/
 
-RUN cd /temp/prod && bun install
+RUN cd /temp/prod && bun install --frozen-lockfile
 
 FROM base AS prerelease
 COPY --from=install /temp/prod/node_modules node_modules
@@ -42,7 +43,8 @@ COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
 COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/package.json ./
 
-RUN mkdir -p node_modules/@repo && \
+RUN rm -rf node_modules/@repo/email node_modules/@repo/queue node_modules/@repo/redis node_modules/@repo/schemas && \
+    mkdir -p node_modules/@repo && \
     ln -s ../../packages/email node_modules/@repo/email && \
     ln -s ../../packages/queue node_modules/@repo/queue && \
     ln -s ../../packages/redis node_modules/@repo/redis && \
