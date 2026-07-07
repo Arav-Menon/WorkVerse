@@ -11,12 +11,8 @@ export class RedisManager {
     }
 
     async init() {
-        this.subClient.on("error", (err: any) =>
-            console.log("Redis Sub Client Error", err),
-        );
-        this.pubClient.on("error", (err: any) =>
-            console.log("Redis Pub Client Error", err),
-        );
+        this.subClient.on("error", () => {});
+        this.pubClient.on("error", () => {});
 
         // Handle messages via the 'message' event (ioredis standard API)
         this.subClient.on("message", (channel: string, message: string) => {
