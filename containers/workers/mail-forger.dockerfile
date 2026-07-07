@@ -37,7 +37,19 @@ COPY packages/testing/package.json /temp/prod/packages/testing/
 COPY packages/typescript-config/package.json /temp/prod/packages/typescript-config/
 COPY packages/ui/package.json /temp/prod/packages/ui/
 
-RUN cd /temp/prod && bun install
+RUN cd /temp/prod && bun install && \
+    find node_modules/@repo -maxdepth 2 -mindepth 2 -type d -name node_modules 2>/dev/null | while read nm_dir; do \
+      for link in "$nm_dir"/*; do \
+        [ -L "$link" ] || continue; \
+        link_target=$(readlink "$link"); \
+        pkg_name=$(basename "$link"); \
+        matching=$(find node_modules/.bun -maxdepth 1 -type d -name "${pkg_name}@*" 2>/dev/null | head -1); \
+        if [ -n "$matching" ]; then \
+          resolved="$matching/node_modules/$pkg_name"; \
+          rm "$link" && cp -a "$resolved" "$link" 2>/dev/null || true; \
+        fi; \
+      done; \
+    done
 
 FROM base AS prerelease
 COPY --from=install /temp/prod/node_modules node_modules
@@ -49,21 +61,7 @@ WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
 
-COPY --from=prerelease /usr/src/app/node_modules ./node_modules
-COPY --from=prerelease /usr/src/app/apps/mail-forger ./apps/mail-forger
-COPY --from=prerelease /usr/src/app/packages/email ./packages/email
-COPY --from=prerelease /usr/src/app/packages/queue ./packages/queue
-COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
-COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
-COPY --from=prerelease /usr/src/app/packages/email/node_modules ./packages/email/node_modules
-COPY --from=prerelease /usr/src/app/package.json ./
-
-RUN rm -rf node_modules/@repo/email node_modules/@repo/queue node_modules/@repo/redis node_modules/@repo/schemas && \
-    mkdir -p node_modules/@repo && \
-    ln -s ../../packages/email node_modules/@repo/email && \
-    ln -s ../../packages/queue node_modules/@repo/queue && \
-    ln -s ../../packages/redis node_modules/@repo/redis && \
-    ln -s ../../packages/schemas node_modules/@repo/schemas
+COPY --from=prerelease /usr/src/app ./
 
 USER 1001:1001
 
