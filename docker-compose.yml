@@ -186,7 +186,7 @@ services:
     networks:
       - workverse
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8002/ || exit 1"]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8002' 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
