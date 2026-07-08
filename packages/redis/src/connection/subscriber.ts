@@ -7,3 +7,4 @@ export const createRedisSubscriber = () =>
     : new Redis(redisConfig);
 
 export const subscriberRedis = createRedisSubscriber();
+subscriberRedis.on("error", (err) => console.error("[Redis Subscriber] Error:", err));
