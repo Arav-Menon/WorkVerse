@@ -3,11 +3,6 @@ import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
 import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
-<<<<<<< HEAD
-=======
-// import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
-// import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
->>>>>>> main
 import { rateLimitPlugin } from "@repo/rate-limit";
 
 const fastify = Fastify({
@@ -26,14 +21,6 @@ fastify.register(rateLimitPlugin);
 
 fastify.register(ingestRoutes, { prefix: "/api/v1/orion" });
 
-<<<<<<< HEAD
-fastify.post("/api/v1/orion/admin/register-tool", {
-  config: {
-    rateLimit: {
-      max: 5,
-      timeWindow: 60000,
-      keyGenerator: (request) => `ratelimit:orion:admin:register:${request.ip}`,
-=======
 fastify.post(
   "/api/v1/orion/admin/register-tool",
   {
@@ -44,27 +31,23 @@ fastify.post(
         keyGenerator: (request) =>
           `ratelimit:orion:admin:register:${request.ip}`,
       },
->>>>>>> main
     },
-  },
-  handler: async (request, reply) => {
-    const tool = request.body as any;
-    const toolId = tool.id || `${tool.category}-${tool.name}`;
-    const toolMetadata = {
-      id: toolId,
-      name: tool.name,
-      category: tool.category,
-      description: tool.description,
-      workerId: tool.workerId,
-      inputSchema: tool.inputSchema || {},
-    };
+    handler: async (request, reply) => {
+      const tool = request.body as any;
+      const toolId = tool.id || `${tool.category}-${tool.name}`;
+      const toolMetadata = {
+        id: toolId,
+        name: tool.name,
+        category: tool.category,
+        description: tool.description,
+        workerId: tool.workerId,
+        inputSchema: tool.inputSchema || {},
+      };
 
-<<<<<<< HEAD
-=======
-    // toolRegistry.registerTool(toolMetadata);
+      // toolRegistry.registerTool(toolMetadata);
 
->>>>>>> main
-    return { ok: true, toolId };
+      return { ok: true, toolId };
+    },
   },
 );
 
