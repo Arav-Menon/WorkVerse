@@ -36,7 +36,7 @@ fastify.post("/api/v1/orion/admin/register-tool", {
       keyGenerator: (request) => `ratelimit:orion:admin:register:${request.ip}`,
     },
   },
-  async (request, reply) => {
+  handler: async (request, reply) => {
     const tool = request.body as any;
     const toolId = tool.id || `${tool.category}-${tool.name}`;
     const toolMetadata = {
