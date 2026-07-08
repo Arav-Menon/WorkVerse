@@ -61,11 +61,8 @@ export async function registerIngestPrompt(
       jobStatus: JSON.stringify(jobStatusPayload),
     };
   } catch (error: any) {
-    return {
-      success: false,
-      statuscode: error.statuscode,
-      message: "Failed to ingest prompt",
-      error,
-    };
+    const status = error.response?.status || 500;
+    const detail = error.response?.data || error.message;
+    throw Object.assign(new Error(`Orion call failed: ${detail}`), { statusCode: status });
   }
 }
