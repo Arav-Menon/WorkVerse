@@ -4,7 +4,6 @@ import { API_URL } from "../API/api_url";
 import { socketStore } from "../store/socketStore";
 
 export const handleConnection = (socket: WebSocket) => {
-  console.log("[Flux] Client connected");
 
   socket.on("message", async (raw) => {
     let parsed: {
