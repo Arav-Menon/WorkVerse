@@ -7,6 +7,7 @@ import AiLabSuggestions from "./ailab/AiLabSuggestions";
 import { currentModel, suggestions as defaultSuggestions } from "./ailab/data";
 import type { ModelInfo } from "./ailab/data";
 
+
 export default function AiLabDeck({ orgName = "Engineering Team" }: { orgName?: string }) {
   const [promptText, setPromptText] = useState("");
   const [model, setModel] = useState<ModelInfo>(currentModel);
