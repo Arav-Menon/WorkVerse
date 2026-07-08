@@ -37,3 +37,4 @@ export const createRedisClient = () =>
     : new Redis(redisConfig);
 
 export const client = createRedisClient();
+client.on("error", (err) => console.error("[Redis Client] Error:", err));
