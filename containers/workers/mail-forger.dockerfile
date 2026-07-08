@@ -2,58 +2,45 @@ FROM oven/bun:1.3.1 AS base
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
 
-FROM base AS install
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-
-COPY apps/cortex/package.json /temp/prod/apps/cortex/
-COPY apps/docs/package.json /temp/prod/apps/docs/
-COPY apps/executor/package.json /temp/prod/apps/executor/
-COPY apps/flux/package.json /temp/prod/apps/flux/
-COPY apps/forger/package.json /temp/prod/apps/forger/
-COPY apps/mail-forger/package.json /temp/prod/apps/mail-forger/
-COPY apps/n8n/package.json /temp/prod/apps/n8n/
-COPY apps/orion/package.json /temp/prod/apps/orion/
-COPY apps/relay/package.json /temp/prod/apps/relay/
-COPY apps/scribe/package.json /temp/prod/apps/scribe/
-COPY apps/space/package.json /temp/prod/apps/space/
-COPY apps/stream/package.json /temp/prod/apps/stream/
-COPY apps/synapse/package.json /temp/prod/apps/synapse/
-COPY apps/web/package.json /temp/prod/apps/web/
-
-COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
-COPY packages/db/package.json /temp/prod/packages/db/
-COPY packages/email/package.json /temp/prod/packages/email/
-COPY packages/eslint-config/package.json /temp/prod/packages/eslint-config/
-COPY packages/evaluator/package.json /temp/prod/packages/evaluator/
-COPY packages/events/package.json /temp/prod/packages/events/
-COPY packages/mcp/package.json /temp/prod/packages/mcp/
-COPY packages/queue/package.json /temp/prod/packages/queue/
-COPY packages/rbac/package.json /temp/prod/packages/rbac/
-COPY packages/redis/package.json /temp/prod/packages/redis/
-COPY packages/schemas/package.json /temp/prod/packages/schemas/
-COPY packages/security/rate-limit/package.json /temp/prod/packages/security/rate-limit/
-COPY packages/testing/package.json /temp/prod/packages/testing/
-COPY packages/typescript-config/package.json /temp/prod/packages/typescript-config/
-COPY packages/ui/package.json /temp/prod/packages/ui/
-
-RUN cd /temp/prod && bun install && \
-    find node_modules/@repo -maxdepth 2 -mindepth 2 -type d -name node_modules 2>/dev/null | while read nm_dir; do \
-      for link in "$nm_dir"/*; do \
-        [ -L "$link" ] || continue; \
-        link_target=$(readlink "$link"); \
-        pkg_name=$(basename "$link"); \
-        matching=$(find node_modules/.bun -maxdepth 1 -type d -name "${pkg_name}@*" 2>/dev/null | head -1); \
-        if [ -n "$matching" ]; then \
-          resolved="$matching/node_modules/$pkg_name"; \
-          rm "$link" && cp -a "$resolved" "$link" 2>/dev/null || true; \
-        fi; \
-      done; \
-    done
-
 FROM base AS prerelease
-COPY --from=install /temp/prod/node_modules node_modules
-COPY . .
+COPY package.json bun.lock ./
+COPY apps/cortex/package.json apps/cortex/
+COPY apps/docs/package.json apps/docs/
+COPY apps/executor/package.json apps/executor/
+COPY apps/flux/package.json apps/flux/
+COPY apps/forger/package.json apps/forger/
+COPY apps/mail-forger/package.json apps/mail-forger/
+COPY apps/n8n/package.json apps/n8n/
+COPY apps/orion/package.json apps/orion/
+COPY apps/relay/package.json apps/relay/
+COPY apps/scribe/package.json apps/scribe/
+COPY apps/space/package.json apps/space/
+COPY apps/stream/package.json apps/stream/
+COPY apps/synapse/package.json apps/synapse/
+COPY apps/web/package.json apps/web/
+COPY packages/convo-store/package.json packages/convo-store/
+COPY packages/db/package.json packages/db/
+COPY packages/email/package.json packages/email/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY packages/evaluator/package.json packages/evaluator/
+COPY packages/events/package.json packages/events/
+COPY packages/mcp/package.json packages/mcp/
+COPY packages/queue/package.json packages/queue/
+COPY packages/rbac/package.json packages/rbac/
+COPY packages/redis/package.json packages/redis/
+COPY packages/schemas/package.json packages/schemas/
+COPY packages/security/rate-limit/package.json packages/security/rate-limit/
+COPY packages/testing/package.json packages/testing/
+COPY packages/typescript-config/package.json packages/typescript-config/
+COPY packages/ui/package.json packages/ui/
+
+COPY apps/mail-forger ./apps/mail-forger
+COPY packages/email ./packages/email
+COPY packages/queue ./packages/queue
+COPY packages/redis ./packages/redis
+COPY packages/schemas ./packages/schemas
+
+RUN bun install
 
 FROM oven/bun:1.3.1-slim AS release
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
