@@ -23,7 +23,20 @@ export const services = {
   synapse: process.env.NEXT_PUBLIC_SYNAPSE_URL || "ws://localhost:8001",
 } as const;
 
+<<<<<<< HEAD
 if (process.env.NODE_ENV === "production") {
+=======
+/** @deprecated Use `services.cortex` instead */
+export const env = {
+  API_URL:       services.cortex,
+  WS_URL:        services.flux,
+  RELAY_URL:     services.relay,
+  SPACE_WS_URL:  services.space,
+  SYNAPSE_WS_URL: services.synapse,
+};
+
+if (process.env.NODE_ENV === "production" && typeof window !== "undefined") {
+>>>>>>> main
   const mismatches: string[] = [];
   if (services.cortex.includes("localhost"))  mismatches.push("NEXT_PUBLIC_CORTEX_URL");
   if (services.flux.includes("localhost"))    mismatches.push("NEXT_PUBLIC_FLUX_URL");
@@ -32,9 +45,15 @@ if (process.env.NODE_ENV === "production") {
   if (services.synapse.includes("localhost")) mismatches.push("NEXT_PUBLIC_SYNAPSE_URL");
 
   if (mismatches.length > 0) {
+<<<<<<< HEAD
     throw new Error(
       `[WorkVerse] Production env vars missing or falling back to localhost.\n` +
       `Expected NEXT_PUBLIC_* variables: ${mismatches.join(", ")}\n` +
+=======
+    console.error(
+      `[WorkVerse] Production env vars missing or falling back to localhost.\n` +
+      `Missing: ${mismatches.join(", ")}\n` +
+>>>>>>> main
       `Set them in Vercel Dashboard > Project Settings > Environment Variables.`
     );
   }
