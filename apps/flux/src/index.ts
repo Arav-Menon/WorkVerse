@@ -1,3 +1,4 @@
+import http from "http";
 import { WebSocketServer } from "ws";
 import { registerChatEvents, registerWorklfowEvents } from "./events/chatEvents";
 import { handleConnection } from "./handlers/socketHandler";
@@ -16,12 +17,36 @@ if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
 
 console.log(`[Flux] Redis target: ${process.env.REDIS_URL || `${process.env.REDIS_HOST || "localhost"}:${process.env.REDIS_PORT || "6379"}`}`);
 console.log(`[Flux] CORTEX_API_URL: ${process.env.CORTEX_API_URL || "http://localhost:3000/api/v1/ingest-prompt (DEFAULT)"}`);
-// ─────────────────────────────────────────────────────────────────
 
-const wss = new WebSocketServer({ port: PORT });
+const server = http.createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200);
+    res.end("OK");
+    return;
+  }
+  res.writeHead(404);
+  res.end();
+});
 
-console.log(`[Flux] WebSocket server listening on port ${PORT}`);
+const wss = new WebSocketServer({ noServer: true });
 
-registerChatEvents();
-registerWorklfowEvents();
-wss.on("connection", handleConnection);
+server.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
+
+server.listen(PORT, async () => {
+  console.log(`[Flux] HTTP + WebSocket server listening on port ${PORT}`);
+
+  try {
+    await registerChatEvents();
+    await registerWorklfowEvents();
+    console.log("[Flux] EventBus subscriptions active");
+  } catch (err) {
+    console.error("[Flux] FATAL: Failed to subscribe to EventBus:", err);
+    process.exit(1);
+  }
+
+  wss.on("connection", handleConnection);
+});
