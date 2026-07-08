@@ -1,5 +1,5 @@
-FROM oven/bun:1.3.1-alpine AS base
-RUN apk add --no-cache openssl
+FROM oven/bun:1.3.1-slim AS base
+RUN apt-get update -y && apt-get install -y python3 make g++ openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
 
 FROM base AS install
@@ -30,8 +30,7 @@ COPY . .
 
 RUN bun install
 
-FROM oven/bun:1.3.1-slim AS release
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+FROM base AS release
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
