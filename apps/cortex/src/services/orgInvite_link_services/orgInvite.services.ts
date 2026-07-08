@@ -14,7 +14,7 @@ export async function registerOrganizationInviteLink(
   const { name, email } = input;
 
   const token = crypto.randomUUID();
-  const inviteLink = `https:/workverse.arav.space/invite/${token}`;
+  const inviteLink = `https://workverse.arav.space/invite/${token}`;
 
   const existMail = await fastify.db.organizationInvite.findFirst({
     where: { organizationId: orgId, email },
