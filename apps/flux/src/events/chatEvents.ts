@@ -3,8 +3,8 @@ import { EventBus } from "@repo/events";
 import { socketStore } from "../store/socketStore";
 
 
-export function registerChatEvents() {
-  EventBus.subscribe("chat_completed", (payload: any) => {
+export async function registerChatEvents() {
+  await EventBus.subscribe("chat_completed", (payload: any) => {
     const socket = socketStore.get(payload.promptId);
 
     if (!socket) return;
@@ -26,8 +26,8 @@ export function registerChatEvents() {
   });
 }
 
-export function registerWorklfowEvents() {
-  EventBus.subscribe("workflow_event", (payload: any) => {
+export async function registerWorklfowEvents() {
+  await EventBus.subscribe("workflow_event", (payload: any) => {
     const socket = socketStore.get(payload.promptId);
 
     if (!socket) return;
