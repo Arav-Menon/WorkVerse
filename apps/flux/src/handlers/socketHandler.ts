@@ -53,7 +53,9 @@ export const handleConnection = (socket: WebSocket) => {
 
       console.log(`[Flux] Prompt queued — promptId: ${promptId}`);
     } catch (err: any) {
-      console.error("[Flux] Failed to enqueue prompt:", err);
+      const detail = err?.response?.data || err?.message || err;
+      console.error("[Flux] Failed to enqueue prompt:", JSON.stringify(detail));
+      console.error("[Flux] Target URL:", API_URL);
       socketStore.remove(promptId);
       socket.send(JSON.stringify({ type: "error", error: "Failed to enqueue prompt", promptId }));
     }
