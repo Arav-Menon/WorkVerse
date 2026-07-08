@@ -49,7 +49,7 @@ COPY --from=prerelease /usr/src/app/package.json ./
 
 USER 1001:1001
 
-EXPOSE 8080/tcp
+EXPOSE 3002/tcp
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD bun --version || exit 1
