@@ -62,6 +62,7 @@ export function AiLabsPanel({
       >
         <AiLabsHeader
           teamName={teamName}
+          isConnected={isConnected}
           contextCount={contextCount}
           toolsCount={toolsCount}
           onClearHistory={clearHistory}
