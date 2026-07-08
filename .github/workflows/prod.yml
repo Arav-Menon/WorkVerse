@@ -39,6 +39,42 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
         run: .github/scripts/detect-changes.sh
 
+  run-migrations:
+    name: Run Database Migrations
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Run Prisma Migrate Deploy
+        working-directory: packages/db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bunx prisma migrate deploy
+
+      - name: Verify Migration Status
+        working-directory: packages/db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bunx prisma migrate status
+
   build-and-push:
     name: Build & Push ${{ matrix.service }}
     needs: detect-changes
@@ -88,8 +124,8 @@ jobs:
 
   update-staging-ops:
     name: Update staging-ops Helm Charts
-    needs: [detect-changes, build-and-push]
-    if: always() && needs.build-and-push.result == 'success'
+    needs: [detect-changes, run-migrations, build-and-push]
+    if: always() && needs.build-and-push.result == 'success' && needs.run-migrations.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -210,7 +246,7 @@ jobs:
 
   summary:
     name: Deployment Summary
-    needs: [detect-changes, build-and-push, update-staging-ops]
+    needs: [detect-changes, run-migrations, build-and-push, update-staging-ops]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -220,6 +256,7 @@ jobs:
         env:
           MATRIX_JSON: ${{ needs.detect-changes.outputs.matrix }}
           HAS_CHANGES: ${{ needs.detect-changes.outputs.has_changes }}
+          MIGRATION_RESULT: ${{ needs.run-migrations.result }}
           BUILD_RESULT: ${{ needs.build-and-push.result }}
           DEPLOY_RESULT: ${{ needs.update-staging-ops.result }}
           COMMIT_SHA: ${{ github.sha }}
@@ -251,6 +288,13 @@ jobs:
             echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
             echo "|---|---|" >> $GITHUB_STEP_SUMMARY
             echo "| Detect Changes | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+            if [ "${MIGRATION_RESULT}" == "success" ]; then
+              echo "| Run Migrations | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+            elif [ "${MIGRATION_RESULT}" == "failure" ]; then
+              echo "| Run Migrations | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Run Migrations | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+            fi
             if [ "${BUILD_RESULT}" == "success" ]; then
               echo "| Build & Push | ✅ Success |" >> $GITHUB_STEP_SUMMARY
             elif [ "${BUILD_RESULT}" == "failure" ]; then
