@@ -3,6 +3,11 @@ import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
 import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
+<<<<<<< HEAD
+=======
+// import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
+// import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
+>>>>>>> main
 import { rateLimitPlugin } from "@repo/rate-limit";
 
 const fastify = Fastify({
@@ -21,12 +26,25 @@ fastify.register(rateLimitPlugin);
 
 fastify.register(ingestRoutes, { prefix: "/api/v1/orion" });
 
+<<<<<<< HEAD
 fastify.post("/api/v1/orion/admin/register-tool", {
   config: {
     rateLimit: {
       max: 5,
       timeWindow: 60000,
       keyGenerator: (request) => `ratelimit:orion:admin:register:${request.ip}`,
+=======
+fastify.post(
+  "/api/v1/orion/admin/register-tool",
+  {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 60000,
+        keyGenerator: (request) =>
+          `ratelimit:orion:admin:register:${request.ip}`,
+      },
+>>>>>>> main
     },
   },
   handler: async (request, reply) => {
@@ -41,9 +59,14 @@ fastify.post("/api/v1/orion/admin/register-tool", {
       inputSchema: tool.inputSchema || {},
     };
 
+<<<<<<< HEAD
+=======
+    // toolRegistry.registerTool(toolMetadata);
+
+>>>>>>> main
     return { ok: true, toolId };
   },
-});
+);
 
 fastify.listen(
   { port: Number(process.env.PORT ?? 3002), host: "0.0.0.0" },
