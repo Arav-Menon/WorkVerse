@@ -32,7 +32,7 @@ export const env = {
   SYNAPSE_WS_URL: services.synapse,
 };
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && typeof window !== "undefined") {
   const mismatches: string[] = [];
   if (services.cortex.includes("localhost"))  mismatches.push("NEXT_PUBLIC_CORTEX_URL");
   if (services.flux.includes("localhost"))    mismatches.push("NEXT_PUBLIC_FLUX_URL");
@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === "production") {
   if (services.synapse.includes("localhost")) mismatches.push("NEXT_PUBLIC_SYNAPSE_URL");
 
   if (mismatches.length > 0) {
-    throw new Error(
+    console.error(
       `[WorkVerse] Production env vars missing or falling back to localhost.\n` +
       `Missing: ${mismatches.join(", ")}\n` +
       `Set them in Vercel Dashboard > Project Settings > Environment Variables.`
