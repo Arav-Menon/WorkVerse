@@ -11,8 +11,8 @@ export class RedisManager {
     }
 
     async init() {
-        this.subClient.on("error", () => {});
-        this.pubClient.on("error", () => {});
+        this.subClient.on("error", (err: any) => console.error("[Redis Manager Sub] Error:", err));
+        this.pubClient.on("error", (err: any) => console.error("[Redis Manager Pub] Error:", err));
 
         this.subClient.on("message", (channel: string, message: string) => {
             const handler = this.messageHandlers.get(channel);
