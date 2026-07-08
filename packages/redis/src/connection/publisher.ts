@@ -7,3 +7,4 @@ const createRedisPublisher = () =>
     : new Redis(redisConfig);
 
 export const publisherRedis = createRedisPublisher();
+publisherRedis.on("error", (err) => console.error("[Redis Publisher] Error:", err));
