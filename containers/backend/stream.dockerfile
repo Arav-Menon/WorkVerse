@@ -1,4 +1,4 @@
-# Stage 1: Install dependencies
+# Stage 1: Install dependencies (Bun handles workspace:* protocol)
 FROM oven/bun:1.3.1-slim AS deps
 RUN apt-get update -y && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
@@ -23,19 +23,39 @@ COPY packages/ui/package.json /usr/src/app/packages/ui/
 
 RUN bun install
 
+# Stage 2: Build with tsup
 FROM deps AS build
 COPY . .
 RUN cd apps/stream && bun run build
 
+# Stage 3: Production Node.js image
 FROM node:22-slim AS release
-RUN apt-get update -y && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y python3 make g++ openssl curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
 
+# Copy compiled bundle
 COPY --from=build /usr/src/app/apps/stream/dist ./dist
 
-COPY --from=build /usr/src/app/node_modules ./node_modules
+# Create a minimal package.json with only external runtime deps
+# (tsup bundles workspace packages, only these remain as imports)
+RUN echo '{ \
+  "name": "stream-runtime", \
+  "private": true, \
+  "type": "module", \
+  "dependencies": { \
+    "mediasoup": "^3.20.0", \
+    "fastify": "^5.8.5", \
+    "fastify-plugin": "^5.1.0", \
+    "@fastify/rate-limit": "^10.3.0", \
+    "pino-pretty": "^11.0.0", \
+    "ioredis": "^5.10.1", \
+    "redis": "^5.11.0" \
+  } \
+}' > package.json
+
+RUN npm install
 
 USER 1001:1001
 
