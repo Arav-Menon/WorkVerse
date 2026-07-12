@@ -28,6 +28,8 @@ FROM base AS prerelease
 COPY --from=install /temp/prod/node_modules node_modules
 COPY . .
 
+RUN bun install
+
 RUN bun install --save-dev prisma && cd packages/db && DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" bunx prisma generate
 
 FROM oven/bun:1.3.1-slim AS release
