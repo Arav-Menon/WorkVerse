@@ -213,7 +213,7 @@ services:
     networks:
       - workverse
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8089/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8089/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -227,6 +227,7 @@ services:
     restart: unless-stopped
     ports:
       - "3010:3010"
+      - "40000-49999:40000-49999/udp"
     depends_on:
       redis:
         condition: service_healthy
@@ -238,7 +239,7 @@ services:
     networks:
       - workverse
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3010/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3010/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
