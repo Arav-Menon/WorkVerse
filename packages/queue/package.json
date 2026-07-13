@@ -13,6 +13,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@repo/redis": "workspace:*",
     "bullmq": "^5.71.0"
   }
 }

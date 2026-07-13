@@ -6,8 +6,10 @@ import type { ModelInfo } from "./data";
 interface AiLabPromptBoxProps {
   promptText: string;
   onPromptChange: (text: string) => void;
+  onSubmit: () => void;
   model: ModelInfo;
   onModelSwitch: () => void;
+  disabled?: boolean;
 }
 
 const contextTags = [
@@ -16,7 +18,7 @@ const contextTags = [
   { icon: "ti-clock", label: "Schedule" },
 ];
 
-export default function AiLabPromptBox({ promptText, onPromptChange, model, onModelSwitch }: AiLabPromptBoxProps) {
+export default function AiLabPromptBox({ promptText, onPromptChange, onSubmit, model, onModelSwitch, disabled = false }: AiLabPromptBoxProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -26,6 +28,15 @@ export default function AiLabPromptBox({ promptText, onPromptChange, model, onMo
       textareaRef.current.style.height = Math.min(scrollHeight, 160) + "px";
     }
   }, [promptText]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      if (promptText.trim() && !disabled) {
+        onSubmit();
+      }
+    }
+  };
 
   return (
     <div className="relative group">
@@ -55,6 +66,8 @@ export default function AiLabPromptBox({ promptText, onPromptChange, model, onMo
             placeholder="What should WorkVerse do next?"
             value={promptText}
             onChange={e => onPromptChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
             className="flex-1 bg-transparent border-none outline-none resize-none min-h-[44px] max-h-[160px] text-[15px] text-zinc-100 placeholder:text-zinc-600 placeholder:font-medium leading-relaxed font-sans py-2"
             rows={1}
             autoFocus
@@ -81,8 +94,9 @@ export default function AiLabPromptBox({ promptText, onPromptChange, model, onMo
               {model.name}
             </button>
             <button
+              onClick={onSubmit}
               className="bg-white text-black text-[12px] font-bold px-5 py-2 rounded-xl flex items-center gap-1.5 hover:bg-zinc-200 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-              disabled={!promptText.trim()}
+              disabled={!promptText.trim() || disabled}
             >
               Execute
               <kbd className="hidden sm:inline-block font-mono text-[9px] opacity-50 ml-0.5">⌘↵</kbd>

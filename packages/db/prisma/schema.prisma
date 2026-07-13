@@ -68,20 +68,20 @@ model User {
   chatMessages        ChatMessage[]
   spaces              Space[]
   n8nConnections      OrganizationN8nConnection[]
-  createdWorkflows   Workflow[]
+  createdWorkflows    Workflow[]
   dmConversations1    DirectMessageConversation[] @relation("DMUser1")
   dmConversations2    DirectMessageConversation[] @relation("DMUser2")
   sentDmMessages      DirectMessage[]
 }
 
 model Organization {
-  id                  String               @id @default(uuid())
+  id                  String                      @id @default(uuid())
   name                String
-  slug                String               @unique
+  slug                String                      @unique
   description         String?
-  createdAt           DateTime             @default(now())
+  createdAt           DateTime                    @default(now())
   createdById         String
-  createdBy           User                 @relation(fields: [createdById], references: [id])
+  createdBy           User                        @relation(fields: [createdById], references: [id])
   members             OrganizationMember[]
   workspaces          Workspace[]
   organizationInvites OrganizationInvite[]
@@ -130,15 +130,15 @@ model OrganizationMember {
 }
 
 model Workspace {
-  id             String        @id @default(uuid())
-  name           String        @unique
-  slug           String        @unique
+  id             String       @id @default(uuid())
+  name           String       @unique
+  slug           String       @unique
   description    String?
   organizationId String
-  createdAt      DateTime      @default(now())
+  createdAt      DateTime     @default(now())
   createdById    String
-  createdBy      User          @relation(fields: [createdById], references: [id])
-  organization   Organization  @relation(fields: [organizationId], references: [id])
+  createdBy      User         @relation(fields: [createdById], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   agents       Agent[]
   channels     Channel[]
@@ -344,21 +344,21 @@ enum ConnectionStatus {
 }
 
 model OrganizationConnection {
-  id                    String           @id @default(uuid())
+  id                    String             @id @default(uuid())
   organizationId        String
   provider              ConnectionProvider
   providerAccountId     String?
   accessToken           String
   refreshToken          String?
-  encryptedAccessToken  String           @default("")
+  encryptedAccessToken  String             @default("")
   encryptedRefreshToken String?
   scopes                String?
   metadata              Json?
-  status                ConnectionStatus @default(ACTIVE)
-  connectedAt           DateTime         @default(now())
+  status                ConnectionStatus   @default(ACTIVE)
+  connectedAt           DateTime           @default(now())
   lastSyncedAt          DateTime?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -367,16 +367,16 @@ model OrganizationConnection {
 }
 
 model OrganizationN8nConnection {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   organizationId  String
   baseUrl         String
   encryptedApiKey String
   connectedById   String
-  connectedBy     User     @relation(fields: [connectedById], references: [id])
-  status          String   @default("CONNECTED")
+  connectedBy     User      @relation(fields: [connectedById], references: [id])
+  status          String    @default("CONNECTED")
   lastValidatedAt DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -403,7 +403,7 @@ model Space {
 }
 
 model Workflow {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   organizationId   String
   workspaceId      String
   createdById      String
@@ -412,21 +412,21 @@ model Workflow {
   prompt           String
   workflowPlan     Json?
   mappedWorkflow   Json?
-  executionType    String   @default("N8N")
-  status           String   @default("DRAFT")
-  deploymentStatus String   @default("PENDING")
+  executionType    String    @default("N8N")
+  status           String    @default("DRAFT")
+  deploymentStatus String    @default("PENDING")
   integrations     String[]
   steps            Json?
   n8nWorkflowId    String?
   n8nWorkflowUrl   String?
-  promptId         String   @unique
-  version          Int      @default(1)
+  promptId         String    @unique
+  version          Int       @default(1)
   lastExecutedAt   DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy    User             @relation(fields: [createdById], references: [id])
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                @relation(fields: [createdById], references: [id])
   executions   WorkflowExecution[]
 
   @@index([organizationId])
@@ -436,15 +436,15 @@ model Workflow {
 }
 
 model WorkflowExecution {
-  id         String    @id @default(uuid())
-  workflowId String
-  status     String    @default("RUNNING")
-  startedAt  DateTime  @default(now())
+  id          String    @id @default(uuid())
+  workflowId  String
+  status      String    @default("RUNNING")
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
-  duration   Int?
-  logs       String?
-  error      String?
-  triggerType String  @default("MANUAL")
+  duration    Int?
+  logs        String?
+  error       String?
+  triggerType String    @default("MANUAL")
 
   workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
@@ -459,9 +459,9 @@ model DirectMessageConversation {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user1        User             @relation("DMUser1", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2        User             @relation("DMUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user1        User            @relation("DMUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2        User            @relation("DMUser2", fields: [user2Id], references: [id], onDelete: Cascade)
   messages     DirectMessage[]
 
   @@unique([organizationId, user1Id, user2Id])
@@ -478,7 +478,7 @@ model DirectMessage {
   createdAt      DateTime @default(now())
 
   conversation DirectMessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User                       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender       User                      @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
   @@index([senderId])

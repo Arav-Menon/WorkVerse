@@ -1,4 +1,10 @@
-export const connection = {
-  host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
-};
+import { redisConfig } from "@repo/redis";
+
+export const connection = typeof redisConfig === "string"
+  ? { url: redisConfig }
+  : {
+      host: redisConfig.host,
+      port: redisConfig.port,
+      username: redisConfig.username,
+      password: redisConfig.password,
+    };

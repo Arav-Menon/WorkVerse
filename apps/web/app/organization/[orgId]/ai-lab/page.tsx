@@ -11,5 +11,12 @@ export default function AiLabPage() {
 
   const { data: org } = useOrganization(orgId);
 
-  return <AiLabDeck orgName={org?.name || ""} />;
+  return (
+    <AiLabDeck
+      orgName={org?.name || ""}
+      workspaceId=""
+      spaceId=""
+      organizationId={orgId}
+    />
+  );
 }

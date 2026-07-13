@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { initGame } from '../../lib/phaser/game';
 import { SpaceClient } from '../../lib/ws/space-client';
-import { env } from '../../lib/config/env';
+import { services } from '../../lib/config/env';
 import type Phaser from 'phaser';
 import type { ArenaScene } from '../../lib/phaser/scenes/ArenaScene';
 import type { SpaceUser } from '../../lib/phaser/types/arena.types';
@@ -63,7 +63,7 @@ export default function ArenaCanvas({
     if (!containerRef.current) return;
 
     const spaceClient = new SpaceClient({
-      wsUrl: env.SPACE_WS_URL,
+      wsUrl: services.space,
       token,
       userId,
       organizationId,

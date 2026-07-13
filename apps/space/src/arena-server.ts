@@ -51,7 +51,6 @@ export class workspaceServer {
 
     const verify = authenticate(token as string) as any;
     if (!verify) {
-      console.warn("[Arena] Connection rejected: Invalid token");
       socket.send(JSON.stringify({ type: "ERROR", message: "Unauthorized" }));
       socket.close(1008);
       return;

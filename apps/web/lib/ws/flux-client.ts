@@ -38,22 +38,33 @@ export class FluxClient {
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private pongTimer: ReturnType<typeof setTimeout> | null = null;
   private isManualClose = false;
-  private messageBuffer: any[] = [];
+  private destroyed = false;
+  private connectionId = 0;
+  private messageBuffer: string[] = [];
 
   constructor(options: FluxClientOptions) {
     this.options = options;
   }
 
   connect() {
+    if (this.destroyed) return;
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
+    this.stopPing();
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
     this.isManualClose = false;
+    this.reconnectAttempts = 0;
+    const connId = ++this.connectionId;
 
     const ws = new WebSocket(this.options.wsUrl);
 
     ws.onopen = () => {
+      if (connId !== this.connectionId) return;
       console.log("[FluxClient] Connected");
-      this.reconnectAttempts = 0;
       this.ws = ws;
       this.options.onConnect?.();
       this.startPing();
@@ -61,6 +72,7 @@ export class FluxClient {
     };
 
     ws.onmessage = (event) => {
+      if (connId !== this.connectionId) return;
       try {
         const data = JSON.parse(event.data);
 
@@ -76,23 +88,26 @@ export class FluxClient {
     };
 
     ws.onclose = () => {
+      if (connId !== this.connectionId) return;
       console.log("[FluxClient] Disconnected");
       this.ws = null;
       this.stopPing();
-      this.options.onDisconnect?.();
 
       if (!this.isManualClose) {
+        this.options.onDisconnect?.();
         this.scheduleReconnect();
       }
     };
 
     ws.onerror = (err) => {
+      if (connId !== this.connectionId) return;
       console.error("[FluxClient] WebSocket error:", err);
     };
   }
 
   disconnect() {
     this.isManualClose = true;
+    this.connectionId++;
     this.stopPing();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -102,6 +117,13 @@ export class FluxClient {
     this.ws = null;
   }
 
+  destroy() {
+    this.destroyed = true;
+    this.disconnect();
+    this.messageBuffer = [];
+    this.options = { ...this.options, onMessage: undefined, onConnect: undefined, onDisconnect: undefined };
+  }
+
   send(payload: {
     token: string;
     workspaceId: string;
@@ -109,12 +131,15 @@ export class FluxClient {
     organizationId: string;
     userPrompt: string;
   }) {
+    if (this.destroyed) return;
     const msg = JSON.stringify(payload);
 
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(msg);
     } else {
-      this.messageBuffer.push(msg);
+      if (this.messageBuffer.length < 50) {
+        this.messageBuffer.push(msg);
+      }
     }
   }
 
@@ -125,7 +150,7 @@ export class FluxClient {
   private flushBuffer() {
     while (this.messageBuffer.length > 0 && this.ws?.readyState === WebSocket.OPEN) {
       const msg = this.messageBuffer.shift();
-      this.ws.send(msg);
+      if (msg) this.ws.send(msg);
     }
   }
 
@@ -160,8 +185,10 @@ export class FluxClient {
   }
 
   private scheduleReconnect() {
+    if (this.destroyed) return;
     if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.error("[FluxClient] Max reconnect attempts reached");
+      this.messageBuffer = [];
       return;
     }
 

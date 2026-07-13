@@ -1,8 +1,8 @@
 import axios from "axios";
-import { env } from "../config/env"
+import { services } from "../config/env"
 
 export const apiClient = axios.create({
-    baseURL : env.API_URL,
+    baseURL : services.cortex,
     withCredentials : true
 })
 

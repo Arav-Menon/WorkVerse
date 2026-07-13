@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 FROM base AS install
 RUN mkdir -p /temp/prod
 COPY package.json /temp/prod/
+COPY bun.lock /temp/prod/
 COPY apps/flux/package.json /temp/prod/apps/flux/
 COPY packages/convo-store/package.json /temp/prod/packages/convo-store/
 COPY packages/db/package.json /temp/prod/packages/db/
@@ -28,6 +29,8 @@ FROM base AS prerelease
 COPY --from=install /temp/prod/node_modules node_modules
 COPY . .
 
+RUN bun install
+
 FROM oven/bun:1.3.1-slim AS release
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/app
@@ -41,7 +44,13 @@ COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
 COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/package.json ./
 
-USER bun
+RUN rm -rf node_modules/@repo/events node_modules/@repo/redis node_modules/@repo/schemas && \
+    mkdir -p node_modules/@repo && \
+    ln -s ../../packages/events node_modules/@repo/events && \
+    ln -s ../../packages/redis node_modules/@repo/redis && \
+    ln -s ../../packages/schemas node_modules/@repo/schemas
+
+USER 1001:1001
 
 EXPOSE 8080/tcp
 

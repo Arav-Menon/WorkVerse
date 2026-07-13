@@ -12,5 +12,12 @@ export default function WorkspaceAiLabPage() {
 
   const { data: workspace } = useWorkspace(orgId, workspaceId);
 
-  return <AiLabDeck orgName={workspace?.name || ""} />;
+  return (
+    <AiLabDeck
+      orgName={workspace?.name || ""}
+      workspaceId={workspaceId}
+      spaceId={workspaceId}
+      organizationId={orgId}
+    />
+  );
 }
