@@ -2,6 +2,7 @@
 
 <img src="./banner.svg" alt="WorkVerse" width="100%" />
 
+***
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.1-fbf0df?style=flat&logo=bun&logoColor=black)](https://bun.sh/)
