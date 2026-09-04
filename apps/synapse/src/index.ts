@@ -2,7 +2,7 @@ import { publisherRedis as pubClient } from "@repo/redis/redis-client";
 import { ChatServer } from "./chat-server";
 import { EventBus } from "@repo/events";
 
-const PORT = Number(process.env.PORT || 8081);
+const PORT = Number(process.env.PORT ?? 8001);
 const server = new ChatServer(PORT, pubClient);
 
 server.start().then(() => {
