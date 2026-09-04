@@ -38,11 +38,7 @@ export class RelayClient {
   constructor(options: RelayClientOptions) {
     this.options = {
       ...options,
-<<<<<<< HEAD
       wsUrl: options.wsUrl || services.relay,
-=======
-      wsUrl: options.wsUrl || env.WS_URL,
->>>>>>> main
     };
     if (options.onMessage) {
       this.messageListeners.add(options.onMessage);
