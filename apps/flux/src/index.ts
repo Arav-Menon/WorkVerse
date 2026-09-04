@@ -3,7 +3,7 @@ import { WebSocketServer } from "ws";
 import { registerChatEvents, registerWorklfowEvents } from "./events/chatEvents";
 import { handleConnection } from "./handlers/socketHandler";
 
-const PORT = 8080;
+const PORT = Number(process.env.PORT ?? 8080);
 
 if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
   console.error(
