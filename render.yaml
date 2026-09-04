@@ -1,0 +1,398 @@
+# WorkVerse Render Blueprint
+# Monorepo deployment: 13 services + PostgreSQL + Redis
+# stream service excluded (mediasoup requires UDP, Render is TCP-only)
+# MongoDB/convo-store excluded (not available on Render)
+
+databases:
+  - name: workverse-db
+    postgresMajorVersion: "16"
+    plan: 0.5c-1g
+    databaseName: workverse
+    ipAllowList: [ ]
+
+services:
+  # ─── Public Web Services (browser-facing) ───────────────────────
+
+  - type: web
+    name: workverse-web
+    runtime: docker
+    dockerfilePath: ./containers/frontend/web.dockerfile
+    dockerContext: .
+    plan: 1c-2g
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_CORTEX_URL
+        value: https://workverse-cortex.onrender.com
+      - key: NEXT_PUBLIC_FLUX_URL
+        value: wss://workverse-flux.onrender.com
+      - key: NEXT_PUBLIC_RELAY_URL
+        value: wss://workverse-relay.onrender.com
+      - key: NEXT_PUBLIC_SPACE_URL
+        value: wss://workverse-space.onrender.com
+      - key: NEXT_PUBLIC_SYNAPSE_URL
+        value: wss://workverse-synapse.onrender.com
+
+  - type: web
+    name: workverse-cortex
+    runtime: docker
+    dockerfilePath: ./containers/backend/cortex.dockerfile
+    dockerContext: .
+    plan: 1c-2g
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: CORS_ORIGIN
+        value: https://workverse-web.onrender.com
+      - key: ORION_API_URL
+        fromService:
+          name: workverse-orion
+          type: pserv
+          property: hostport
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_WEBHOOK_SECRET
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_REDIRECT_URL
+        value: https://workverse-cortex.onrender.com/api/v1/oauth/github/callback
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URL
+        value: https://workverse-cortex.onrender.com/api/v1/oauth/google/callback
+      - key: NOTION_CLIENT_ID
+        sync: false
+      - key: NOTION_CLIENT_SECRET
+        sync: false
+      - key: NOTION_REDIRECT_URL
+        value: https://workverse-cortex.onrender.com/api/auth/callback/notion
+      - key: NOTION_AUTHORIZATION_URL
+        sync: false
+      - key: N8N_ENCRYPTION_KEY
+        sync: false
+      - key: WORKVERSE_ENCRYPTION_KEY
+        sync: false
+    buildFilter:
+      paths:
+        - apps/cortex/**
+        - packages/**
+        - containers/backend/cortex.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: web
+    name: workverse-flux
+    runtime: docker
+    dockerfilePath: ./containers/backend/flux.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      - key: CORTEX_API_URL
+        fromService:
+          name: workverse-cortex
+          type: web
+          property: hostport
+    buildFilter:
+      paths:
+        - apps/flux/**
+        - packages/**
+        - containers/backend/flux.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: web
+    name: workverse-synapse
+    runtime: docker
+    dockerfilePath: ./containers/backend/synapse.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: PORT
+        value: 8001
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+    buildFilter:
+      paths:
+        - apps/synapse/**
+        - packages/**
+        - containers/backend/synapse.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: web
+    name: workverse-space
+    runtime: docker
+    dockerfilePath: ./containers/backend/space.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: PORT
+        value: 8002
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+    buildFilter:
+      paths:
+        - apps/space/**
+        - packages/**
+        - containers/backend/space.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: web
+    name: workverse-relay
+    runtime: docker
+    dockerfilePath: ./containers/backend/relay.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: PORT
+        value: 8089
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      # NOTE: relay requires stream (mediasoup SFU) which is excluded from Render.
+      # Set API_URL to your external stream service URL after deployment.
+      - key: API_URL
+        sync: false
+    buildFilter:
+      paths:
+        - apps/relay/**
+        - packages/**
+        - containers/backend/relay.dockerfile
+        - package.json
+        - bun.lock
+
+  # ─── Private Service ────────────────────────────────────────────
+
+  - type: pserv
+    name: workverse-orion
+    runtime: docker
+    dockerfilePath: ./containers/backend/orion.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      - key: OPENROUTER_API_KEY
+        sync: false
+    buildFilter:
+      paths:
+        - apps/orion/**
+        - packages/**
+        - containers/backend/orion.dockerfile
+        - package.json
+        - bun.lock
+
+  # ─── Background Workers ─────────────────────────────────────────
+
+  - type: worker
+    name: workverse-executor
+    runtime: docker
+    dockerfilePath: ./containers/workers/executor.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+    buildFilter:
+      paths:
+        - apps/executor/**
+        - packages/**
+        - containers/workers/executor.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: worker
+    name: workverse-forger
+    runtime: docker
+    dockerfilePath: ./containers/workers/forger.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: OPENROUTER_API_KEY
+        sync: false
+    buildFilter:
+      paths:
+        - apps/forger/**
+        - packages/**
+        - containers/workers/forger.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: worker
+    name: workverse-scribe
+    runtime: docker
+    dockerfilePath: ./containers/workers/scribe.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+    buildFilter:
+      paths:
+        - apps/scribe/**
+        - packages/**
+        - containers/workers/scribe.dockerfile
+        - package.json
+        - bun.lock
+
+  - type: worker
+    name: workverse-mail-forger
+    runtime: docker
+    dockerfilePath: ./containers/workers/mail-forger.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+    buildFilter:
+      paths:
+        - apps/mail-forger/**
+        - packages/**
+        - containers/workers/mail-forger.dockerfile
+        - package.json
+        - bun.lock
+
+  # ─── n8n Automation ─────────────────────────────────────────────
+
+  - type: web
+    name: workverse-n8n-engine
+    runtime: image
+    image:
+      url: docker.io/n8nio/n8n:latest
+    plan: 1c-2g
+    healthCheckPath: /healthz
+    envVars:
+      - key: N8N_PORT
+        value: 5678
+
+  - type: worker
+    name: workverse-n8n-worker
+    runtime: docker
+    dockerfilePath: ./containers/automation/n8n.dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workverse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: workverse-redis
+          type: keyvalue
+          property: connectionString
+      - key: N8N_ENGINE_URL
+        fromService:
+          name: workverse-n8n-engine
+          type: web
+          property: hostport
+      - key: N8N_API_KEY
+        sync: false
+      - key: N8N_ENCRYPTION_KEY
+        sync: false
+    buildFilter:
+      paths:
+        - apps/n8n/**
+        - packages/**
+        - containers/automation/n8n.dockerfile
+        - package.json
+        - bun.lock
+
+  # ─── Redis ──────────────────────────────────────────────────────
+
+  - type: keyvalue
+    name: workverse-redis
+    plan: 256mb
+    ipAllowList: [ ]
+    maxmemoryPolicy: noeviction
+    persistenceMode: journal-snapshot

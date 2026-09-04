@@ -43,7 +43,7 @@ COPY --from=prerelease /usr/src/app/packages/redis ./packages/redis
 COPY --from=prerelease /usr/src/app/packages/schemas ./packages/schemas
 COPY --from=prerelease /usr/src/app/package.json ./
 
-USER bun
+USER 1001:1001
 
 EXPOSE 8002/tcp
 

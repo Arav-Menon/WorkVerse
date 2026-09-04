@@ -3,10 +3,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start:stream": "node --import tsx ./src/bin.ts",
-    "dev:stream": "node --watch --import tsx ./src/bin.ts"
+    "build": "tsup",
+    "start:stream": "node dist/bin.js",
+    "dev:stream": "node --watch --import tsx ./src/bin.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   },

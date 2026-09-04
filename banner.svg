@@ -1,0 +1,31 @@
+<svg width="1920" height="640" viewBox="0 0 1920 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <rect width="1920" height="640" fill="#090909"/>
+
+  <!-- Subtle decorative rounded rectangles (framing the entire hero content) -->
+  <g opacity="0.04">
+    <rect x="240" y="80" width="1440" height="480" rx="40" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+    <rect x="280" y="100" width="1360" height="440" rx="36" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+    <rect x="320" y="120" width="1280" height="400" rx="32" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+  </g>
+
+  <!-- Hero content group (centered as one unit) -->
+  <g>
+    <!-- Logo (increased ~11%, positioned for balanced composition) -->
+    <g transform="translate(280, 130)">
+      <rect width="24" height="24" fill="black" transform="scale(18.33)"/>
+      <path d="M2 2H9V9H2V2Z" fill="white" transform="scale(18.33)"/>
+      <path d="M15 15H22V22H15V15Z" fill="white" transform="scale(18.33)"/>
+      <path d="M11 2H22V13L11 2Z" fill="white" transform="scale(18.33)"/>
+      <path d="M2 11V22H13L2 11Z" fill="white" transform="scale(18.33)"/>
+    </g>
+
+    <!-- Title (increased size, tight spacing from logo) -->
+    <text x="830" y="310" font-family="Inter, Arial, Helvetica, sans-serif" font-size="120" font-weight="700" fill="#FFFFFF" letter-spacing="-2">WorkVerse</text>
+
+    <!-- Tagline (slightly larger, closer to title) -->
+    <text x="830" y="368" font-family="Inter, Arial, Helvetica, sans-serif" font-size="30" font-weight="300" fill="#A8A8A8">AI-native Virtual Workspace for Modern Engineering Teams</text>
+  </g>
+
+</svg>

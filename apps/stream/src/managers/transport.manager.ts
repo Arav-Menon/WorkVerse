@@ -29,7 +29,7 @@ class RtcTransportManager {
         const transport = await router.createWebRtcTransport({
             listenIps: [
                 {
-                    ip: process.env.MEDIASOUP_LISTEN_IP || "127.0.0.1",
+                    ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
                     announcedIp: process.env.SERVER_PUBLIC_IP || "127.0.0.1"
                 }
             ],

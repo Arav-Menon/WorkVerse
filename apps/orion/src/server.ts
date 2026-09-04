@@ -3,8 +3,6 @@ import producerPlugin from "./plugins/producer";
 import cachePlugin from "./plugins/cache";
 import dbPlugin from "./plugins/db";
 import { ingestRoutes } from "./routes/ingest.routes";
-// import { setupToolRoutes, toolRegistry } from "./services/tool-manager";
-// import { setupMcpSseRoutes, registerToolToBridge } from "./services/mcp-bridge";
 import { rateLimitPlugin } from "@repo/rate-limit";
 
 const fastify = Fastify({
@@ -34,22 +32,22 @@ fastify.post(
           `ratelimit:orion:admin:register:${request.ip}`,
       },
     },
-  },
-  async (request, reply) => {
-    const tool = request.body as any;
-    const toolId = tool.id || `${tool.category}-${tool.name}`;
-    const toolMetadata = {
-      id: toolId,
-      name: tool.name,
-      category: tool.category,
-      description: tool.description,
-      workerId: tool.workerId,
-      inputSchema: tool.inputSchema || {},
-    };
+    handler: async (request, reply) => {
+      const tool = request.body as any;
+      const toolId = tool.id || `${tool.category}-${tool.name}`;
+      const toolMetadata = {
+        id: toolId,
+        name: tool.name,
+        category: tool.category,
+        description: tool.description,
+        workerId: tool.workerId,
+        inputSchema: tool.inputSchema || {},
+      };
 
-    // toolRegistry.registerTool(toolMetadata);
+      // toolRegistry.registerTool(toolMetadata);
 
-    return { ok: true, toolId };
+      return { ok: true, toolId };
+    },
   },
 );
 

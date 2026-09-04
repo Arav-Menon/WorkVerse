@@ -1,4 +1,4 @@
-import { env } from '../config/env';
+import { services } from '../config/env';
 
 export interface RelayClientOptions {
   wsUrl?: string;
@@ -38,7 +38,7 @@ export class RelayClient {
   constructor(options: RelayClientOptions) {
     this.options = {
       ...options,
-      wsUrl: options.wsUrl || env.WS_URL,
+      wsUrl: options.wsUrl || services.relay,
     };
     if (options.onMessage) {
       this.messageListeners.add(options.onMessage);

@@ -4,13 +4,14 @@ import React from 'react';
 
 interface AiLabsHeaderProps {
   teamName: string;
+  isConnected: boolean;
   contextCount: number;
   toolsCount: number;
   onClearHistory: () => void;
   onClose: () => void;
 }
 
-export function AiLabsHeader({ teamName, contextCount, toolsCount, onClearHistory, onClose }: AiLabsHeaderProps) {
+export function AiLabsHeader({ teamName, isConnected, contextCount, toolsCount, onClearHistory, onClose }: AiLabsHeaderProps) {
   return (
     <div
       className="px-4 py-3.5 flex items-center justify-between flex-shrink-0"
@@ -36,9 +37,9 @@ export function AiLabsHeader({ teamName, contextCount, toolsCount, onClearHistor
           <div className="text-[11px] flex items-center gap-1.5 mt-0.5" style={{ color: '#444441' }}>
             <span
               className="w-[5px] h-[5px] rounded-full flex-shrink-0"
-              style={{ background: '#1D9E75' }}
+              style={{ background: isConnected ? '#1D9E75' : '#eab308' }}
             />
-            {teamName} · Active
+            {teamName} · {isConnected ? 'Active' : 'Connecting…'}
           </div>
         </div>
       </div>

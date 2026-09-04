@@ -152,14 +152,12 @@ export class spaceManager {
                 chatHistory
             }));
 
-        } catch (error: any) {
-            console.error(`[SpaceManager] Error in addClient:`, error);
+        } catch {
             socket.send(JSON.stringify({ type: "Error", message: "Internal server error" }))
         }
     }
 
     async moveClient(workSpaceId: string, userId: string, position: { x: number, y: number }) {
-        console.log("some")
         const raw = await client.hget(`space:${workSpaceId}:users`, userId);
         if (!raw) return;
         let spaceUser: SpaceUser;
@@ -195,8 +193,8 @@ export class spaceManager {
                         users: [userId, otherUserId]
                     });
                 }
-            } catch (err) {
-                console.error("Error calculating proximity", err);
+            } catch {
+                // skip malformed user entries
             }
         }
     }

@@ -5,7 +5,7 @@ import { FluxClient, type FluxMessage } from '../lib/ws/flux-client';
 import { apiClient } from '../lib/api/client';
 import { API_ENDPOINTS } from '../lib/api/endpoints';
 import { workflowApi, type WorkflowHistoryItem } from '../lib/api/workflow.api';
-import { env } from '../lib/config/env';
+import { services } from '../lib/config/env';
 
 export interface AiMessage {
   id: string;
@@ -41,6 +41,8 @@ interface UseAiLabsOptions {
   enabled?: boolean;
 }
 
+const RESPONSE_TIMEOUT_MS = 60_000;
+
 export function useAiLabs({
   workspaceId,
   spaceId,
@@ -56,6 +58,25 @@ export function useAiLabs({
 
   const clientRef = useRef<FluxClient | null>(null);
   const pendingPromptRef = useRef<string | null>(null);
+  const responseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const workflowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const clearResponseTimer = useCallback(() => {
+    if (responseTimerRef.current) {
+      clearTimeout(responseTimerRef.current);
+      responseTimerRef.current = null;
+    }
+  }, []);
+
+  const startResponseTimer = useCallback(() => {
+    clearResponseTimer();
+    responseTimerRef.current = setTimeout(() => {
+      setIsTyping(false);
+      setError('Response timed out. Please try again.');
+      pendingPromptRef.current = null;
+    }, RESPONSE_TIMEOUT_MS);
+  }, [clearResponseTimer]);
 
   const handleFluxMessage = useCallback((msg: FluxMessage) => {
     switch (msg.type) {
@@ -64,6 +85,7 @@ export function useAiLabs({
         break;
 
       case 'chat_completed':
+        clearResponseTimer();
         setIsTyping(false);
         if (msg.status === 'failed') {
           setMessages((prev) => [
@@ -77,12 +99,24 @@ export function useAiLabs({
             },
           ]);
         } else if (msg.content) {
+          const content = msg.content;
           setMessages((prev) => [
             ...prev,
             {
               id: `ai-${Date.now()}`,
               role: 'assistant',
-              content: msg.content ?? '',
+              content,
+              timestamp: new Date(),
+              type: 'chat',
+            },
+          ]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `ai-${Date.now()}`,
+              role: 'assistant',
+              content: 'Request completed but returned no content.',
               timestamp: new Date(),
               type: 'chat',
             },
@@ -100,6 +134,7 @@ export function useAiLabs({
           });
 
           if (msg.status === 'completed' || msg.status === 'failed') {
+            clearResponseTimer();
             const deploymentData: WorkflowDeploymentData | undefined =
               msg.workflowId && msg.workflowName
                 ? {
@@ -131,12 +166,17 @@ export function useAiLabs({
 
             setIsTyping(false);
             pendingPromptRef.current = null;
-            setTimeout(() => setActiveWorkflow(null), 3000);
+
+            if (workflowTimerRef.current) {
+              clearTimeout(workflowTimerRef.current);
+            }
+            workflowTimerRef.current = setTimeout(() => setActiveWorkflow(null), 3000);
           }
         }
         break;
 
       case 'mcp_completed':
+        clearResponseTimer();
         setIsTyping(false);
         if (msg.status === 'failed') {
           setMessages((prev) => [
@@ -153,7 +193,7 @@ export function useAiLabs({
           try {
             const results = JSON.parse(msg.content);
             const summary = results
-              .map((r: any) => `${r.service}: ${r.error ?? 'success'}`)
+              .map((r: any) => `${r.service ?? 'unknown'}: ${r.error ?? 'success'}`)
               .join('\n');
             setMessages((prev) => [
               ...prev,
@@ -182,12 +222,13 @@ export function useAiLabs({
         break;
 
       case 'error':
+        clearResponseTimer();
         setIsTyping(false);
         setError(msg.error ?? 'An error occurred');
         pendingPromptRef.current = null;
         break;
     }
-  }, []);
+  }, [clearResponseTimer]);
 
   const connect = useCallback(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -198,7 +239,7 @@ export function useAiLabs({
     }
 
     const client = new FluxClient({
-      wsUrl: env.WS_URL,
+      wsUrl: services.flux,
       token,
       workspaceId,
       spaceId,
@@ -239,6 +280,7 @@ export function useAiLabs({
       setMessages((prev) => [...prev, userMsg]);
       setIsTyping(true);
       setError(null);
+      startResponseTimer();
 
       clientRef.current.send({
         token,
@@ -248,19 +290,26 @@ export function useAiLabs({
         userPrompt: text.trim(),
       });
     },
-    [workspaceId, spaceId, organizationId, isTyping],
+    [workspaceId, spaceId, organizationId, isTyping, startResponseTimer],
   );
 
   const loadHistory = useCallback(async () => {
     if (historyLoaded || !workspaceId) return;
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const [chatResponse, workflowHistory] = await Promise.all([
         apiClient.get(API_ENDPOINTS.AI_CHAT.HISTORY(workspaceId), {
           params: { workspaceId, limit: 20 },
+          signal: controller.signal,
         }),
         workflowApi.getHistoryByWorkspace(workspaceId).catch(() => []),
       ]);
+
+      if (controller.signal.aborted) return;
 
       const data = chatResponse.data;
       const allItems: AiMessage[] = [];
@@ -309,7 +358,8 @@ export function useAiLabs({
       allItems.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       setMessages(allItems);
       setHistoryLoaded(true);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') return;
       console.warn('[useAiLabs] Failed to load history:', err);
     }
   }, [workspaceId, historyLoaded]);
@@ -323,16 +373,26 @@ export function useAiLabs({
       });
       setMessages([]);
       setHistoryLoaded(false);
+      setIsTyping(false);
+      clearResponseTimer();
+      pendingPromptRef.current = null;
     } catch (err) {
       console.warn('[useAiLabs] Failed to clear chat history:', err);
       setError('Failed to clear chat history');
     }
-  }, [workspaceId]);
+  }, [workspaceId, clearResponseTimer]);
 
   useEffect(() => {
     connect();
-    return () => disconnect();
-  }, [connect, disconnect]);
+    return () => {
+      disconnect();
+      clearResponseTimer();
+      if (workflowTimerRef.current) {
+        clearTimeout(workflowTimerRef.current);
+      }
+      abortRef.current?.abort();
+    };
+  }, [connect, disconnect, clearResponseTimer]);
 
   useEffect(() => {
     if (enabled && workspaceId) {
