@@ -16,28 +16,28 @@
  *   3. Add the variable to docker-compose.yml / docker-compose.prod.yml web service
  */
 export const services = {
-  cortex:  process.env.NEXT_PUBLIC_CORTEX_URL  || "http://localhost:3000",
-  flux:    process.env.NEXT_PUBLIC_FLUX_URL    || "ws://localhost:8080",
-  relay:   process.env.NEXT_PUBLIC_RELAY_URL   || "ws://localhost:8089",
-  space:   process.env.NEXT_PUBLIC_SPACE_URL   || "ws://localhost:8002",
+  cortex: process.env.NEXT_PUBLIC_CORTEX_URL || "http://localhost:3000",
+  flux: process.env.NEXT_PUBLIC_FLUX_URL || "ws://localhost:8080",
+  relay: process.env.NEXT_PUBLIC_RELAY_URL || "ws://localhost:8089",
+  space: process.env.NEXT_PUBLIC_SPACE_URL || "ws://localhost:8002",
   synapse: process.env.NEXT_PUBLIC_SYNAPSE_URL || "ws://localhost:8001",
 } as const;
 
 /** @deprecated Use `services.cortex` instead */
 export const env = {
-  API_URL:       services.cortex,
-  WS_URL:        services.flux,
-  RELAY_URL:     services.relay,
-  SPACE_WS_URL:  services.space,
+  API_URL: services.cortex,
+  WS_URL: services.flux,
+  RELAY_URL: services.relay,
+  SPACE_WS_URL: services.space,
   SYNAPSE_WS_URL: services.synapse,
 };
 
 if (process.env.NODE_ENV === "production" && typeof window !== "undefined") {
   const mismatches: string[] = [];
-  if (services.cortex.includes("localhost"))  mismatches.push("NEXT_PUBLIC_CORTEX_URL");
-  if (services.flux.includes("localhost"))    mismatches.push("NEXT_PUBLIC_FLUX_URL");
-  if (services.relay.includes("localhost"))   mismatches.push("NEXT_PUBLIC_RELAY_URL");
-  if (services.space.includes("localhost"))   mismatches.push("NEXT_PUBLIC_SPACE_URL");
+  if (services.cortex.includes("localhost")) mismatches.push("NEXT_PUBLIC_CORTEX_URL");
+  if (services.flux.includes("localhost")) mismatches.push("NEXT_PUBLIC_FLUX_URL");
+  if (services.relay.includes("localhost")) mismatches.push("NEXT_PUBLIC_RELAY_URL");
+  if (services.space.includes("localhost")) mismatches.push("NEXT_PUBLIC_SPACE_URL");
   if (services.synapse.includes("localhost")) mismatches.push("NEXT_PUBLIC_SYNAPSE_URL");
 
   if (mismatches.length > 0) {

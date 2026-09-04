@@ -1,6 +1,9 @@
 import { oauthService } from "../services/oauth_services/oauth.service";
 
-const FRONTEND_URL = process.env.CORS_ORIGIN || "http://localhost:3009";
+const FRONTEND_URL =
+    process.env.FRONTEND_URL ||
+    process.env.CORS_ORIGIN?.split(",")[0]?.trim() ||
+    "http://localhost:3009";
 
 class OAuthController {
     async connect(req: any, reply: any) {

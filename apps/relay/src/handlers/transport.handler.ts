@@ -3,35 +3,36 @@ import { API_URL } from "../../utils/api";
 
 const SFU_BASE = API_URL;
 
+async function requestWithRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 2000): Promise<T> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            return await fn();
+        } catch (err: any) {
+            const isLast = attempt === retries;
+            const isConnRefused = err?.code === 'ECONNREFUSED';
+            if (isLast || !isConnRefused) throw err;
+            console.warn(`[Relay] Stream not ready (attempt ${attempt}/${retries}), retrying in ${delayMs}ms...`);
+            await new Promise(r => setTimeout(r, delayMs));
+        }
+    }
+    throw new Error("Unreachable");
+}
+
 class TransportManager {
     async getRouterCapabilities(roomId: string) {
-        try {
-            if (!roomId) throw new Error("roomId is required");
-            const response = await axios.get(`${SFU_BASE}/router-capabilities/${roomId}`);
-            return response.data;
-        } catch (err) {
-            console.error("Error getting router capabilities:", err);
-            throw err;
-        }
+        if (!roomId) throw new Error("roomId is required");
+        return requestWithRetry(() =>
+            axios.get(`${SFU_BASE}/router-capabilities/${roomId}`).then(r => r.data)
+        );
     }
 
     async createTransport(roomId: string, userId: string) {
-        try {
-            if (!roomId || !userId) {
-                throw new Error("roomId and userId are required to create a transport");
-            }
-
-            const response = await axios.post(`${SFU_BASE}/create-transport`, {
-                roomId,
-                userId
-            });
-
-            return response.data;
-
-        } catch (err) {
-            console.error("Error creating transport:", err);
-            throw err;
+        if (!roomId || !userId) {
+            throw new Error("roomId and userId are required to create a transport");
         }
+        return requestWithRetry(() =>
+            axios.post(`${SFU_BASE}/create-transport`, { roomId, userId }).then(r => r.data)
+        );
     }
 
     async connectTransport(transportId: string, dtlsParameters: any) {

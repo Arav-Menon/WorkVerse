@@ -88,6 +88,13 @@ export class RelayClient {
 
         if (data.type === 'error') {
           console.error('[WebRTC] Relay error:', data.error);
+          
+          if (data.requestId && this.pendingRequests.has(data.requestId)) {
+            const pending = this.pendingRequests.get(data.requestId)!;
+            clearTimeout(pending.timer);
+            this.pendingRequests.delete(data.requestId);
+            pending.reject(new Error(data.error));
+          }
           return;
         }
 

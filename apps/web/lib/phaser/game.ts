@@ -38,6 +38,14 @@ export function initGame(
         debug: false,
       },
     },
+    input: {
+      keyboard: {
+        // Empty capture list = Phaser captures ALL keydown events globally.
+        // The default Phaser capture list only includes cursor/space/shift keys,
+        // which is why A and D were not being intercepted by the game.
+        capture: [],
+      },
+    },
     scene: [ArenaScene],
     transparent: true,
   };

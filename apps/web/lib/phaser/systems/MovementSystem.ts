@@ -1,68 +1,88 @@
 import { WorldConfig } from '../config/world.config';
 import type { Player } from '../entities/Player';
-import Phaser from "phaser";
 
+/**
+ * MovementSystem — uses raw window-level keydown/keyup listeners instead of
+ * Phaser's keyboard plugin. This bypasses all of Phaser's capture/focus
+ * machinery and gives us direct, reliable state tracking for WASD.
+ */
 export class MovementSystem {
-  private scene: Phaser.Scene;
-  private keys: {
-    W: Phaser.Input.Keyboard.Key;
-    A: Phaser.Input.Keyboard.Key;
-    S: Phaser.Input.Keyboard.Key;
-    D: Phaser.Input.Keyboard.Key;
-  };
+  private keysDown = new Set<string>();
+  private boundKeyDown: (e: KeyboardEvent) => void;
+  private boundKeyUp: (e: KeyboardEvent) => void;
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
-    if (!scene.input.keyboard) {
-      throw new Error('Keyboard not found in scene');
-    }
+  private static MOVE_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'w', 'a', 's', 'd']);
 
-    this.keys = {
-      W: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-      A: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-      S: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-      D: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+  constructor(_scene: any) {
+    this.boundKeyDown = (e: KeyboardEvent) => {
+      // Never interfere when a real text-entry element has focus
+      if (this.isTyping()) return;
+      if (MovementSystem.MOVE_KEYS.has(e.code) || MovementSystem.MOVE_KEYS.has(e.key.toLowerCase())) {
+        e.preventDefault();
+        this.keysDown.add(e.code || ('Key' + e.key.toUpperCase()));
+      }
     };
+
+    this.boundKeyUp = (e: KeyboardEvent) => {
+      this.keysDown.delete(e.code || ('Key' + e.key.toUpperCase()));
+    };
+
+    window.addEventListener('keydown', this.boundKeyDown, { capture: true });
+    window.addEventListener('keyup', this.boundKeyUp, { capture: true });
   }
 
-  private isInputFocused(): boolean {
+  /**
+   * Only suppress movement when the user is actively typing in a real text field.
+   */
+  private isTyping(): boolean {
     const active = document.activeElement;
-    return active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA' || active?.getAttribute('contenteditable') === 'true';
+    if (!active || active === document.body || active === document.documentElement) {
+      return false;
+    }
+    const tag = active.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    const ce = active.getAttribute('contenteditable');
+    if (ce !== null && ce !== 'false') return true;
+    const role = active.getAttribute('role');
+    if (role === 'textbox' || role === 'combobox' || role === 'searchbox' || role === 'spinbutton') return true;
+    return false;
   }
 
-  update(player: Player, delta: number) {
-    if (this.isInputFocused()) {
-      // Release all keys so Phaser stops capturing them
-      this.scene.input.keyboard?.disableGlobalCapture();
+  update(player: Player, _delta: number) {
+    if (this.isTyping()) {
       player.stop();
       return;
     }
 
-    // Re-enable capture when not typing
-    this.scene.input.keyboard?.enableGlobalCapture();
+    const up    = this.keysDown.has('KeyW');
+    const down  = this.keysDown.has('KeyS');
+    const left  = this.keysDown.has('KeyA');
+    const right = this.keysDown.has('KeyD');
 
     let dx = 0;
     let dy = 0;
+    if (up)    dy -= 1;
+    if (down)  dy += 1;
+    if (left)  dx -= 1;
+    if (right) dx += 1;
 
-    if (this.keys.W.isDown) dy -= 1;
-    if (this.keys.S.isDown) dy += 1;
-    if (this.keys.A.isDown) dx -= 1;
-    if (this.keys.D.isDown) dx += 1;
-
-    // Normalize diagonal movement
     if (dx !== 0 && dy !== 0) {
-      const length = Math.sqrt(dx * dx + dy * dy);
-      dx /= length;
-      dy /= length;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      dx /= len;
+      dy /= len;
     }
 
-    // Apply velocity — physics engine handles collision + position
     const speed = WorldConfig.player.speed;
-
     if (dx !== 0 || dy !== 0) {
       player.move(dx * speed, dy * speed);
     } else {
       player.stop();
     }
+  }
+
+  /** Call this when the scene is destroyed to avoid memory leaks. */
+  destroy() {
+    window.removeEventListener('keydown', this.boundKeyDown, { capture: true });
+    window.removeEventListener('keyup', this.boundKeyUp, { capture: true });
   }
 }

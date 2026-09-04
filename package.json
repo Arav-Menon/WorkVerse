@@ -7,9 +7,16 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prisma:generate" : "cd packages/db && bun prisma:generate",
-    "prisma:studio" : "cd packages/db && bun prisma:studio",
-    "test": "vitest"
+    "prisma:generate": "cd packages/db && bun prisma:generate",
+    "prisma:studio": "cd packages/db && bun prisma:studio",
+    "test": "vitest",
+    "dev:all": "concurrently --names cortex,orion,flux,synapse,space,relay,stream,executor,forger,scribe,mail-forger,n8n,web --prefix-colors blue,green,yellow,purple,red,orange,cyan,magenta,pink,teal,lime,gray,blue \"bun run --cwd apps/cortex start:cortex\" \"bun run --cwd apps/orion start:orion\" \"bun run --cwd apps/flux start:flux\" \"bun run --cwd apps/synapse start:synapse\" \"bun run --cwd apps/space start:space\" \"bun run --cwd apps/relay start:relay\" \"bun run --cwd apps/stream dev:stream\" \"bun run --cwd apps/executor start:executor\" \"bun run --cwd apps/forger start:forger\" \"bun run --cwd apps/scribe start:scribe\" \"bun run --cwd apps/mail-forger start:mail-forger\" \"bun run --cwd apps/n8n start:n8n\" \"bun run --cwd apps/web dev\"",
+    "dev:backend": "concurrently --names cortex,orion,flux,synapse,space,relay,stream,executor,forger,scribe,mail-forger,n8n --prefix-colors blue,green,yellow,purple,red,orange,cyan,magenta,pink,teal,lime,gray \"bun run --cwd apps/cortex start:cortex\" \"bun run --cwd apps/orion start:orion\" \"bun run --cwd apps/flux start:flux\" \"bun run --cwd apps/synapse start:synapse\" \"bun run --cwd apps/space start:space\" \"bun run --cwd apps/relay start:relay\" \"bun run --cwd apps/stream dev:stream\" \"bun run --cwd apps/executor start:executor\" \"bun run --cwd apps/forger start:forger\" \"bun run --cwd apps/scribe start:scribe\" \"bun run --cwd apps/mail-forger start:mail-forger\" \"bun run --cwd apps/n8n start:n8n\"",
+    "dev:web": "bun run --cwd apps/web dev",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build",
+    "docker:logs": "docker compose logs -f"
   },
   "devDependencies": {
     "@types/supertest": "^7.2.0",
@@ -18,7 +25,8 @@
     "turbo": "^2.8.16",
     "typescript": "5.7.3",
     "vitest": "^4.1.7",
-    "@repo/testing": "*"
+    "@repo/testing": "*",
+    "concurrently": "^9.1.2"
   },
   "engines": {
     "node": ">=18"

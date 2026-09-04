@@ -130,6 +130,7 @@ export default function ArenaCanvas({
   return (
     <div
       ref={containerRef}
+      data-phaser-canvas="true"
       className="absolute inset-0 w-full h-full overflow-hidden"
       style={{ zIndex: 0 }}
     />

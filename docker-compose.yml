@@ -208,6 +208,7 @@ services:
     env_file:
       - ./apps/relay/.env
     environment:
+      API_URL: http://stream:3010/api/v1
       REDIS_HOST: redis
       REDIS_PORT: "6379"
     networks:

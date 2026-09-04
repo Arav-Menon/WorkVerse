@@ -25,7 +25,9 @@ RUN bun install
 
 # Stage 2: Build with tsup
 FROM deps AS build
+COPY --from=deps /usr/src/app/node_modules node_modules
 COPY . .
+RUN bun install
 RUN cd apps/stream && bun run build
 
 # Stage 3: Production Node.js image
