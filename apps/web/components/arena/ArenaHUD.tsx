@@ -70,16 +70,33 @@ export function ArenaHUD({
         </div>
       </div>
 
-      {/* Bottom-Left: WASD hint */}
+      {/* Bottom-Left: movement hint — WASD or arrow keys */}
       <div className="absolute bottom-24 left-4">
-        <div className="flex flex-col items-center gap-1 opacity-40 select-none">
-          <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">W</kbd>
-          <div className="flex gap-1">
-            <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">A</kbd>
-            <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">S</kbd>
-            <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">D</kbd>
+        <div className="flex flex-col items-start gap-2 opacity-40 select-none">
+
+          {/* WASD cluster */}
+          <div className="flex flex-col items-center gap-1">
+            <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">W</kbd>
+            <div className="flex gap-1">
+              <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">A</kbd>
+              <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">S</kbd>
+              <kbd className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-[10px] text-gray-300 w-6 text-center">D</kbd>
+            </div>
           </div>
-          <span className="text-[9px] text-gray-500 mt-0.5">Move</span>
+
+          <span className="text-[8px] text-gray-600 self-center">or</span>
+
+          {/* Arrow key cluster */}
+          <div className="flex flex-col items-center gap-1">
+            <kbd className="bg-gray-800 border border-gray-600 rounded px-1.5 py-0.5 text-[10px] text-gray-300 w-6 text-center">↑</kbd>
+            <div className="flex gap-1">
+              <kbd className="bg-gray-800 border border-gray-600 rounded px-1.5 py-0.5 text-[10px] text-gray-300 w-6 text-center">←</kbd>
+              <kbd className="bg-gray-800 border border-gray-600 rounded px-1.5 py-0.5 text-[10px] text-gray-300 w-6 text-center">↓</kbd>
+              <kbd className="bg-gray-800 border border-gray-600 rounded px-1.5 py-0.5 text-[10px] text-gray-300 w-6 text-center">→</kbd>
+            </div>
+          </div>
+
+          <span className="text-[9px] text-gray-500 self-center mt-0.5">Move</span>
         </div>
       </div>
     </div>
