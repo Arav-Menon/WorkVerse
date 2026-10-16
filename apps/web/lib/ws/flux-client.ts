@@ -101,7 +101,8 @@ export class FluxClient {
 
     ws.onerror = (err) => {
       if (connId !== this.connectionId) return;
-      console.error("[FluxClient] WebSocket error:", err);
+      const msg = (err instanceof ErrorEvent) ? err.message : 'connection failed';
+      console.error(`[FluxClient] WebSocket error: ${msg} — is the Flux service running on ${this.options.wsUrl}?`);
     };
   }
 
