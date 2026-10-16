@@ -42,6 +42,7 @@ function DockButton({ active, danger, activeColor, onClick, label, children }: D
 
   return (
     <button
+      tabIndex={-1}
       className={`group relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150 cursor-pointer hover:scale-110 active:scale-95 ${colorClass}`}
       onClick={handleClick}
     >
