@@ -54,7 +54,6 @@ export class ArenaScene extends Phaser.Scene {
     this.proximityManager = data.proximityManager || null;
     this.onAvatarClicked = data.onAvatarClicked || null;
     this.onProximityChange = data.onProximityChange || null;
-    console.log('[AVATAR_CLICK] onAvatarClicked assigned:', !!this.onAvatarClicked);
   }
 
   preload() { /* Shapes-only MVP — no external assets needed */ }
@@ -108,14 +107,12 @@ export class ArenaScene extends Phaser.Scene {
     // Avatar click detection
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-      console.log(`[AVATAR_CLICK] pointerdown at world (${Math.round(worldPoint.x)}, ${Math.round(worldPoint.y)}), remotePlayers: ${this.remotePlayers.size}`);
       for (const [userId, remotePlayer] of this.remotePlayers) {
         const container = remotePlayer.getContainer();
         const dx = worldPoint.x - container.x;
         const dy = worldPoint.y - container.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= 24) {
-          console.log(`[AVATAR_CLICK] Match found for ${remotePlayer.getName()} (${remotePlayer.getId()}), calling onAvatarClicked`);
           this.onAvatarClicked?.({
             userId: remotePlayer.getId(),
             username: remotePlayer.getName(),
@@ -157,7 +154,6 @@ export class ArenaScene extends Phaser.Scene {
       }
       this.addRemotePlayer(user);
     }
-    console.log(`[Arena] Space state synced: ${this.remotePlayers.size} remote players`);
   }
 
   handleUserJoined(user: SpaceUser) {
@@ -165,7 +161,6 @@ export class ArenaScene extends Phaser.Scene {
     if (this.remotePlayers.has(user.userId)) return;
 
     this.addRemotePlayer(user);
-    console.log(`[Arena] ${user.username} joined`);
   }
 
   handleUserLeft(userId: string) {
@@ -173,7 +168,6 @@ export class ArenaScene extends Phaser.Scene {
     if (remote) {
       remote.destroy();
       this.remotePlayers.delete(userId);
-      console.log(`[Arena] User ${userId} removed`);
     }
   }
 
@@ -182,10 +176,7 @@ export class ArenaScene extends Phaser.Scene {
 
     const remote = this.remotePlayers.get(userId);
     if (remote) {
-      console.log(`[AVATAR UPDATE] userId=${userId} x=${position.x} y=${position.y}`);
       remote.updatePosition(position.x, position.y);
-    } else {
-      console.log(`[AVATAR UPDATE] No remote player found for userId=${userId}`);
     }
   }
 
