@@ -105,12 +105,14 @@ function ProximityPopupCard({ user, onConnect, onIgnore }: ProximityPopupCardPro
 
       <div className="flex items-center gap-2 ml-2 shrink-0">
         <button
+          tabIndex={-1}
           onClick={onIgnore}
           className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
         >
           Ignore
         </button>
         <button
+          tabIndex={-1}
           onClick={onConnect}
           className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
         >
